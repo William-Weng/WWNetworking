@@ -6,62 +6,47 @@
 //
 
 import Foundation
+import WWPrint
 
 // MARK: - 簡易型的AFNetworking (單例)
 open class WWNetworking: NSObject {
     
-    public typealias DownloadProgressInformation = (urlString: String?, totalSize: Int64, totalWritten: Int64, writting: Int64)     // 網路下載資料 => (URL / 大小 / 己下載 / 一段段的下載量)
-    public typealias ResponseInformation = (data: Data?, response: HTTPURLResponse?)                                                // 網路回傳的資料
-    public typealias HttpDownloadOffset = (start: Int?, end: Int?)                                                                  // 續傳下載開始~結束位置設定值 (bytes=0-1024)
-    public typealias DownloadResultInformation = (urlString: String, data: Data?)                                                   // 網路下載資料的結果資訊 => (URL, Data)
+    public typealias DownloadProgressInformation = (urlString: String?, totalSize: Int64, totalWritten: Int64, writting: Int64)                 // 網路下載資料 => (URL / 大小 / 己下載 / 一段段的下載量)
+    public typealias ResponseInformation = (data: Data?, response: HTTPURLResponse?)                                                            // 網路回傳的資料
+    public typealias HttpDownloadOffset = (start: Int?, end: Int?)                                                                              // 續傳下載開始~結束位置設定值 (bytes=0-1024)
+    public typealias DownloadResultInformation = (urlString: String, data: Data?)                                                               // 網路下載資料的結果資訊 => (URL, Data)
+    public typealias UploadProgressInformation = (urlString: String?, bytesSent: Int64, totalBytesSent: Int64, totalBytesExpectedToSend: Int64) // 網路下載資料 => (URL / 段落上傳大小 / 己上傳大小 / 總大小)
 
     public class Constant: NSObject {}
     
     public static let shared = WWNetworking()
     
-    private var downloadTaskResultBlock: ((Result<DownloadResultInformation, Error>) -> Void)?                                      // 下載檔案完成的動作
-    private var downloadProgressResultBlock: ((DownloadProgressInformation) -> Void)?                                               // 下載進行中的進度 - 檔案
-    private var downloadTaskInformations: [String: String?] = [:]                                                                   // 下載的相關資訊 => (Task, URL)
+    private var downloadTaskResultBlock: ((Result<DownloadResultInformation, Error>) -> Void)?                                                  // 下載檔案完成的動作
+    private var downloadProgressResultBlock: ((DownloadProgressInformation) -> Void)?                                                           // 下載進行中的進度 - 檔案
+    private var downloadTaskInformations: [String: String?] = [:]                                                                               // 下載的相關資訊 => (Task, URL)
 
-    private var fragmentDownloadFinishBlock: ((Result<Data, Error>) -> Void)?                                                       // 分段下載完成的動作
-    private var fragmentDownloadProgressResultBlock: ((DownloadProgressInformation) -> Void)?                                       // 分段下載進行中的進度 - 檔案大小
-    private var fragmentDownloadContentLength = -1                                                                                  // 分段下載的檔案總大小
-    private var fragmentDownloadDatas: [String: Data] = [:]                                                                         // 記錄分段下載的Data
-    private var fragmentDownloadKeys: [String] = []                                                                                 // 記錄Tasks的順序
+    private var fragmentDownloadFinishBlock: ((Result<Data, Error>) -> Void)?                                                                   // 分段下載完成的動作
+    private var fragmentDownloadProgressResultBlock: ((DownloadProgressInformation) -> Void)?                                                   // 分段下載進行中的進度 - 檔案大小
+    private var fragmentDownloadContentLength = -1                                                                                              // 分段下載的檔案總大小
+    private var fragmentDownloadDatas: [String: Data] = [:]                                                                                     // 記錄分段下載的Data
+    private var fragmentDownloadKeys: [String] = []                                                                                             // 記錄Tasks的順序
+    
+    private var fragmentUploadFinishBlock: ((Result<Bool, Error>) -> Void)?                                                                     // 分段上傳完成的動作
+    private var fragmentUploadProgressResultBlock: ((UploadProgressInformation) -> Void)?                                                       // 分段下載進行中的進度 - 檔案大小
     
     private override init() {}
 }
 
-// MARK: - URLSessionDownloadDelegate
-extension WWNetworking: URLSessionDownloadDelegate {
-
-    public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didWriteData bytesWritten: Int64, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
-
-        guard let block = downloadProgressResultBlock,
-              let urlString = downloadTaskInformations["\(downloadTask)"]
-        else {
-            return
-        }
-        
-        let progress: DownloadProgressInformation = (urlString: urlString, totalSize: totalBytesExpectedToWrite, totalWritten: totalBytesWritten, writting: bytesWritten)
-        block(progress)
+// MARK: - URLSessionTaskDelegate
+extension WWNetworking: URLSessionTaskDelegate {
+ 
+    public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+        self.fragmentDownloadCompleteAction(session, task: task, didCompleteWithError: error)
+        self.fragmentUploadCompleteAction(session, task: task, didCompleteWithError: error)
     }
 
-    public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
-
-        guard let block = downloadTaskResultBlock,
-              let urlString = downloadTask.currentRequest?.url?.absoluteString
-        else {
-            return
-        }
-        
-        do {
-            let data = try Data(contentsOf: location)
-            let info: DownloadResultInformation = (urlString: urlString, data: data)
-            block(.success(info))
-        } catch {
-            block(.failure(error))
-        }
+    public func urlSession(_ session: URLSession, task: URLSessionTask, didSendBodyData bytesSent: Int64, totalBytesSent: Int64, totalBytesExpectedToSend: Int64) {
+        self.fragmentUploadProgressAction(session, task: task, didSendBodyData: bytesSent, totalBytesSent: totalBytesSent, totalBytesExpectedToSend: totalBytesExpectedToSend)
     }
 }
 
@@ -69,12 +54,47 @@ extension WWNetworking: URLSessionDownloadDelegate {
 extension WWNetworking: URLSessionDataDelegate {
 
     public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse, completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
-        fragmentDownloadDatas["\(dataTask)"] = Data()
-        completionHandler(.allow)
+        self.fragmentDownloadAction(session, dataTask: dataTask, didReceive: response, completionHandler: completionHandler)
     }
 
     public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
+        self.fragmentDownloadedAction(session, dataTask: dataTask, didReceive: data)
+    }
+}
 
+// MARK: - URLSessionDownloadDelegate
+extension WWNetworking: URLSessionDownloadDelegate {
+
+    public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didWriteData bytesWritten: Int64, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
+        self.downloadProgressAction(session, downloadTask: downloadTask, didWriteData: bytesWritten, totalBytesWritten: totalBytesWritten, totalBytesExpectedToWrite: totalBytesExpectedToWrite)
+    }
+
+    public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
+        self.downloadFinishedAction(session, downloadTask: downloadTask, didFinishDownloadingTo: location)
+    }
+}
+
+// MARK: - URLSessionDataDelegate
+extension WWNetworking {
+    
+    /// 分段下載開始時的設定
+    /// - Parameters:
+    ///   - session: URLSession
+    ///   - dataTask: URLSessionDataTask
+    ///   - response: URLResponse
+    ///   - completionHandler: URLSession.ResponseDisposition
+    private func fragmentDownloadAction(_ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse, completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
+        fragmentDownloadDatas["\(dataTask)"] = Data()
+        completionHandler(.allow)
+    }
+    
+    /// 分段下載完成的處理
+    /// - Parameters:
+    ///   - session: URLSession
+    ///   - dataTask: URLSessionDataTask
+    ///   - data: Data
+    private func fragmentDownloadedAction(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
+        
         fragmentDownloadDatas["\(dataTask)"]? += data
         
         guard let fragmentDownloadFinishBlock = fragmentDownloadFinishBlock,
@@ -91,9 +111,14 @@ extension WWNetworking: URLSessionDataDelegate {
             fragmentDownloadFinishBlock(.success(downloadData))
         }
     }
-
-    public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
-
+    
+    /// 分段下載錯誤的處理
+    /// - Parameters:
+    ///   - session: URLSession
+    ///   - task: URLSessionTask
+    ///   - error: Error?
+    private func fragmentDownloadCompleteAction(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+        
         guard let error = error,
               let fragmentDownloadFinishBlock = fragmentDownloadFinishBlock
         else {
@@ -102,6 +127,84 @@ extension WWNetworking: URLSessionDataDelegate {
 
         task.cancel()
         fragmentDownloadFinishBlock(.failure(error))
+    }
+}
+
+// MARK: - URLSessionTaskDelegate
+extension WWNetworking {
+    
+    /// 下載進度處理
+    /// - Parameters:
+    ///   - session: URLSession
+    ///   - downloadTask: URLSessionDownloadTask
+    ///   - bytesWritten: Int64
+    ///   - totalBytesWritten: Int64
+    ///   - totalBytesExpectedToWrite: Int64
+    private func downloadProgressAction(_ session: URLSession, downloadTask: URLSessionDownloadTask, didWriteData bytesWritten: Int64, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
+        
+        guard let block = downloadProgressResultBlock,
+              let urlString = downloadTaskInformations["\(downloadTask)"]
+        else {
+            return
+        }
+        
+        let progress: DownloadProgressInformation = (urlString: urlString, totalSize: totalBytesExpectedToWrite, totalWritten: totalBytesWritten, writting: bytesWritten)
+        block(progress)
+    }
+    
+    /// 下載完成處理
+    /// - Parameters:
+    ///   - session: URLSession
+    ///   - downloadTask: URLSessionDownloadTask
+    ///   - location: URL
+    private func downloadFinishedAction(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
+                
+        guard let block = downloadTaskResultBlock,
+              let urlString = downloadTask.currentRequest?.url?.absoluteString
+        else {
+            return
+        }
+        
+        do {
+            let data = try Data(contentsOf: location)
+            let info: DownloadResultInformation = (urlString: urlString, data: data)
+            block(.success(info))
+        } catch {
+            block(.failure(error))
+        }
+    }
+}
+
+// MARK: - URLSessionUploadTask
+extension WWNetworking {
+    
+    /// 分段上傳進度處理
+    /// - Parameters:
+    ///   - session: URLSession
+    ///   - task: URLSessionTask
+    ///   - bytesSent: Int64
+    ///   - totalBytesSent: Int64
+    ///   - totalBytesExpectedToSend: Int64
+    private func fragmentUploadProgressAction(_ session: URLSession, task: URLSessionTask, didSendBodyData bytesSent: Int64, totalBytesSent: Int64, totalBytesExpectedToSend: Int64) {
+        
+        guard let fragmentUploadProgressResultBlock = fragmentUploadProgressResultBlock else { return }
+        
+        let progress: UploadProgressInformation = (urlString: task.currentRequest?.url?.absoluteString, bytesSent: bytesSent, totalBytesSent: totalBytesSent, totalBytesExpectedToSend: totalBytesExpectedToSend)
+        
+        fragmentUploadProgressResultBlock(progress)
+    }
+    
+    /// 分段上傳完成處理
+    /// - Parameters:
+    ///   - session: URLSession
+    ///   - task: URLSessionTask
+    ///   - error: Error?
+    private func fragmentUploadCompleteAction(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+        
+        guard let fragmentUploadFinishBlock = fragmentUploadFinishBlock else { return }
+        guard let error = error else { fragmentUploadFinishBlock(.success(true)); return }
+        
+        fragmentUploadFinishBlock(.failure(error))
     }
 }
 
@@ -118,7 +221,7 @@ extension WWNetworking {
     ///   - httpBody: Data => 所有的資料只要轉成Data都可以傳
     ///   - result: Result<Constant.ResponseInformation, Error>
     public func request(with httpMethod: Constant.HttpMethod = .GET, urlString: String, contentType: Constant.ContentType = .json, queryItems: [URLQueryItem]? = nil, headers: [String: String?]? = nil, httpBody: Data? = nil, result: @escaping (Result<ResponseInformation, Error>) -> Void) {
-
+        
         guard let urlComponents = URLComponents._build(urlString: urlString, queryItems: queryItems),
               let queryedURL = urlComponents.url,
               var request = Optional.some(URLRequest._build(url: queryedURL, httpMethod: httpMethod))
@@ -143,9 +246,9 @@ extension WWNetworking {
     ///   - paramaters: 參數 => ?name=william
     ///   - headers: [Http Header](https://zh.wikipedia.org/zh-tw/HTTP头字段)
     ///   - httpBody: Data => 所有的資料只要轉成Data都可以傳
+    ///   - contentType: Constant.ContentType
     ///   - result: Result<Constant.ResponseInformation, Error>
     public func request(with httpMethod: Constant.HttpMethod = .GET, urlString: String, contentType: Constant.ContentType = .json, paramaters: [String: String?]? = nil, headers: [String: String?]? = nil, httpBody: Data? = nil, result: @escaping (Result<ResponseInformation, Error>) -> Void) {
-
         self.request(with: httpMethod, urlString: urlString, contentType: contentType, queryItems: paramaters?._queryItems(), headers: headers, httpBody: httpBody) { result($0) }
     }
 
@@ -165,7 +268,7 @@ extension WWNetworking {
         }
     }
     
-    /// [上傳檔案](https://www.w3schools.com/nodejs/nodejs_uploadfiles.asp)
+    /// [上傳檔案 - 模仿Form](https://www.w3schools.com/nodejs/nodejs_uploadfiles.asp)
     /// - Parameters:
     ///   - httpMethod: [HTTP方法](https://imququ.com/post/four-ways-to-post-data-in-http.html)
     ///   - urlString: [網址](https://imququ.com/post/web-proxy.html)
@@ -175,7 +278,7 @@ extension WWNetworking {
     ///   - contentType: 檔案類型 (MIME) => image/png
     ///   - result: Result<Constant.ResponseInformation, Error>
     public func upload(with httpMethod: Constant.HttpMethod? = .POST, urlString: String, parameters: [String: Data], headers: [String: String?]? = nil, filename: String, contentType: Constant.ContentType = .png, result: @escaping (Result<ResponseInformation, Error>) -> Void) {
-
+                
         guard var request = URLRequest._build(string: urlString, httpMethod: httpMethod) else { result(.failure(Constant.MyError.notUrlFormat)); return }
 
         let boundary = "Boundary+\(arc4random())\(arc4random())"
@@ -186,22 +289,61 @@ extension WWNetworking {
         if let headers = headers {
             headers.forEach { key, value in if let value = value { request.addValue(value, forHTTPHeaderField: key) }}
         }
-
-        for (key, data) in parameters {
+        
+        parameters.first.map { (name, data) in
             _ = body._append(string: "--\(boundary)\r\n")
-            _ = body._append(string: "Content-Disposition: form-data; name=\"\(key)\"; filename=\"\(arc4random())_\(filename)\"\r\n")
+            _ = body._append(string: "Content-Disposition: form-data; name=\"\(name)\"; filename=\"\(filename)\"\r\n")
             _ = body._append(string: "Content-Type: \(contentType)\r\n\r\n")
             _ = body._append(data: data)
             _ = body._append(string: "\r\n")
+            _ = body._append(string: "--\(boundary)--\r\n")
         }
-
-        _ = body._append(string: "--\(boundary)--\r\n")
 
         request.httpBody = body
 
         fetchData(from: request, result: result)
     }
     
+    /// [片段上傳 - 大型檔案](https://www.swiftbysundell.com/articles/http-post-and-file-upload-requests-using-urlsession/)
+    /// - Parameters:
+    ///   - httpMethod: [Constant.HttpMethod?](https://developer.mozilla.org/zh-TW/docs/Web/HTTP/Basics_of_HTTP/MIME_types)
+    ///   - urlString: String
+    ///   - parameters: [String: Data]
+    ///   - headers:  [String: String?]?
+    ///   - filename: String
+    ///   - contentType: [Constant.ContentType](https://ithelp.ithome.com.tw/articles/10185514)
+    ///   - delegateQueue: OperationQueue?
+    ///   - progress: UploadProgressInformation
+    ///   - completion: Result<Bool, Error>
+    /// - Returns: URLSessionUploadTask?
+    public func fragmentUpload(with httpMethod: Constant.HttpMethod? = .POST, urlString: String, parameters: [String: Data], headers: [String: String?]? = nil, filename: String, contentType: Constant.ContentType = .octetStream, delegateQueue: OperationQueue? = .main, progress: @escaping ((UploadProgressInformation) -> Void), completion: @escaping (Result<Bool, Error>) -> Void) -> URLSessionUploadTask? {
+        
+        cleanAllBlocks()
+        
+        guard var request = URLRequest._build(string: urlString, httpMethod: httpMethod) else { completion(.failure(Constant.MyError.notOpenURL)); return nil }
+                
+        let urlSession = URLSession(configuration: .default, delegate: self, delegateQueue: delegateQueue)
+        var uploadTask: URLSessionUploadTask?
+        
+        request.setValue("\(contentType)", forHTTPHeaderField: "Content-Type")
+        
+        parameters.first.map { (field, data) in
+            request.setValue(filename, forHTTPHeaderField: field)
+            uploadTask = urlSession.uploadTask(with: request, from: data)
+        }
+        
+        if let headers = headers {
+            headers.forEach { key, value in if let value = value { request.addValue(value, forHTTPHeaderField: key) }}
+        }
+        
+        fragmentUploadProgressResultBlock = progress
+        fragmentUploadFinishBlock = completion
+        
+        uploadTask?.resume()
+        
+        return uploadTask
+    }
+
     /// [下載資料 => URLSessionDownloadDelegate](https://medium.com/@jerrywang0420/urlsession-教學-swift-3-ios-part-3-34699564fb12)
     /// - Parameters:
     ///   - httpMethod: [HTTP方法](https://imququ.com/post/four-ways-to-post-data-in-http.html)
@@ -211,10 +353,10 @@ extension WWNetworking {
     ///   - progress: 下載進度
     ///   - completion: 下載完成後
     /// - Returns: URLSessionTask?
-    public func download(with httpMethod: Constant.HttpMethod? = .GET, urlString: String, timeout: TimeInterval = .infinity, delegateQueue: OperationQueue = .main, progress: @escaping ((DownloadProgressInformation) -> Void), completion: @escaping ((Result<DownloadResultInformation, Error>) -> Void)) -> URLSessionTask? {
-
+    public func download(with httpMethod: Constant.HttpMethod? = .GET, urlString: String, timeout: TimeInterval = .infinity, delegateQueue: OperationQueue? = .main, progress: @escaping ((DownloadProgressInformation) -> Void), completion: @escaping ((Result<DownloadResultInformation, Error>) -> Void)) -> URLSessionTask? {
+        
         guard let downloadTask = self.downloadTaskMaker(with: httpMethod, urlString: urlString, timeout: timeout, delegateQueue: delegateQueue) else { completion(.failure(Constant.MyError.notUrlFormat)); return nil }
-
+        
         downloadTaskInformations["\(downloadTask)"] = urlString
         downloadTaskResultBlock = completion
         downloadProgressResultBlock = progress
@@ -233,7 +375,9 @@ extension WWNetworking {
     ///   - progress: 下載進度
     ///   - completion: 下載完成後
     /// - Returns: [URLSessionTask]
-    public func multipleDownload(with httpMethod: Constant.HttpMethod? = .GET, urlStrings: [String], timeout: TimeInterval = .infinity, delegateQueue: OperationQueue = .main, progress: @escaping ((DownloadProgressInformation) -> Void), completion: @escaping ((Result<DownloadResultInformation, Error>) -> Void)) -> [URLSessionTask] {
+    public func multipleDownload(with httpMethod: Constant.HttpMethod? = .GET, urlStrings: [String], timeout: TimeInterval = .infinity, delegateQueue: OperationQueue? = .main, progress: @escaping ((DownloadProgressInformation) -> Void), completion: @escaping ((Result<DownloadResultInformation, Error>) -> Void)) -> [URLSessionTask] {
+        
+        cleanAllBlocks()
         
         let _urlStrings = urlStrings._arraySet()
         downloadTaskInformations = [:]
@@ -257,10 +401,12 @@ extension WWNetworking {
     ///   - delegateQueue: OperationQueue
     ///   - timeoutInterval: TimeInterval
     ///   - result: Result<FragmentDownloadDataInfomation, Error>
+    ///   - progress: 下載進度
+    ///   - completion: (Result<Data, Error>
     public func fragmentDownload(with urlString: String, fragment: Int = 2, delegateQueue: OperationQueue? = .main, timeoutInterval: TimeInterval = .infinity, progress: @escaping ((DownloadProgressInformation) -> Void), completion: ((Result<Data, Error>) -> Void)?) {
 
         guard fragment > 0 else { return }
-
+        
         fragmentDownloadProgressResultBlock = progress
         cleanFragmentInformation()
         
@@ -283,7 +429,7 @@ extension WWNetworking {
 
                     let offset: HttpDownloadOffset = (index * fragmentSize, (index + 1) * fragmentSize - 1)
 
-                    let _task = self.fragmentDownloadDataTaskMaker(with: urlString, delegateQueue: delegateQueue, offset: offset, timeoutInterval: timeoutInterval) { _result in
+                    let _task = self.fragmentDownloadDataTaskMaker(with: urlString, delegateQueue: delegateQueue, offset: offset, timeout: timeoutInterval) { _result in
                         switch _result {
                         case .failure(let error): completion?(.failure(error))
                         case .success(let info): completion?(.success(info))
@@ -303,27 +449,27 @@ extension WWNetworking {
 // MARK: - WWNetworking (private class function)
 extension WWNetworking {
     
-    /// 產生下載用的HttpTask
+    /// [產生下載用的HttpTask - downloadTask() => URLSessionDownloadDelegate](https://developer.apple.com/documentation/foundation/urlsessiondownloaddelegate)
     /// - Parameters:
     ///   - httpMethod: [HTTP方法](https://imququ.com/post/four-ways-to-post-data-in-http.html)
     ///   - urlString: [網址](https://imququ.com/post/web-proxy.html)
     ///   - timeout: Timeout
     ///   - delegateQueue: 執行緒
     /// - Returns: URLSessionDownloadTask
-    private func downloadTaskMaker(with httpMethod: Constant.HttpMethod? = .POST, urlString: String, timeout: TimeInterval = .infinity, delegateQueue: OperationQueue = .main) -> URLSessionDownloadTask? {
+    private func downloadTaskMaker(with httpMethod: Constant.HttpMethod? = .POST, urlString: String, timeout: TimeInterval = .infinity, delegateQueue: OperationQueue? = .main) -> URLSessionDownloadTask? {
 
         guard let request = URLRequest._build(string: urlString, httpMethod: httpMethod) else { return nil }
 
-        let configiguration = URLSessionConfiguration.default._timeoutInterval(timeout)
+        let configiguration = URLSessionConfiguration.background(withIdentifier: urlString)._timeoutInterval(timeout)
         let urlSession = URLSession(configuration: configiguration, delegate: self, delegateQueue: delegateQueue)
         let downloadTask = urlSession.downloadTask(with: request)
 
         return downloadTask
     }
     
-    /// [抓取資料](https://medium.com/@jerrywang0420/urlsession-教學-swift-3-ios-part-2-a17b2d4cc056)
+    /// [抓取資料 - dataTask() => URLSessionDataDelegate](https://developer.apple.com/documentation/foundation/urlsessiondatadelegate)
     /// - Parameters:
-    ///   - request: URLRequest
+    ///   - request: [URLRequest](https://medium.com/@jerrywang0420/urlsession-教學-swift-3-ios-part-2-a17b2d4cc056)
     ///   - result: Result<Constant.ResponseInformation, Error>
     private func fetchData(from request: URLRequest, result: @escaping (Result<ResponseInformation, Error>) -> Void) {
 
@@ -340,12 +486,19 @@ extension WWNetworking {
 
     /// [斷點續傳下載檔案 (Data) => HTTPHeaderField = Range / ∵ 是一段一段下載 ∴ 自己要一段一段存](https://www.jianshu.com/p/534ec0d9d758)
     /// - urlSession(_:dataTask:didReceive:) => completionHandler(.allow)
-    private func fragmentDownloadDataTaskMaker(with urlString: String, delegateQueue: OperationQueue? = .main, offset: HttpDownloadOffset = (0, nil), timeoutInterval: TimeInterval = .infinity, result: ((Result<Data, Error>) -> Void)?) -> URLSessionDataTask? {
+    /// - Parameters:
+    ///   - urlString: String
+    ///   - delegateQueue: OperationQueue?
+    ///   - offset: HttpDownloadOffset
+    ///   - timeout: TimeInterval
+    ///   - result: Result<Data, Error>) -> Void
+    /// - Returns: URLSessionDataTask?
+    private func fragmentDownloadDataTaskMaker(with urlString: String, delegateQueue: OperationQueue? = .main, offset: HttpDownloadOffset = (0, nil), timeout: TimeInterval = .infinity, result: ((Result<Data, Error>) -> Void)?) -> URLSessionDataTask? {
 
         guard let url = URL(string: urlString),
-              var request = Optional.some(URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: timeoutInterval)),
-              let configiguration = Optional.some(URLSessionConfiguration.default._timeoutInterval(timeoutInterval)),
-              let urlSession = Optional.some(URLSession(configuration: configiguration, delegate: self, delegateQueue: .main)),
+              var request = Optional.some(URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: timeout)),
+              let configiguration = Optional.some(URLSessionConfiguration.background(withIdentifier: urlString)._timeoutInterval(timeout)),
+              let urlSession = Optional.some(URLSession(configuration: configiguration, delegate: self, delegateQueue: delegateQueue)),
               let headerValue = downloadOffsetMaker(offset: offset)
         else {
             return nil
@@ -386,5 +539,15 @@ extension WWNetworking {
         fragmentDownloadContentLength = -1
         fragmentDownloadDatas = [:]
         fragmentDownloadKeys = []
+    }
+    
+    /// 清除所有的Block
+    private func cleanAllBlocks() {
+        downloadTaskResultBlock = nil
+        downloadProgressResultBlock = nil
+        fragmentDownloadFinishBlock = nil
+        fragmentDownloadProgressResultBlock = nil
+        fragmentUploadFinishBlock = nil
+        fragmentUploadProgressResultBlock = nil
     }
 }
