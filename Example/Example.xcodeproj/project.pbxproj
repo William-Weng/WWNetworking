@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		3D60051726FDC7B1008D8412 /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 3D60051626FDC7B1008D8412 /* WWNetworking */; };
+		3D60051A26FDCF8F008D8412 /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 3D60051926FDCF8F008D8412 /* WWNetworking */; };
 		3DBCD87426F198EF00522E3B /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DBCD87326F198EF00522E3B /* AppDelegate.swift */; };
 		3DBCD87826F198EF00522E3B /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DBCD87726F198EF00522E3B /* ViewController.swift */; };
 		3DBCD87B26F198EF00522E3B /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3DBCD87926F198EF00522E3B /* Main.storyboard */; };
@@ -30,7 +30,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3D60051726FDC7B1008D8412 /* WWNetworking in Frameworks */,
+				3D60051A26FDCF8F008D8412 /* WWNetworking in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -115,7 +115,7 @@
 			);
 			name = Example;
 			packageProductDependencies = (
-				3D60051626FDC7B1008D8412 /* WWNetworking */,
+				3D60051926FDCF8F008D8412 /* WWNetworking */,
 			);
 			productName = Example;
 			productReference = 3DBCD87026F198EF00522E3B /* Example.app */;
@@ -145,7 +145,7 @@
 			);
 			mainGroup = 3DBCD86726F198EF00522E3B;
 			packageReferences = (
-				3D60051526FDC7B1008D8412 /* XCRemoteSwiftPackageReference "WWNetworking" */,
+				3D60051826FDCF8F008D8412 /* XCRemoteSwiftPackageReference "WWNetworking" */,
 			);
 			productRefGroup = 3DBCD87126F198EF00522E3B /* Products */;
 			projectDirPath = "";
@@ -381,20 +381,20 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		3D60051526FDC7B1008D8412 /* XCRemoteSwiftPackageReference "WWNetworking" */ = {
+		3D60051826FDCF8F008D8412 /* XCRemoteSwiftPackageReference "WWNetworking" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "file:///Users/william/Desktop/WWNetworking";
+			repositoryURL = "https://github.com/William-Weng/WWNetworking.git";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 1.1.0;
+				minimumVersion = 1.0.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		3D60051626FDC7B1008D8412 /* WWNetworking */ = {
+		3D60051926FDCF8F008D8412 /* WWNetworking */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 3D60051526FDC7B1008D8412 /* XCRemoteSwiftPackageReference "WWNetworking" */;
+			package = 3D60051826FDCF8F008D8412 /* XCRemoteSwiftPackageReference "WWNetworking" */;
 			productName = WWNetworking;
 		};
 /* End XCSwiftPackageProductDependency section */

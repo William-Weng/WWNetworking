@@ -11,19 +11,12 @@ This is a simple integration of HTTP transmission, upload and download functions
 ### [Installation with Swift Package Manager](https://medium.com/彼得潘的-swift-ios-app-開發問題解答集/使用-spm-安裝第三方套件-xcode-11-新功能-2c4ffcf85b4b)
 ```
 dependencies: [
-    .package(url: "https://github.com/William-Weng/WWNetworking.git", .upToNextMajor(from: "1.0.0"))
+    .package(url: "https://github.com/William-Weng/WWNetworking.git", .upToNextMajor(from: "1.1.0"))
 ]
 ```
 
 ### Example
 ```swift
-//
-//  ViewController.swift
-//  Example
-//
-//  Created by William.Weng on 2021/9/11.
-//
-
 import UIKit
 import WWNetworking
 
@@ -43,7 +36,7 @@ final class ViewController: UIViewController {
         "GET": "https://httpbin.org/get",
         "POST": "https://httpbin.org/post",
         "DOWNLOAD": "https://raw.githubusercontent.com/William-Weng/AdobeIllustrator/master/William-Weng.png",
-        "UPLOAD": "http://172.16.3.33:8080/fileupload",
+        "UPLOAD": "http://172.16.20.43:8080/fileupload",
         "FRAGMENT": "https://photosku.com/images_file/images/i000_803.jpg",
     ]
     
@@ -51,10 +44,11 @@ final class ViewController: UIViewController {
     
     @IBAction func httpGetAction(_ sender: UIButton) { httpGetTest() }
     @IBAction func httpPostAction(_ sender: UIButton) { httpPostTest() }
-    @IBAction func httpUploadAction(_ sender: UIButton) { httpUploadData() }
     @IBAction func httpDownloadAction(_ sender: UIButton) { httpDownloadData() }
     @IBAction func httpFragmentDownloadAction(_ sender: UIButton) { fragmentDownloadData() }
     @IBAction func httpMultipleDownloadAction(_ sender: UIButton) { httpMultipleDownload() }
+    @IBAction func httpUploadAction(_ sender: UIButton) { httpUploadData() }
+    @IBAction func httpFragmentUpLoad(_ sender: UIButton) { httpFragmentUploadData() }
 }
 
 // MARK: - ViewController (private class function)
@@ -96,13 +90,34 @@ extension ViewController {
         let urlString = UrlStrings["UPLOAD"]!
         let imageData = resultImageViews[0].image?.pngData()
         
-        WWNetworking.shared.upload(urlString: urlString, parameters: ["file_to_upload": imageData!], filename: "William.png") { result in
+        WWNetworking.shared.upload(urlString: urlString, parameters: ["file_to_upload": imageData!], filename: "Demo.png") { result in
             
             switch result {
             case .failure(let error): self.displayText(error)
-            case .success(let info): self.displayText("\(info.data?._jsonSerialization() ?? "ERROR")")
+            case .success(let info): self.displayText("\(info.data?._jsonSerialization() ?? "NOT JSON")")
             }
         }
+    }
+    
+    /// 上傳圖片 (大型檔案)
+    private func httpFragmentUploadData() {
+        
+        let urlString = UrlStrings["UPLOAD"]!
+        let index = 1
+        let imageData = resultImageViews[index].image?.pngData()
+                
+        _ = WWNetworking.shared.fragmentUpload(urlString: urlString, parameters: ["x-filename": imageData!], filename: "Large.png", progress: { info in
+            
+            let progress = Float(info.totalBytesSent) / Float(info.totalBytesExpectedToSend)
+            DispatchQueue.main.async { self.title = "\(progress)" }
+            
+        }, completion: { result in
+            
+            switch result {
+            case .failure(let error): self.displayText(error)
+            case .success(let isSuccess): self.displayText(isSuccess)
+            }
+        })
     }
     
     /// 下載檔案 (單個)
@@ -110,6 +125,8 @@ extension ViewController {
         
         let urlString = UrlStrings["DOWNLOAD"]!
         let index = 0
+        
+        self.displayText("")
         
         _ = WWNetworking.shared.download(urlString: urlString, progress: { info in
             
@@ -131,7 +148,9 @@ extension ViewController {
         let urlString = UrlStrings["FRAGMENT"]!
         let index = 1
         let fragmentCount = 10
-                
+        
+        self.displayText("")
+        
         WWNetworking.shared.fragmentDownload(with: urlString, fragment: fragmentCount, progress: { info in
             
             let progress = Float(info.totalWritten) / Float(info.totalSize)
