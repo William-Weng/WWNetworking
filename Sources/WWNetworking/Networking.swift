@@ -23,7 +23,6 @@ open class WWNetworking: NSObject {
     
     private var downloadTaskResultBlock: ((Result<DownloadResultInformation, Error>) -> Void)?                                                  // 下載檔案完成的動作
     private var downloadProgressResultBlock: ((DownloadProgressInformation) -> Void)?                                                           // 下載進行中的進度 - 檔案
-    private var downloadTaskInformations: [String: String?] = [:]                                                                               // 下載的相關資訊 => (Task, URL)
 
     private var fragmentDownloadFinishBlock: ((Result<Data, Error>) -> Void)?                                                                   // 分段下載完成的動作
     private var fragmentDownloadProgressResultBlock: ((DownloadProgressInformation) -> Void)?                                                   // 分段下載進行中的進度 - 檔案大小
@@ -33,8 +32,6 @@ open class WWNetworking: NSObject {
     
     private var fragmentUploadFinishBlock: ((Result<Bool, Error>) -> Void)?                                                                     // 分段上傳完成的動作
     private var fragmentUploadProgressResultBlock: ((UploadProgressInformation) -> Void)?                                                       // 分段下載進行中的進度 - 檔案大小
-    
-    private override init() {}
 }
 
 // MARK: - URLSessionTaskDelegate
@@ -141,9 +138,9 @@ extension WWNetworking {
     ///   - totalBytesWritten: Int64
     ///   - totalBytesExpectedToWrite: Int64
     private func downloadProgressAction(_ session: URLSession, downloadTask: URLSessionDownloadTask, didWriteData bytesWritten: Int64, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
-        
+                
         guard let block = downloadProgressResultBlock,
-              let urlString = downloadTaskInformations["\(downloadTask)"]
+              let urlString = downloadTask.originalRequest?.url?.absoluteString
         else {
             return
         }
@@ -357,12 +354,11 @@ extension WWNetworking {
         
         guard let downloadTask = self.downloadTaskMaker(with: httpMethod, urlString: urlString, timeout: timeout, delegateQueue: delegateQueue) else { completion(.failure(Constant.MyError.notUrlFormat)); return nil }
         
-        downloadTaskInformations["\(downloadTask)"] = urlString
         downloadTaskResultBlock = completion
         downloadProgressResultBlock = progress
 
         downloadTask.resume()
-        
+                
         return downloadTask
     }
 
@@ -380,7 +376,6 @@ extension WWNetworking {
         cleanAllBlocks()
         
         let _urlStrings = urlStrings._arraySet()
-        downloadTaskInformations = [:]
         
         let downloadTasks = _urlStrings.compactMap { urlString in
             
