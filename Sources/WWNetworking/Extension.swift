@@ -69,6 +69,7 @@ extension Dictionary where Self.Key == String, Self.Value == String? {
     }
 }
 
+// MARK: - UIImage (class function)
 extension UIImage {
     
     /// UIImage => Data

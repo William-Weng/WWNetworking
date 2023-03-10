@@ -7,10 +7,11 @@
 
 import UIKit
 
-extension WWNetworking.Constant {
+// MARK: - 常數
+public extension WWNetworking.Constant {
 
     /// [HTTP 請求方法](https://developer.mozilla.org/zh-TW/docs/Web/HTTP/Methods)
-    public enum HttpMethod: String {
+    enum HttpMethod: String {
         case GET = "GET"
         case HEAD = "HEAD"
         case POST = "POST"
@@ -23,7 +24,7 @@ extension WWNetworking.Constant {
     }
     
     /// [HTTP標頭欄位](https://zh.wikipedia.org/wiki/HTTP头字段)
-    public enum HTTPHeaderField: String {
+    enum HTTPHeaderField: String {
         case acceptRanges = "Accept-Ranges"
         case authorization = "Authorization"
         case contentType = "Content-Type"
@@ -36,7 +37,7 @@ extension WWNetworking.Constant {
     }
     
     /// 自訂錯誤
-    public enum MyError: Error, LocalizedError {
+    enum MyError: Error, LocalizedError {
         
         var errorDescription: String { errorMessage() }
 
@@ -75,13 +76,13 @@ extension WWNetworking.Constant {
     }
     
     /// [網頁檔案類型的MimeType](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types)
-    public enum MimeType {
+    enum MimeType {
         case jpeg(compressionQuality: CGFloat)
         case png
     }
     
     /// [HTTP Content-Type](https://www.runoob.com/http/http-content-type.html) => Content-Type: application/json
-    public enum ContentType: CustomStringConvertible {
+    enum ContentType: CustomStringConvertible {
         
         public var description: String { return toString() }
         
