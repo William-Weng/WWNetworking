@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import WWPrint
 
 // MARK: - Collection (override class function)
 extension Collection {
@@ -96,7 +97,14 @@ extension URLComponents {
     static func _build(urlString: String, queryItems: [URLQueryItem]?) -> URLComponents? {
         
         guard var urlComponents = URLComponents(string: urlString) else { return nil }
-        urlComponents.queryItems = queryItems
+                        
+        if let queryItems = queryItems {
+            
+            let urlComponentsQueryItems = urlComponents.queryItems ?? []
+            let newQueryItems = (urlComponentsQueryItems + queryItems)
+            
+            urlComponents.queryItems = newQueryItems
+        }
         
         return urlComponents
     }
@@ -130,7 +138,7 @@ extension URLRequest {
         
         var request = URLRequest(url: url)
         request.httpMethod = httpMethod
-        
+                
         return request
     }
     

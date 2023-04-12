@@ -211,19 +211,20 @@ public extension WWNetworking {
     /// - Parameters:
     ///   - httpMethod: [HTTP方法](https://imququ.com/post/four-ways-to-post-data-in-http.html)
     ///   - urlString: [網址](https://zh-tw.coderbridge.com/series/01d31194cb3c428d9ca2575c91e8b997/posts/2c17813523194f578281c430e8ecca02)
-    ///   - timeout: Timeout
+    ///   - timeout: [Timeout](https://draveness.me/ios-yuan-dai-ma-jie-xi-sdwebimage/)
     ///   - delegateQueue: [執行緒](https://zh-tw.coderbridge.com/series/01d31194cb3c428d9ca2575c91e8b997/posts/c44ba1db0ded4d53aec73a8e589ca1e5)
-    ///   - progress: 下載進度
+    ///   - isResume: [是否要立刻執行Task](https://liuyousama.top/2020/10/18/Kingfisher源码阅读/)
+    ///   - progress: [下載進度](https://www.appcoda.com.tw/ios-concurrency/)
     ///   - completion: 下載完成後
     /// - Returns: URLSessionTask?
-    func download(with httpMethod: Constant.HttpMethod? = .GET, urlString: String, timeout: TimeInterval = .infinity, delegateQueue: OperationQueue? = .main, progress: @escaping ((DownloadProgressInformation) -> Void), completion: @escaping ((Result<DownloadResultInformation, Error>) -> Void)) -> URLSessionTask? {
+    func download(with httpMethod: Constant.HttpMethod? = .GET, urlString: String, timeout: TimeInterval = .infinity, delegateQueue: OperationQueue? = .main, isResume: Bool = true, progress: @escaping ((DownloadProgressInformation) -> Void), completion: @escaping ((Result<DownloadResultInformation, Error>) -> Void)) -> URLSessionTask? {
         
         guard let downloadTask = self.downloadTaskMaker(with: httpMethod, urlString: urlString, timeout: timeout, delegateQueue: delegateQueue) else { completion(.failure(Constant.MyError.notUrlFormat)); return nil }
         
         downloadTaskResultBlock = completion
         downloadProgressResultBlock = progress
 
-        downloadTask.resume()
+        if (isResume) { downloadTask.resume() }
                 
         return downloadTask
     }
