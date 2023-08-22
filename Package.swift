@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "WWNetworking",
     platforms: [
-        .iOS(.v12)
+        .iOS(.v14)
     ],
     products: [
         .library(name: "WWNetworking", targets: ["WWNetworking"]),
