@@ -471,7 +471,7 @@ private extension WWNetworking {
 
         let dataTask = URLSession.shared.dataTask(with: request) { (data, response, error) in
 
-            if let error = error { result(.failure(error)) }
+            if let error = error { result(.failure(error)); return }
 
             let info: ResponseInformation = (data: data, response: response as? HTTPURLResponse)
             result(.success(info))
