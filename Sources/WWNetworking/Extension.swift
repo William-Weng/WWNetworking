@@ -126,19 +126,22 @@ extension URLRequest {
     /// - Parameters:
     ///   - url: URL網址
     ///   - httpMethod: HTTP方法 (GET / POST / ...)
-    static func _build(url: URL, httpMethod: WWNetworking.Constant.HttpMethod? = nil) -> URLRequest {
-        return Self._build(url: url, httpMethod: httpMethod?.rawValue)
+    ///   - timeout: [連線時的逾時秒數](https://ephrain.net/lua-設定-http-連線時的逾時秒數-timeout/)
+    static func _build(url: URL, httpMethod: WWNetworking.Constant.HttpMethod? = nil, timeout: TimeInterval = 60) -> URLRequest {
+        return Self._build(url: url, httpMethod: httpMethod?.rawValue, timeout: timeout)
     }
     
     /// 產生URLRequest
     /// - Parameters:
     ///   - url: URL網址
     ///   - httpMethod: HTTP方法 (GET / POST / ...)
-    static func _build(url: URL, httpMethod: String? = nil) -> URLRequest {
+    ///   - timeout: [連線時的逾時秒數](https://ephrain.net/lua-設定-http-連線時的逾時秒數-timeout/)
+    static func _build(url: URL, httpMethod: String? = nil, timeout: TimeInterval = 60) -> URLRequest {
         
         var request = URLRequest(url: url)
         request.httpMethod = httpMethod
-                
+        request.timeoutInterval = timeout
+        
         return request
     }
     
@@ -146,18 +149,20 @@ extension URLRequest {
     /// - Parameters:
     ///   - string: URL網址
     ///   - httpMethod: HTTP方法 (GET / POST / ...)
-    static func _build(string: String, httpMethod: String? = nil) -> URLRequest? {
+    ///   - timeout: [連線時的逾時秒數](https://ephrain.net/lua-設定-http-連線時的逾時秒數-timeout/)
+    static func _build(string: String, httpMethod: String? = nil, timeout: TimeInterval = 60) -> URLRequest? {
         guard let url = URL(string: string) else { return nil }
-        return Self._build(url: url, httpMethod: httpMethod)
+        return Self._build(url: url, httpMethod: httpMethod, timeout: timeout)
     }
     
     /// 產生URLRequest
     /// - Parameters:
     ///   - string: URL網址
     ///   - httpMethod: HTTP方法 (GET / POST / ...)
-    static func _build(string: String, httpMethod: WWNetworking.Constant.HttpMethod? = nil) -> URLRequest? {
+    ///   - timeout: [連線時的逾時秒數](https://ephrain.net/lua-設定-http-連線時的逾時秒數-timeout/)
+    static func _build(string: String, httpMethod: WWNetworking.Constant.HttpMethod? = nil, timeout: TimeInterval = 60) -> URLRequest? {
         guard let url = URL(string: string) else { return nil }
-        return Self._build(url: url, httpMethod: httpMethod)
+        return Self._build(url: url, httpMethod: httpMethod, timeout: timeout)
     }
 }
 

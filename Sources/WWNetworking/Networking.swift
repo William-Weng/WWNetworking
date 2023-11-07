@@ -79,15 +79,16 @@ public extension WWNetworking {
     ///   - httpMethod: [HTTP方法](https://imququ.com/post/four-ways-to-post-data-in-http.html)
     ///   - urlString: 網址
     ///   - contentType: [要回傳的格式 => application/json](https://notfalse.net/39/http-message-format)
+    ///   - timeout: [連線時的逾時秒數](https://ephrain.net/lua-設定-http-連線時的逾時秒數-timeout/)
     ///   - queryItems: 參數 => ?name=william
     ///   - headers: [Http Header](https://zh.wikipedia.org/zh-tw/HTTP头字段)
     ///   - httpBody: Data => 所有的資料只要轉成Data都可以傳
     ///   - result: Result<Constant.ResponseInformation, Error>
-    func request(with httpMethod: Constant.HttpMethod = .GET, urlString: String, contentType: Constant.ContentType = .json, queryItems: [URLQueryItem]? = nil, headers: [String: String?]? = nil, httpBody: Data? = nil, result: @escaping (Result<ResponseInformation, Error>) -> Void) {
+    func request(with httpMethod: Constant.HttpMethod = .GET, urlString: String, contentType: Constant.ContentType = .json, timeout: TimeInterval = 60, queryItems: [URLQueryItem]? = nil, headers: [String: String?]? = nil, httpBody: Data? = nil, result: @escaping (Result<ResponseInformation, Error>) -> Void) {
         
         guard let urlComponents = URLComponents._build(urlString: urlString, queryItems: queryItems),
               let queryedURL = urlComponents.url,
-              var request = Optional.some(URLRequest._build(url: queryedURL, httpMethod: httpMethod))
+              var request = Optional.some(URLRequest._build(url: queryedURL, httpMethod: httpMethod, timeout: timeout))
         else {
             result(.failure(Constant.MyError.notUrlFormat)); return
         }
@@ -110,19 +111,21 @@ public extension WWNetworking {
     ///   - headers: [Http Header](https://zh.wikipedia.org/zh-tw/HTTP头字段)
     ///   - httpBody: Data => 所有的資料只要轉成Data都可以傳
     ///   - contentType: Constant.ContentType
+    ///   - timeout: [連線時的逾時秒數](https://ephrain.net/lua-設定-http-連線時的逾時秒數-timeout/)
     ///   - result: Result<Constant.ResponseInformation, Error>
-    func request(with httpMethod: Constant.HttpMethod = .GET, urlString: String, contentType: Constant.ContentType = .json, paramaters: [String: String?]? = nil, headers: [String: String?]? = nil, httpBody: Data? = nil, result: @escaping (Result<ResponseInformation, Error>) -> Void) {
-        self.request(with: httpMethod, urlString: urlString, contentType: contentType, queryItems: paramaters?._queryItems(), headers: headers, httpBody: httpBody) { result($0) }
+    func request(with httpMethod: Constant.HttpMethod = .GET, urlString: String, contentType: Constant.ContentType = .json, timeout: TimeInterval = 60, paramaters: [String: String?]? = nil, headers: [String: String?]? = nil, httpBody: Data? = nil, result: @escaping (Result<ResponseInformation, Error>) -> Void) {
+        self.request(with: httpMethod, urlString: urlString, contentType: contentType, timeout: timeout, queryItems: paramaters?._queryItems(), headers: headers, httpBody: httpBody) { result($0) }
     }
-
+    
     /// 取得該URL資源的HEAD資訊 (檔案大小 / 類型 / 上傳日期…)
     /// - Parameters:
     ///   - urlString: [網址](https://imququ.com/post/web-proxy.html)
     ///   - headers: [Http Header](https://zh.wikipedia.org/zh-tw/HTTP头字段)
+    ///   - timeout: [連線時的逾時秒數](https://ephrain.net/lua-設定-http-連線時的逾時秒數-timeout/)
     ///   - result: Result<Constant.ResponseInformation?, Error>
-    func header(urlString: String, headers: [String: String?]? = nil, result: @escaping (Result<ResponseInformation, Error>) -> Void) {
+    func header(urlString: String, headers: [String: String?]? = nil, timeout: TimeInterval = 60, result: @escaping (Result<ResponseInformation, Error>) -> Void) {
 
-        self.request(with: .HEAD, urlString: urlString, contentType: .plain, paramaters: nil, headers: headers, httpBody: nil) { _result in
+        self.request(with: .HEAD, urlString: urlString, contentType: .plain, timeout: timeout, paramaters: nil, headers: headers, httpBody: nil) { _result in
 
             switch _result {
             case .failure(let error): result(.failure(error))
@@ -139,15 +142,16 @@ public extension WWNetworking {
     ///   - headers: [Http Header](https://zh.wikipedia.org/zh-tw/HTTP头字段)
     ///   - filename: [上傳後的檔案名稱 => 123456_<filename>.png](https://ithelp.ithome.com.tw/articles/10244974?sc=rss.iron)
     ///   - contentType: 檔案類型 (MIME) => image/png
+    ///   - timeout: [連線時的逾時秒數](https://ephrain.net/lua-設定-http-連線時的逾時秒數-timeout/)
     ///   - result: Result<Constant.ResponseInformation, Error>
-    func upload(with httpMethod: Constant.HttpMethod? = .POST, urlString: String, parameters: [String: Data], headers: [String: String?]? = nil, filename: String, contentType: Constant.ContentType = .png, result: @escaping (Result<ResponseInformation, Error>) -> Void) {
-                
-        guard var request = URLRequest._build(string: urlString, httpMethod: httpMethod) else { result(.failure(Constant.MyError.notUrlFormat)); return }
+    func upload(with httpMethod: Constant.HttpMethod? = .POST, urlString: String, parameters: [String: Data], headers: [String: String?]? = nil, filename: String, contentType: Constant.ContentType = .png, timeout: TimeInterval = 60, result: @escaping (Result<ResponseInformation, Error>) -> Void) {
+        
+        guard var request = URLRequest._build(string: urlString, httpMethod: httpMethod, timeout: timeout) else { result(.failure(Constant.MyError.notUrlFormat)); return }
 
         let boundary = "Boundary+\(arc4random())\(arc4random())"
         var body = Data()
 
-        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        request._setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: .contentType)
 
         if let headers = headers {
             headers.forEach { key, value in if let value = value { request.addValue(value, forHTTPHeaderField: key) }}
@@ -175,20 +179,21 @@ public extension WWNetworking {
     ///   - headers:  [String: String?]?
     ///   - filename: String
     ///   - contentType: [Constant.ContentType](https://ithelp.ithome.com.tw/articles/10185514)
+    ///   - timeout: [連線時的逾時秒數](https://ephrain.net/lua-設定-http-連線時的逾時秒數-timeout/)
     ///   - delegateQueue: OperationQueue?
     ///   - progress: UploadProgressInformation
     ///   - completion: Result<Bool, Error>
     /// - Returns: URLSessionUploadTask?
-    func fragmentUpload(with httpMethod: Constant.HttpMethod? = .POST, urlString: String, parameters: [String: Data], headers: [String: String?]? = nil, filename: String, contentType: Constant.ContentType = .octetStream, delegateQueue: OperationQueue? = .main, progress: @escaping ((UploadProgressInformation) -> Void), completion: @escaping (Result<Bool, Error>) -> Void) -> URLSessionUploadTask? {
+    func fragmentUpload(with httpMethod: Constant.HttpMethod? = .POST, urlString: String, parameters: [String: Data], headers: [String: String?]? = nil, filename: String, contentType: Constant.ContentType = .octetStream, timeout: TimeInterval = 60, delegateQueue: OperationQueue? = .main, progress: @escaping ((UploadProgressInformation) -> Void), completion: @escaping (Result<Bool, Error>) -> Void) -> URLSessionUploadTask? {
         
         cleanAllBlocks()
         
-        guard var request = URLRequest._build(string: urlString, httpMethod: httpMethod) else { completion(.failure(Constant.MyError.notOpenURL)); return nil }
+        guard var request = URLRequest._build(string: urlString, httpMethod: httpMethod, timeout: timeout) else { completion(.failure(Constant.MyError.notOpenURL)); return nil }
                 
         let urlSession = URLSession(configuration: .default, delegate: self, delegateQueue: delegateQueue)
         var uploadTask: URLSessionUploadTask?
         
-        request.setValue("\(contentType)", forHTTPHeaderField: "Content-Type")
+        request._setValue("\(contentType)", forHTTPHeaderField: .contentType)
         
         parameters.first.map { (field, data) in
             request.setValue(filename, forHTTPHeaderField: field)
@@ -261,11 +266,11 @@ public extension WWNetworking {
     ///   - urlString: String
     ///   - fragment: 分段數量
     ///   - delegateQueue: OperationQueue
-    ///   - timeoutInterval: TimeInterval
+    ///   - timeout: TimeInterval
     ///   - result: Result<FragmentDownloadDataInfomation, Error>
     ///   - progress: 下載進度
     ///   - completion: (Result<Data, Error>
-    func fragmentDownload(with urlString: String, fragment: Int = 2, delegateQueue: OperationQueue? = .main, timeoutInterval: TimeInterval = .infinity, progress: @escaping ((DownloadProgressInformation) -> Void), completion: ((Result<Data, Error>) -> Void)?) {
+    func fragmentDownload(with urlString: String, fragment: Int = 2, delegateQueue: OperationQueue? = .main, timeout: TimeInterval = .infinity, progress: @escaping ((DownloadProgressInformation) -> Void), completion: ((Result<Data, Error>) -> Void)?) {
 
         guard fragment > 0 else { return }
         
@@ -291,7 +296,7 @@ public extension WWNetworking {
 
                     let offset: HttpDownloadOffset = (index * fragmentSize, (index + 1) * fragmentSize - 1)
 
-                    let _task = self.fragmentDownloadDataTaskMaker(with: urlString, delegateQueue: delegateQueue, offset: offset, timeout: timeoutInterval) { _result in
+                    let _task = self.fragmentDownloadDataTaskMaker(with: urlString, delegateQueue: delegateQueue, offset: offset, timeout: timeout) { _result in
                         switch _result {
                         case .failure(let error): completion?(.failure(error))
                         case .success(let info): completion?(.success(info))
