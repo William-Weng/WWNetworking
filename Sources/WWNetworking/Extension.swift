@@ -6,7 +6,6 @@
 //
 
 import UIKit
-import WWPrint
 
 // MARK: - Collection (override class function)
 extension Collection {
@@ -32,24 +31,6 @@ extension Collection where Self.Element: Hashable {
 }
 
 // MARK: - Dictionary (class function)
-extension Dictionary {
-    
-    /// Dictionary => JSON Data
-    /// - ["name":"William"] => {"name":"William"} => 7b226e616d65223a2257696c6c69616d227d
-    /// - Returns: Data?
-    func _jsonSerialization() -> Data? {
-        
-        guard JSONSerialization.isValidJSONObject(self),
-              let data = try? JSONSerialization.data(withJSONObject: self, options: JSONSerialization.WritingOptions())
-        else {
-            return nil
-        }
-        
-        return data
-    }
-}
-
-// MARK: - Dictionary (class function)
 extension Dictionary where Self.Key == String, Self.Value == String? {
     
     /// [將[String: String?] => [URLQueryItem]](https://medium.com/@jerrywang0420/urlsession-教學-swift-3-ios-part-2-a17b2d4cc056)
@@ -62,10 +43,13 @@ extension Dictionary where Self.Key == String, Self.Value == String? {
         var queryItems: [URLQueryItem] = []
 
         for (key, value) in self {
-            guard let queryItem = Optional.some(URLQueryItem(name: key, value: value)) else { return queryItems }
+            
+            guard let value = value else { continue }
+            
+            let queryItem = URLQueryItem(name: key, value: value)
             queryItems.append(queryItem)
         }
-
+        
         return queryItems
     }
 }
@@ -126,22 +110,19 @@ extension URLRequest {
     /// - Parameters:
     ///   - url: URL網址
     ///   - httpMethod: HTTP方法 (GET / POST / ...)
-    ///   - timeout: [連線時的逾時秒數](https://ephrain.net/lua-設定-http-連線時的逾時秒數-timeout/)
-    static func _build(url: URL, httpMethod: WWNetworking.Constant.HttpMethod? = nil, timeout: TimeInterval = 60) -> URLRequest {
-        return Self._build(url: url, httpMethod: httpMethod?.rawValue, timeout: timeout)
+    static func _build(url: URL, httpMethod: WWNetworking.Constant.HttpMethod? = nil) -> URLRequest {
+        return Self._build(url: url, httpMethod: httpMethod?.rawValue)
     }
     
     /// 產生URLRequest
     /// - Parameters:
     ///   - url: URL網址
     ///   - httpMethod: HTTP方法 (GET / POST / ...)
-    ///   - timeout: [連線時的逾時秒數](https://ephrain.net/lua-設定-http-連線時的逾時秒數-timeout/)
-    static func _build(url: URL, httpMethod: String? = nil, timeout: TimeInterval = 60) -> URLRequest {
+    static func _build(url: URL, httpMethod: String? = nil) -> URLRequest {
         
         var request = URLRequest(url: url)
         request.httpMethod = httpMethod
-        request.timeoutInterval = timeout
-        
+                
         return request
     }
     
@@ -149,20 +130,18 @@ extension URLRequest {
     /// - Parameters:
     ///   - string: URL網址
     ///   - httpMethod: HTTP方法 (GET / POST / ...)
-    ///   - timeout: [連線時的逾時秒數](https://ephrain.net/lua-設定-http-連線時的逾時秒數-timeout/)
-    static func _build(string: String, httpMethod: String? = nil, timeout: TimeInterval = 60) -> URLRequest? {
+    static func _build(string: String, httpMethod: String? = nil) -> URLRequest? {
         guard let url = URL(string: string) else { return nil }
-        return Self._build(url: url, httpMethod: httpMethod, timeout: timeout)
+        return Self._build(url: url, httpMethod: httpMethod)
     }
     
     /// 產生URLRequest
     /// - Parameters:
     ///   - string: URL網址
     ///   - httpMethod: HTTP方法 (GET / POST / ...)
-    ///   - timeout: [連線時的逾時秒數](https://ephrain.net/lua-設定-http-連線時的逾時秒數-timeout/)
-    static func _build(string: String, httpMethod: WWNetworking.Constant.HttpMethod? = nil, timeout: TimeInterval = 60) -> URLRequest? {
+    static func _build(string: String, httpMethod: WWNetworking.Constant.HttpMethod? = nil) -> URLRequest? {
         guard let url = URL(string: string) else { return nil }
-        return Self._build(url: url, httpMethod: httpMethod, timeout: timeout)
+        return Self._build(url: url, httpMethod: httpMethod)
     }
 }
 
