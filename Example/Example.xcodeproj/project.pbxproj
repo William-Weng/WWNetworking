@@ -13,6 +13,7 @@
 		3DBCD87D26F198F300522E3B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3DBCD87C26F198F300522E3B /* Assets.xcassets */; };
 		3DBCD88026F198F300522E3B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3DBCD87E26F198F300522E3B /* LaunchScreen.storyboard */; };
 		811F6E582B10451700359749 /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 811F6E572B10451700359749 /* WWNetworking */; };
+		811F6E5B2B10465300359749 /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 811F6E5A2B10465300359749 /* WWNetworking */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -23,7 +24,6 @@
 		3DBCD87C26F198F300522E3B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		3DBCD87F26F198F300522E3B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		3DBCD88126F198F300522E3B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		811F6E502B10406100359749 /* WWNetworking */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = WWNetworking; path = ../WWNetworking; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -31,6 +31,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				811F6E5B2B10465300359749 /* WWNetworking in Frameworks */,
 				811F6E582B10451700359749 /* WWNetworking in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -41,7 +42,6 @@
 		3DBCD86726F198EF00522E3B = {
 			isa = PBXGroup;
 			children = (
-				811F6E4F2B10406100359749 /* Packages */,
 				3DBCD87226F198EF00522E3B /* Example */,
 				3DBCD87126F198EF00522E3B /* Products */,
 				811F6E512B1040B800359749 /* Frameworks */,
@@ -101,14 +101,6 @@
 			name = Setting;
 			sourceTree = "<group>";
 		};
-		811F6E4F2B10406100359749 /* Packages */ = {
-			isa = PBXGroup;
-			children = (
-				811F6E502B10406100359749 /* WWNetworking */,
-			);
-			name = Packages;
-			sourceTree = "<group>";
-		};
 		811F6E512B1040B800359749 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
@@ -134,6 +126,7 @@
 			name = Example;
 			packageProductDependencies = (
 				811F6E572B10451700359749 /* WWNetworking */,
+				811F6E5A2B10465300359749 /* WWNetworking */,
 			);
 			productName = Example;
 			productReference = 3DBCD87026F198EF00522E3B /* Example.app */;
@@ -163,6 +156,7 @@
 			);
 			mainGroup = 3DBCD86726F198EF00522E3B;
 			packageReferences = (
+				811F6E592B10465300359749 /* XCRemoteSwiftPackageReference "WWNetworking" */,
 			);
 			productRefGroup = 3DBCD87126F198EF00522E3B /* Products */;
 			projectDirPath = "";
@@ -403,9 +397,25 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		811F6E592B10465300359749 /* XCRemoteSwiftPackageReference "WWNetworking" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/William-Weng/WWNetworking";
+			requirement = {
+				kind = upToNextMinorVersion;
+				minimumVersion = 1.3.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
 		811F6E572B10451700359749 /* WWNetworking */ = {
 			isa = XCSwiftPackageProductDependency;
+			productName = WWNetworking;
+		};
+		811F6E5A2B10465300359749 /* WWNetworking */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 811F6E592B10465300359749 /* XCRemoteSwiftPackageReference "WWNetworking" */;
 			productName = WWNetworking;
 		};
 /* End XCSwiftPackageProductDependency section */
