@@ -2,9 +2,9 @@
 
 [![Swift-5.6](https://img.shields.io/badge/Swift-5.6-orange.svg?style=flat)](https://developer.apple.com/swift/) [![iOS-14.0](https://img.shields.io/badge/iOS-14.0-pink.svg?style=flat)](https://developer.apple.com/swift/) ![TAG](https://img.shields.io/github/v/tag/William-Weng/WWNetworking) [![Swift Package Manager-SUCCESS](https://img.shields.io/badge/Swift_Package_Manager-SUCCESS-blue.svg?style=flat)](https://developer.apple.com/swift/) [![LICENSE](https://img.shields.io/badge/LICENSE-MIT-yellow.svg?style=flat)](https://developer.apple.com/swift/)
 
-This is a simple integration of HTTP transmission, upload and download functions. It is a rare and good tool for iOS engineers.
-
-這是一個簡單的HTTP傳輸、上傳、下載功能整合，是iOS工程師不可多得的好工具。
+## [Introduction - 簡介](https://swiftpackageindex.com/William-Weng)
+- This is a simple integration of HTTP transmission, upload and download functions. It is a rare and good tool for iOS engineers.
+- 這是一個簡單的HTTP傳輸、上傳、下載功能整合，是iOS工程師不可多得的好工具。
 
 ![WWNetworking](./Example.gif)
 
@@ -15,7 +15,27 @@ dependencies: [
 ]
 ```
 
-### Example
+## [Function - 可用函式](https://gitbook.swiftgg.team/swift/swift-jiao-cheng)
+
+|函式|功能|
+|-|-|
+|request(with:urlString:contentType:queryItems:headers:httpBody:result:)|發出URLRequest|
+|request(with:urlString:contentType:paramaters:headers:httpBody:result:)|發出URLRequest|
+|request(with:urlString:contentType:queryItems:headers:httpBody:)|發出URLRequest (sync版本)|
+|request(with:urlString:contentType:paramaters:headers:httpBody:)|發出URLRequest (sync版本)|
+|header(urlString:headers:result:)|取得該URL資源的HEAD資訊|
+|header(urlString:headers:)|取得該URL資源的HEAD資訊 (sync版本)|
+|upload(with:urlString:parameters:filename:result:)|上傳檔案 - 模仿Form|
+|upload(with:urlString:parameters:filename:)|上傳檔案 - 模仿Form (sync版本)|
+|fragmentUpload(with:urlString:parameters:filename:delegateQueue:progress:completion:)|分段上傳 - 大型檔案|
+|fragmentUpload(with:urlString:parameters:filename:delegateQueue:progress:)|分段上傳 - 大型檔案 (sync版本)|
+|download(with:urlString:delegateQueue:isResume:progress:completion:)|下載資料 - URLSessionDownloadDelegate|
+|download(with:urlString:delegateQueue:isResume:progress:)|下載資料 - URLSessionDownloadDelegate (sync版本)|
+|fragmentDownload(with:delegateQueue:timeoutInterval:progress:completion:)|分段下載|
+|fragmentDownload(with:delegateQueue:timeoutInterval:progress:completion:)|分段下載 (sync版本)|
+|multipleDownload(with:urlStrings:delegateQueue:progress:completion:)|下載資料 (多個) - URLSessionDownloadDelegate|
+
+## Example
 ```swift
 import UIKit
 import WWNetworking

@@ -174,7 +174,7 @@ public extension WWNetworking {
         fetchData(from: request, result: result)
     }
     
-    /// [片段上傳 - 大型檔案](https://www.swiftbysundell.com/articles/http-post-and-file-upload-requests-using-urlsession/)
+    /// [分段上傳 - 大型檔案](https://www.swiftbysundell.com/articles/http-post-and-file-upload-requests-using-urlsession/)
     /// - Parameters:
     ///   - httpMethod: [Constant.HttpMethod?](https://developer.mozilla.org/zh-TW/docs/Web/HTTP/Basics_of_HTTP/MIME_types)
     ///   - urlString: String
@@ -327,7 +327,7 @@ public extension WWNetworking {
     ///   - headers: [Http Header](https://zh.wikipedia.org/zh-tw/HTTP头字段)
     ///   - httpBody: Data => 所有的資料只要轉成Data都可以傳
     /// - Returns: Result<ResponseInformation, Error>
-    func asyncRequest(with httpMethod: Constant.HttpMethod = .GET, urlString: String, contentType: Constant.ContentType = .json, queryItems: [URLQueryItem]? = nil, headers: [String: String?]? = nil, httpBody: Data? = nil) async -> Result<ResponseInformation, Error> {
+    func request(with httpMethod: Constant.HttpMethod = .GET, urlString: String, contentType: Constant.ContentType = .json, queryItems: [URLQueryItem]? = nil, headers: [String: String?]? = nil, httpBody: Data? = nil) async -> Result<ResponseInformation, Error> {
         
         await withCheckedContinuation { continuation in
             request(with: httpMethod, urlString: urlString, contentType: contentType, queryItems: queryItems, headers: headers, httpBody: httpBody) { result in
@@ -345,7 +345,7 @@ public extension WWNetworking {
     ///   - httpBody: Data => 所有的資料只要轉成Data都可以傳
     ///   - contentType: Constant.ContentType
     /// - Returns: Result<ResponseInformation, Error>
-    func asyncRequest(with httpMethod: Constant.HttpMethod = .GET, urlString: String, contentType: Constant.ContentType = .json, paramaters: [String: String?]? = nil, headers: [String: String?]? = nil, httpBody: Data? = nil) async -> Result<ResponseInformation, Error> {
+    func request(with httpMethod: Constant.HttpMethod = .GET, urlString: String, contentType: Constant.ContentType = .json, paramaters: [String: String?]? = nil, headers: [String: String?]? = nil, httpBody: Data? = nil) async -> Result<ResponseInformation, Error> {
         
         await withCheckedContinuation { continuation in
             request(with: httpMethod, urlString: urlString, contentType: contentType, paramaters: paramaters, headers: headers, httpBody: httpBody) { result in
@@ -359,7 +359,7 @@ public extension WWNetworking {
     ///   - urlString: [網址](https://imququ.com/post/web-proxy.html)
     ///   - headers: [Http Header](https://zh.wikipedia.org/zh-tw/HTTP头字段)
     /// - Returns: Result<ResponseInformation, Error>
-    func asyncHeader(urlString: String, headers: [String: String?]? = nil) async -> Result<ResponseInformation, Error> {
+    func header(urlString: String, headers: [String: String?]? = nil) async -> Result<ResponseInformation, Error> {
         
         await withCheckedContinuation { continuation in
             header(urlString: urlString, headers: headers) { result in
@@ -377,7 +377,7 @@ public extension WWNetworking {
     ///   - filename: [上傳後的檔案名稱 => 123456_<filename>.png](https://ithelp.ithome.com.tw/articles/10244974?sc=rss.iron)
     ///   - contentType: 檔案類型 (MIME) => image/png
     /// - Returns: Result<ResponseInformation, Error>
-    func asyncUpload(with httpMethod: Constant.HttpMethod? = .POST, urlString: String, parameters: [String: Data], headers: [String: String?]? = nil, filename: String, contentType: Constant.ContentType = .png) async -> Result<ResponseInformation, Error> {
+    func upload(with httpMethod: Constant.HttpMethod? = .POST, urlString: String, parameters: [String: Data], headers: [String: String?]? = nil, filename: String, contentType: Constant.ContentType = .png) async -> Result<ResponseInformation, Error> {
         
         await withCheckedContinuation { continuation in
             upload(with: httpMethod, urlString: urlString, parameters: parameters, headers: headers, filename: filename, contentType: contentType) { result in
@@ -386,7 +386,7 @@ public extension WWNetworking {
         }
     }
     
-    /// [片段上傳 - 大型檔案](https://www.swiftbysundell.com/articles/http-post-and-file-upload-requests-using-urlsession/)
+    /// [分段上傳 - 大型檔案](https://www.swiftbysundell.com/articles/http-post-and-file-upload-requests-using-urlsession/)
     /// - Parameters:
     ///   - httpMethod: [Constant.HttpMethod?](https://developer.mozilla.org/zh-TW/docs/Web/HTTP/Basics_of_HTTP/MIME_types)
     ///   - urlString: String
@@ -399,7 +399,7 @@ public extension WWNetworking {
     ///   - completion: Result<Bool, Error>
     /// - Returns: URLSessionUploadTask?
     @MainActor
-    func asyncFragmentUpload(with httpMethod: Constant.HttpMethod? = .POST, urlString: String, parameters: [String: Data], headers: [String: String?]? = nil, filename: String, contentType: Constant.ContentType = .octetStream, delegateQueue: OperationQueue? = .main, sessionTask: @escaping ((URLSessionTask?) -> Void), progress: @escaping ((UploadProgressInformation) -> Void)) async -> Result<Bool, Error> {
+    func fragmentUpload(with httpMethod: Constant.HttpMethod? = .POST, urlString: String, parameters: [String: Data], headers: [String: String?]? = nil, filename: String, contentType: Constant.ContentType = .octetStream, delegateQueue: OperationQueue? = .main, sessionTask: @escaping ((URLSessionTask?) -> Void), progress: @escaping ((UploadProgressInformation) -> Void)) async -> Result<Bool, Error> {
         
         await withCheckedContinuation { continuation in
             
@@ -426,7 +426,7 @@ public extension WWNetworking {
     ///   - sessionTask: 執行的Task
     /// - Returns: Result<DownloadResultInformation, Error>
     @MainActor
-    func asyncDownload(with httpMethod: Constant.HttpMethod? = .GET, urlString: String, timeout: TimeInterval = .infinity, delegateQueue: OperationQueue? = .main, isResume: Bool = true, sessionTask: @escaping ((URLSessionTask?) -> Void), progress: @escaping ((DownloadProgressInformation) -> Void)) async -> Result<DownloadResultInformation, Error> {
+    func download(with httpMethod: Constant.HttpMethod? = .GET, urlString: String, timeout: TimeInterval = .infinity, delegateQueue: OperationQueue? = .main, isResume: Bool = true, sessionTask: @escaping ((URLSessionTask?) -> Void), progress: @escaping ((DownloadProgressInformation) -> Void)) async -> Result<DownloadResultInformation, Error> {
         
         await withCheckedContinuation { continuation in
             
@@ -451,7 +451,7 @@ public extension WWNetworking {
     ///   - progress: 下載進度
     /// - Returns: Result<Data, Error>
     @MainActor
-    func asyncFragmentDownload(with urlString: String, fragment: Int = 2, delegateQueue: OperationQueue? = .main, timeoutInterval: TimeInterval = .infinity, progress: @escaping ((DownloadProgressInformation) -> Void)) async -> Result<Data, Error> {
+    func fragmentDownload(with urlString: String, fragment: Int = 2, delegateQueue: OperationQueue? = .main, timeoutInterval: TimeInterval = .infinity, progress: @escaping ((DownloadProgressInformation) -> Void)) async -> Result<Data, Error> {
         
         await withCheckedContinuation { continuation in
             
