@@ -320,7 +320,7 @@ public extension WWNetworking {
     
     /// [執行多個Request](https://youtu.be/s2PiL_Vte4E)
     /// - Parameter infos: [[RequestInformation]](https://onevcat.com/2021/07/swift-concurrency/)
-    /// - Returns: [Result<ResponseInformation, Error>]
+    /// - Returns: [[Result<ResponseInformation, Error>]](https://waynestalk.com/swift-concurrency/)
     func multipleRequest(with infos: [RequestInformation]) async -> [Result<ResponseInformation, Error>] {
         
         var requests: [Result<ResponseInformation, Error>] = []
