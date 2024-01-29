@@ -53,7 +53,8 @@ public extension WWNetworking.Constant {
         case notOpenSettingsPage
         case notSupports
         case unregistered
-        
+        case fragmentCountError
+
         /// 顯示錯誤說明
         /// - Returns: String
         private func errorMessage() -> String {
@@ -71,6 +72,7 @@ public extension WWNetworking.Constant {
             case .notSupports: return "該手機不支援"
             case .notEncoding: return "該資料編碼錯誤"
             case .unregistered: return "尚未註冊"
+            case .fragmentCountError: return "分段下載數量至少要有一段"
             }
         }
     }

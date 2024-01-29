@@ -16,5 +16,8 @@ let package = Package(
     targets: [
         .target(name: "WWNetworking", dependencies: []),
         .testTarget(name: "WWNetworkingTests", dependencies: ["WWNetworking"]),
+    ],
+    swiftLanguageVersions: [
+        .v5
     ]
 )

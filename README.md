@@ -16,24 +16,27 @@ dependencies: [
 ```
 
 ## [Function - 可用函式](https://gitbook.swiftgg.team/swift/swift-jiao-cheng)
-
+### [一般版本](https://medium.com/彼得潘的-swift-ios-app-開發教室/簡易說明swift-4-closures-77351c3bf775)
 |函式|功能|
 |-|-|
-|request(with:urlString:contentType:queryItems:headers:httpBody:result:)|發出URLRequest|
 |request(with:urlString:contentType:paramaters:headers:httpBody:result:)|發出URLRequest|
-|request(with:urlString:contentType:queryItems:headers:httpBody:)|發出URLRequest (sync版本)|
-|request(with:urlString:contentType:paramaters:headers:httpBody:)|發出URLRequest (sync版本)|
 |header(urlString:headers:result:)|取得該URL資源的HEAD資訊|
-|header(urlString:headers:)|取得該URL資源的HEAD資訊 (sync版本)|
 |upload(with:urlString:parameters:filename:result:)|上傳檔案 - 模仿Form|
-|upload(with:urlString:parameters:filename:)|上傳檔案 - 模仿Form (sync版本)|
 |fragmentUpload(with:urlString:parameters:filename:delegateQueue:progress:completion:)|分段上傳 - 大型檔案|
-|fragmentUpload(with:urlString:parameters:filename:delegateQueue:progress:)|分段上傳 - 大型檔案 (sync版本)|
 |download(with:urlString:delegateQueue:isResume:progress:completion:)|下載資料 - URLSessionDownloadDelegate|
-|download(with:urlString:delegateQueue:isResume:progress:)|下載資料 - URLSessionDownloadDelegate (sync版本)|
 |fragmentDownload(with:delegateQueue:timeoutInterval:progress:completion:)|分段下載|
-|fragmentDownload(with:delegateQueue:timeoutInterval:progress:completion:)|分段下載 (sync版本)|
-|multipleDownload(with:urlStrings:delegateQueue:progress:completion:)|下載資料 (多個) - URLSessionDownloadDelegate|
+|multipleDownload(with:urlStrings:delegateQueue:progress:completion:)|下載多筆資料- URLSessionDownloadDelegate|
+
+### [aynsc / await版本](https://youtu.be/s2PiL_Vte4E)
+|函式|功能|
+|-|-|
+|request(with:urlString:contentType:paramaters:headers:httpBody:)|發出URLRequest|
+|header(urlString:headers:)|取得該URL資源的HEAD資訊|
+|upload(with:urlString:parameters:filename:)|上傳檔案 - 模仿Form|
+|fragmentUpload(with:urlString:parameters:filename:delegateQueue:progress:)|分段上傳 - 大型檔案|
+|download(with:urlString:delegateQueue:isResume:progress:)|下載資料 - URLSessionDownloadDelegate|
+|fragmentDownload(with:delegateQueue:timeoutInterval:progress:)|分段下載|
+|multipleRequest(with:)|發出多個request|
 
 ## Example
 ```swift
