@@ -320,7 +320,7 @@ public extension WWNetworking {
     
     /// [執行多個Request](https://youtu.be/s2PiL_Vte4E)
     /// - Parameter infos: [[RequestInformation]](https://onevcat.com/2021/07/swift-concurrency/)
-    /// - Returns: [[Result<ResponseInformation, Error>]](https://waynestalk.com/swift-concurrency/)
+    /// - Returns: [Result<ResponseInformation, Error>]
     func multipleRequest(with infos: [RequestInformation]) async -> [Result<ResponseInformation, Error>] {
         
         var requests: [Result<ResponseInformation, Error>] = []
@@ -333,6 +333,26 @@ public extension WWNetworking {
         return requests
     }
     
+    /// [執行多個Request](https://hicc.pro/p/swift/whats-new-in-swift-5-5)
+    /// - Parameter infos: [[RequestInformation]](https://www.appcoda.com.tw/task-group/)
+    /// - Returns: [Result<ResponseInformation, Error>]
+    func multipleRequestWithTaskGroup(infos: [RequestInformation]) async -> [Result<ResponseInformation, Error>] {
+        
+        await withTaskGroup(of: Result<ResponseInformation, Error>.self) { [self] group in
+            
+            for info in infos {
+                group.addTask {
+                    await self.request(with: info.httpMethod, urlString: info.urlString, contentType: info.contentType, paramaters: info.paramaters, headers: info.headers, httpBody: info.httpBody)
+                }
+            }
+            
+            var requests: [Result<ResponseInformation, Error>] = []
+            for await request in group { requests.append(request) }
+            
+            return requests
+        }
+    }
+        
     /// 取得該URL資源的HEAD資訊 (檔案大小 / 類型 / 上傳日期…)
     /// - Parameters:
     ///   - urlString: [網址](https://imququ.com/post/web-proxy.html)

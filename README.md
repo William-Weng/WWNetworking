@@ -37,6 +37,7 @@ dependencies: [
 |download(with:urlString:delegateQueue:isResume:progress:)|下載資料 - URLSessionDownloadDelegate|
 |fragmentDownload(with:delegateQueue:timeoutInterval:progress:)|分段下載|
 |multipleRequest(with:)|發出多個request|
+|multipleRequestWithTaskGroup(info:)|發出多個request|
 
 ## Example
 ```swift
