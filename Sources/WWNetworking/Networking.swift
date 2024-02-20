@@ -33,8 +33,9 @@ public extension WWNetworking {
     typealias DownloadProgressInformation = (urlString: String?, totalSize: Int64, totalWritten: Int64, writting: Int64)                    // 網路下載資料 => (URL / 大小 / 己下載 / 一段段的下載量)
     typealias ResponseInformation = (data: Data?, response: HTTPURLResponse?)                                                               // 網路回傳的資料
     typealias HttpDownloadOffset = (start: Int?, end: Int?)                                                                                 // 續傳下載開始~結束位置設定值 (bytes=0-1024)
-    typealias DownloadResultInformation = (urlString: String, data: Data?)                                                                  // 網路下載資料的結果資訊 => (URL, Data)
-    typealias UploadProgressInformation = (urlString: String?, bytesSent: Int64, totalBytesSent: Int64, totalBytesExpectedToSend: Int64)    // 網路下載資料 => (URL / 段落上傳大小 / 己上傳大小 / 總大小)
+    typealias DownloadResultInformation = (urlString: String, data: Data?)                                                                  // 網路下載資料的結果資訊 (URL, Data)
+    typealias UploadProgressInformation = (urlString: String?, bytesSent: Int64, totalBytesSent: Int64, totalBytesExpectedToSend: Int64)    // 網路上傳資料 (URL / 段落上傳大小 / 己上傳大小 / 總大小)
+    typealias FormDataInformation = (name: String, filename: String, contentType: Constant.ContentType, data: Data)                         // 上傳檔案資訊 (參數名稱 / 檔名 / 檔案類型 / 資料)
     typealias RequestInformation = (httpMethod: Constant.HttpMethod,                                                                        // 多個request的參數值 (同單個request)
                                     urlString: String,
                                     contentType: Constant.ContentType,
@@ -119,17 +120,16 @@ public extension WWNetworking {
             }
         }
     }
-    
+        
     /// [上傳檔案 - 模仿Form](https://www.w3schools.com/nodejs/nodejs_uploadfiles.asp)
     /// - Parameters:
     ///   - httpMethod: [HTTP方法](https://imququ.com/post/four-ways-to-post-data-in-http.html)
     ///   - urlString: [網址](https://imququ.com/post/web-proxy.html)
-    ///   - parameters: [圖片Data](https://pjchender.blogspot.com/2017/06/chrome-dev-tools.html)
+    ///   - formData: [圖片Data相關參數](https://pjchender.blogspot.com/2017/06/chrome-dev-tools.html)
+    ///   - parameters: [圖片Data](https://ithelp.ithome.com.tw/articles/10244974?sc=rss.iron)
     ///   - headers: [Http Header](https://zh.wikipedia.org/zh-tw/HTTP头字段)
-    ///   - filename: [上傳後的檔案名稱 => 123456_<filename>.png](https://ithelp.ithome.com.tw/articles/10244974?sc=rss.iron)
-    ///   - contentType: 檔案類型 (MIME) => image/png
     ///   - result: Result<Constant.ResponseInformation, Error>
-    func upload(with httpMethod: Constant.HttpMethod? = .POST, urlString: String, parameters: [String: Data], headers: [String: String?]? = nil, filename: String, contentType: Constant.ContentType = .png, result: @escaping (Result<ResponseInformation, Error>) -> Void) {
+    func upload(with httpMethod: Constant.HttpMethod? = .POST, urlString: String, formData: FormDataInformation, parameters: [String: String]? = nil, headers: [String: String?]? = nil, result: @escaping (Result<ResponseInformation, Error>) -> Void) {
         
         guard var request = URLRequest._build(string: urlString, httpMethod: httpMethod) else { result(.failure(Constant.MyError.notUrlFormat)); return }
 
@@ -138,21 +138,29 @@ public extension WWNetworking {
         
         request._setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: .contentType)
 
-        if let headers = headers {
-            headers.forEach { key, value in if let value = value { request.addValue(value, forHTTPHeaderField: key) }}
+        if let headers = headers { headers.forEach { key, value in if let value = value { request.addValue(value, forHTTPHeaderField: key) }}}
+        
+        /* 上傳Data的部分 */
+        _ = body._append(string: "--\(boundary)\r\n")
+        _ = body._append(string: "Content-Disposition: form-data; name=\"\(formData.name)\"; filename=\"\(formData.filename)\"\r\n")
+        _ = body._append(string: "Content-Type: \(formData.contentType)\r\n")
+        _ = body._append(string: "\r\n")
+        _ = body._append(data: formData.data)
+        _ = body._append(string: "\r\n")
+        
+        /* 額外參數的部分 */
+        parameters?.forEach { (key, value) in
+            _ = body._append(string: "--\(boundary)\r\n")
+            _ = body._append(string: "Content-Disposition: form-data; name=\"\(key)\"\r\n")
+            _ = body._append(string: "\r\n")
+            _ = body._append(string: "\(value)")
+            _ = body._append(string: "\r\n")
         }
         
-        parameters.first.map { (name, data) in
-            _ = body._append(string: "--\(boundary)\r\n")
-            _ = body._append(string: "Content-Disposition: form-data; name=\"\(name)\"; filename=\"\(filename)\"\r\n")
-            _ = body._append(string: "Content-Type: \(contentType)\r\n\r\n")
-            _ = body._append(data: data)
-            _ = body._append(string: "\r\n")
-            _ = body._append(string: "--\(boundary)--\r\n")
-        }
-
+        /* 結尾部分 */
+        _ = body._append(string: "--\(boundary)--\r\n")
+        
         request.httpBody = body
-
         fetchData(from: request, result: result)
     }
     
@@ -371,15 +379,14 @@ public extension WWNetworking {
     /// - Parameters:
     ///   - httpMethod: [HTTP方法](https://imququ.com/post/four-ways-to-post-data-in-http.html)
     ///   - urlString: [網址](https://imququ.com/post/web-proxy.html)
-    ///   - parameters: [圖片Data](https://pjchender.blogspot.com/2017/06/chrome-dev-tools.html)
+    ///   - formData: [圖片Data相關參數](https://pjchender.blogspot.com/2017/06/chrome-dev-tools.html)
+    ///   - parameters: [圖片Data](https://ithelp.ithome.com.tw/articles/10244974?sc=rss.iron)
     ///   - headers: [Http Header](https://zh.wikipedia.org/zh-tw/HTTP头字段)
-    ///   - filename: [上傳後的檔案名稱 => 123456_<filename>.png](https://ithelp.ithome.com.tw/articles/10244974?sc=rss.iron)
-    ///   - contentType: 檔案類型 (MIME) => image/png
     /// - Returns: Result<ResponseInformation, Error>
-    func upload(with httpMethod: Constant.HttpMethod? = .POST, urlString: String, parameters: [String: Data], headers: [String: String?]? = nil, filename: String, contentType: Constant.ContentType = .png) async -> Result<ResponseInformation, Error> {
+    func upload(with httpMethod: Constant.HttpMethod? = .POST, urlString: String, formData: FormDataInformation, parameters: [String: String], headers: [String: String?]? = nil) async -> Result<ResponseInformation, Error> {
         
         await withCheckedContinuation { continuation in
-            upload(with: httpMethod, urlString: urlString, parameters: parameters, headers: headers, filename: filename, contentType: contentType) { result in
+            upload(with: httpMethod, urlString: urlString, formData: formData, parameters: parameters, headers: headers) { result in
                 continuation.resume(returning: result)
             }
         }

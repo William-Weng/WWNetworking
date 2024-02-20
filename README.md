@@ -21,7 +21,7 @@ dependencies: [
 |-|-|
 |request(with:urlString:contentType:paramaters:headers:httpBody:result:)|發出URLRequest|
 |header(urlString:headers:result:)|取得該URL資源的HEAD資訊|
-|upload(with:urlString:parameters:filename:result:)|上傳檔案 - 模仿Form|
+|upload(with:urlString:formData:parameters:headers:result)|上傳檔案 - 模仿Form|
 |fragmentUpload(with:urlString:parameters:filename:delegateQueue:progress:completion:)|分段上傳 - 大型檔案|
 |download(with:urlString:delegateQueue:isResume:progress:completion:)|下載資料 - URLSessionDownloadDelegate|
 |fragmentDownload(with:delegateQueue:timeoutInterval:progress:completion:)|分段下載|
@@ -32,7 +32,7 @@ dependencies: [
 |-|-|
 |request(with:urlString:contentType:paramaters:headers:httpBody:)|發出URLRequest|
 |header(urlString:headers:)|取得該URL資源的HEAD資訊|
-|upload(with:urlString:parameters:filename:)|上傳檔案 - 模仿Form|
+|upload(with:urlString:formData:parameters:headers:)|上傳檔案 - 模仿Form|
 |fragmentUpload(with:urlString:parameters:filename:delegateQueue:progress:)|分段上傳 - 大型檔案|
 |download(with:urlString:delegateQueue:isResume:progress:)|下載資料 - URLSessionDownloadDelegate|
 |fragmentDownload(with:delegateQueue:timeoutInterval:progress:)|分段下載|

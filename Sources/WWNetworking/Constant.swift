@@ -96,8 +96,10 @@ public extension WWNetworking.Constant {
         case jpeg
         case formUrlEncoded
         case formData
+        case mp3
         case octetStream
         case bearer(forKey: String)
+        case custom(value: String)
         
         /// [轉成MIME文字](https://developer.mozilla.org/zh-TW/docs/Web/HTTP/Basics_of_HTTP/MIME_types)
         /// - Returns: String
@@ -110,10 +112,12 @@ public extension WWNetworking.Constant {
             case .json: return "application/json"
             case .png: return "image/png"
             case .jpeg: return "image/jpeg"
+            case .mp3: return "audio/mpeg"
             case .formUrlEncoded: return "application/x-www-form-urlencoded"
             case .formData: return "multipart/form-data"
             case .octetStream: return "application/octet-stream"
             case .bearer(forKey: let key): return "Bearer \(key)"
+            case .custom(value: let value): return value
             }
         }
     }
