@@ -40,10 +40,10 @@ final class ViewController: UIViewController {
 }
 
 // MARK: - ViewController (private class function)
-extension ViewController {
+private extension ViewController {
 
     /// 測試GET (GET不能有httpBody)
-    private func httpGetTest() {
+    func httpGetTest() {
         
         let urlString = UrlStrings["GET"]!
         let parameters: [String: String?] = ["name": "William.Weng", "github": "https://william-weng.github.io/"]
@@ -58,7 +58,7 @@ extension ViewController {
     }
 
     /// 測試POST
-    private func httpPostTest() {
+    func httpPostTest() {
         
         let urlString = UrlStrings["POST"]!
         let parameters: [String: String?] = ["name": "William.Weng", "github": "https://william-weng.github.io/"]
@@ -73,12 +73,13 @@ extension ViewController {
     }
     
     /// 上傳圖片
-    private func httpUploadData() {
+    func httpUploadData() {
         
         let urlString = UrlStrings["UPLOAD"]!
         let imageData = resultImageViews[0].image?.pngData()
+        let formData: WWNetworking.FormDataInformation = (name: "file_to_upload", filename: "Demo.png", contentType: .png, data: imageData!)
         
-        WWNetworking.shared.upload(urlString: urlString, parameters: ["file_to_upload": imageData!], filename: "Demo.png") { result in
+        WWNetworking.shared.upload(urlString: urlString, formData: formData) { result in
             
             switch result {
             case .failure(let error): self.displayText(error)
@@ -88,7 +89,7 @@ extension ViewController {
     }
     
     /// 上傳圖片 (大型檔案)
-    private func httpFragmentUploadData() {
+    func httpFragmentUploadData() {
         
         let urlString = UrlStrings["UPLOAD"]!
         let index = 1
@@ -109,7 +110,7 @@ extension ViewController {
     }
     
     /// 下載檔案 (單個)
-    private func httpDownloadData() {
+    func httpDownloadData() {
         
         let urlString = UrlStrings["DOWNLOAD"]!
         let index = 0
@@ -131,7 +132,7 @@ extension ViewController {
     }
     
     /// 分段下載 (單一檔案分多點合併下載)
-    private func fragmentDownloadData() {
+    func fragmentDownloadData() {
         
         let urlString = UrlStrings["FRAGMENT"]!
         let index = 1
@@ -154,7 +155,7 @@ extension ViewController {
     }
     
     /// 下載檔案 (多個檔案)
-    private func httpMultipleDownload() {
+    func httpMultipleDownload() {
         
         resultImageViews.forEach { $0.image = nil }
         
@@ -181,13 +182,13 @@ extension ViewController {
 }
 
 // MARK: - 小工具 (class function)
-extension ViewController {
+private extension ViewController {
     
     /// 顯示進度百分比
     /// - Parameters:
     ///   - index: Int
     ///   - progress: Float
-    private func displayProgressWithIndex(_ index: Int, progress: Float) {
+    func displayProgressWithIndex(_ index: Int, progress: Float) {
         self.resultProgressLabels[index].text = "\(progress * 100.0) %"
     }
     
@@ -195,14 +196,14 @@ extension ViewController {
     /// - Parameters:
     ///   - index: Int
     ///   - data: Data?
-    private func displayImageWithIndex(_ index: Int, data: Data?) {
+    func displayImageWithIndex(_ index: Int, data: Data?) {
         guard let data = data else { return }
         self.resultImageViews[index].image = UIImage(data: data)
     }
     
     /// 顯示文字
     /// - Parameter text: Any?
-    private func displayText(_ text: Any?) {
+    func displayText(_ text: Any?) {
         DispatchQueue.main.async { self.resultTextField.text = "\(text ?? "NULL")" }
     }
     
@@ -211,7 +212,7 @@ extension ViewController {
     ///   - urlStrings: [String]
     ///   - urlString: String?
     /// - Returns: Int?
-    private func displayImageIndex(urlStrings: [String], urlString: String?) -> Int? {
+    func displayImageIndex(urlStrings: [String], urlString: String?) -> Int? {
         
         guard let urlString = urlString,
               let index = urlStrings.firstIndex(of: urlString)
@@ -220,35 +221,5 @@ extension ViewController {
         }
 
         return index
-    }
-}
-
-// MARK: - Dictionary (class function)
-extension Dictionary {
-    
-    /// Dictionary => JSON Data
-    /// - ["name":"William"] => {"name":"William"} => 7b226e616d65223a2257696c6c69616d227d
-    /// - Returns: Data?
-    func _jsonSerialization() -> Data? {
-        
-        guard JSONSerialization.isValidJSONObject(self),
-              let data = try? JSONSerialization.data(withJSONObject: self, options: JSONSerialization.WritingOptions())
-        else {
-            return nil
-        }
-        
-        return data
-    }
-}
-
-// MARK: - Data (class function)
-extension Data {
-    
-    /// Data => JSON
-    /// - 7b2268747470223a2022626f6479227d => {"http": "body"}
-    /// - Returns: Any?
-    func _jsonSerialization(options: JSONSerialization.ReadingOptions = .allowFragments) -> Any? {
-        let json = try? JSONSerialization.jsonObject(with: self, options: options)
-        return json
     }
 }
