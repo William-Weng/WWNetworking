@@ -96,13 +96,21 @@ public extension WWNetworking.Constant {
         case jpeg
         case formUrlEncoded
         case formData
+        case flac
         case mp3
+        case mp4
+        case mpeg
+        case mpga
+        case m4a
+        case ogg
+        case wav
+        case webm
         case octetStream
         case bearer(forKey: String)
         case custom(value: String)
         
         /// [轉成MIME文字](https://developer.mozilla.org/zh-TW/docs/Web/HTTP/Basics_of_HTTP/MIME_types)
-        /// - Returns: String
+        /// - Returns: [String](https://www.iana.org/assignments/media-types/media-types.xhtml)
         private func toString() -> String {
             
             switch self {
@@ -113,6 +121,14 @@ public extension WWNetworking.Constant {
             case .png: return "image/png"
             case .jpeg: return "image/jpeg"
             case .mp3: return "audio/mpeg"
+            case .mpeg: return "audio/mpeg"
+            case .mpga: return "audio/mpeg"
+            case .mp4: return "audio/mp4"
+            case .ogg: return "audio/ogg"
+            case .wav: return "audio/wav"
+            case .webm: return "audio/webm"
+            case .m4a: return "audio/m4a"
+            case .flac: return "audio/flac"
             case .formUrlEncoded: return "application/x-www-form-urlencoded"
             case .formData: return "multipart/form-data"
             case .octetStream: return "application/octet-stream"
