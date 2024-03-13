@@ -14,8 +14,7 @@ let package = Package(
     dependencies: [
     ],
     targets: [
-        .target(name: "WWNetworking", dependencies: []),
-        .testTarget(name: "WWNetworkingTests", dependencies: ["WWNetworking"]),
+        .target(name: "WWNetworking", resources: [.copy("Privacy")]),
     ],
     swiftLanguageVersions: [
         .v5
