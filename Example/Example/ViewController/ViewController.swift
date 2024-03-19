@@ -48,7 +48,7 @@ private extension ViewController {
         let urlString = UrlStrings["GET"]!
         let parameters: [String: String?] = ["name": "William.Weng", "github": "https://william-weng.github.io/"]
 
-        WWNetworking.shared.request(with: .GET, urlString: urlString, paramaters: parameters) { result in
+        _ = WWNetworking.shared.request(with: .GET, urlString: urlString, paramaters: parameters) { result in
 
             switch result {
             case .failure(let error): self.displayText(error)
@@ -63,7 +63,7 @@ private extension ViewController {
         let urlString = UrlStrings["POST"]!
         let parameters: [String: String?] = ["name": "William.Weng", "github": "https://william-weng.github.io/"]
         
-        WWNetworking.shared.request(with: .POST, urlString: urlString, paramaters: nil, httpBody: parameters._jsonSerialization()) { result in
+        _ = WWNetworking.shared.request(with: .POST, urlString: urlString, paramaters: nil, httpBody: parameters._jsonSerialization()) { result in
 
             switch result {
             case .failure(let error): self.displayText(error)
@@ -79,7 +79,7 @@ private extension ViewController {
         let imageData = resultImageViews[0].image?.pngData()
         let formData: WWNetworking.FormDataInformation = (name: "file_to_upload", filename: "Demo.png", contentType: .png, data: imageData!)
         
-        WWNetworking.shared.upload(urlString: urlString, formData: formData) { result in
+        _ = WWNetworking.shared.upload(urlString: urlString, formData: formData) { result in
             
             switch result {
             case .failure(let error): self.displayText(error)
@@ -145,6 +145,8 @@ private extension ViewController {
             let progress = Float(info.totalWritten) / Float(info.totalSize)
             self.displayProgressWithIndex(index, progress: progress)
             
+        }, fragmentTask: { _ in
+           
         }, completion: { result in
             
             switch result {
@@ -159,7 +161,7 @@ private extension ViewController {
         
         resultImageViews.forEach { $0.image = nil }
         
-        let _ = WWNetworking.shared.multipleDownload(urlStrings: ImageUrlInfos) { info in
+        _ = WWNetworking.shared.multipleDownload(urlStrings: ImageUrlInfos) { info in
             
             guard let index = self.displayImageIndex(urlStrings: self.ImageUrlInfos, urlString: info.urlString),
                   let progress = Optional.some(Float(info.totalWritten) / Float(info.totalSize))

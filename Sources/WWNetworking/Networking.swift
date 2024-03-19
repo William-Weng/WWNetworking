@@ -101,8 +101,10 @@ public extension WWNetworking {
     ///   - httpBody: Data => 所有的資料只要轉成Data都可以傳
     ///   - contentType: Constant.ContentType
     ///   - result: Result<Constant.ResponseInformation, Error>
-    func request(with httpMethod: Constant.HttpMethod = .GET, urlString: String, contentType: Constant.ContentType = .json, paramaters: [String: String?]? = nil, headers: [String: String?]? = nil, httpBody: Data? = nil, result: @escaping (Result<ResponseInformation, Error>) -> Void) {
-        self.request(with: httpMethod, urlString: urlString, contentType: contentType, queryItems: paramaters?._queryItems(), headers: headers, httpBody: httpBody) { result($0) }
+    /// - Returns: URLSessionTask?
+    func request(with httpMethod: Constant.HttpMethod = .GET, urlString: String, contentType: Constant.ContentType = .json, paramaters: [String: String?]? = nil, headers: [String: String?]? = nil, httpBody: Data? = nil, result: @escaping (Result<ResponseInformation, Error>) -> Void) -> URLSessionTask? {
+        let task = self.request(with: httpMethod, urlString: urlString, contentType: contentType, queryItems: paramaters?._queryItems(), headers: headers, httpBody: httpBody) { result($0) }
+        return task
     }
     
     /// 取得該URL資源的HEAD資訊 (檔案大小 / 類型 / 上傳日期…)
@@ -110,15 +112,18 @@ public extension WWNetworking {
     ///   - urlString: [網址](https://imququ.com/post/web-proxy.html)
     ///   - headers: [Http Header](https://zh.wikipedia.org/zh-tw/HTTP头字段)
     ///   - result: Result<Constant.ResponseInformation?, Error>
-    func header(urlString: String, headers: [String: String?]? = nil, result: @escaping (Result<ResponseInformation, Error>) -> Void) {
+    /// - Returns: URLSessionTask?
+    func header(urlString: String, headers: [String: String?]? = nil, result: @escaping (Result<ResponseInformation, Error>) -> Void) -> URLSessionTask? {
 
-        self.request(with: .HEAD, urlString: urlString, contentType: .plain, paramaters: nil, headers: headers, httpBody: nil) { _result in
+        let task = self.request(with: .HEAD, urlString: urlString, contentType: .plain, paramaters: nil, headers: headers, httpBody: nil) { _result in
 
             switch _result {
             case .failure(let error): result(.failure(error))
             case .success(let info): result(.success(info))
             }
         }
+        
+        return task
     }
         
     /// [上傳檔案 - 模仿Form](https://www.w3schools.com/nodejs/nodejs_uploadfiles.asp)
@@ -129,9 +134,9 @@ public extension WWNetworking {
     ///   - parameters: [圖片Data](https://ithelp.ithome.com.tw/articles/10244974?sc=rss.iron)
     ///   - headers: [Http Header](https://zh.wikipedia.org/zh-tw/HTTP头字段)
     ///   - result: Result<Constant.ResponseInformation, Error>
-    func upload(with httpMethod: Constant.HttpMethod? = .POST, urlString: String, formData: FormDataInformation, parameters: [String: String]? = nil, headers: [String: String?]? = nil, result: @escaping (Result<ResponseInformation, Error>) -> Void) {
+    func upload(with httpMethod: Constant.HttpMethod? = .POST, urlString: String, formData: FormDataInformation, parameters: [String: String]? = nil, headers: [String: String?]? = nil, result: @escaping (Result<ResponseInformation, Error>) -> Void) -> URLSessionTask? {
         
-        guard var request = URLRequest._build(string: urlString, httpMethod: httpMethod) else { result(.failure(Constant.MyError.notUrlFormat)); return }
+        guard var request = URLRequest._build(string: urlString, httpMethod: httpMethod) else { result(.failure(Constant.MyError.notUrlFormat)); return nil }
 
         let boundary = "Boundary+\(arc4random())\(arc4random())"
         var body = Data()
@@ -161,7 +166,8 @@ public extension WWNetworking {
         _ = body._append(string: "--\(boundary)--\r\n")
         
         request.httpBody = body
-        fetchData(from: request, result: result)
+        let task = fetchData(from: request, result: result)
+        return task
     }
     
     /// [分段上傳 - 大型檔案](https://www.swiftbysundell.com/articles/http-post-and-file-upload-requests-using-urlsession/)
@@ -261,10 +267,11 @@ public extension WWNetworking {
     ///   - timeoutInterval: TimeInterval
     ///   - result: Result<FragmentDownloadDataInfomation, Error>
     ///   - progress: 下載進度
-    ///   - completion: (Result<Data, Error>
-    func fragmentDownload(with urlString: String, fragment: Int = 2, delegateQueue: OperationQueue? = .main, timeoutInterval: TimeInterval = .infinity, progress: @escaping ((DownloadProgressInformation) -> Void), completion: @escaping ((Result<Data, Error>) -> Void)) {
-
-        guard fragment > 0 else { completion(.failure(Constant.MyError.fragmentCountError)) ;return }
+    ///   - fragmentTask: URLSessionTask
+    ///   - completion: Result<Data, Error>
+    func fragmentDownload(with urlString: String, fragment: Int = 2, delegateQueue: OperationQueue? = .main, timeoutInterval: TimeInterval = .infinity, progress: @escaping ((DownloadProgressInformation) -> Void), fragmentTask: @escaping (URLSessionTask) -> Void, completion: @escaping ((Result<Data, Error>) -> Void)) {
+        
+        guard fragment > 0 else { completion(.failure(Constant.MyError.fragmentCountError)); return }
         
         fragmentDownloadProgressResultBlock = progress
         cleanFragmentInformation()
@@ -298,6 +305,7 @@ public extension WWNetworking {
                     if let _task = _task {
                         self.fragmentDownloadKeys.append("\(_task)")
                         _task.resume()
+                        fragmentTask(_task)
                     }
                 }
             }
@@ -462,7 +470,10 @@ public extension WWNetworking {
             
             fragmentDownload(with: urlString, fragment: fragment, delegateQueue: delegateQueue, timeoutInterval: timeoutInterval) { info in
                 progress(info)
-            } completion: { result in
+            } fragmentTask: { _ in
+                
+            }
+            completion: { result in
                 Task { @MainActor in continuation.resume(returning: result) }
             }
         }
@@ -481,13 +492,14 @@ private extension WWNetworking {
     ///   - headers: [Http Header](https://zh.wikipedia.org/zh-tw/HTTP头字段)
     ///   - httpBody: Data => 所有的資料只要轉成Data都可以傳
     ///   - result: Result<Constant.ResponseInformation, Error>
-    func request(with httpMethod: Constant.HttpMethod = .GET, urlString: String, contentType: Constant.ContentType = .json, queryItems: [URLQueryItem]? = nil, headers: [String: String?]? = nil, httpBody: Data? = nil, result: @escaping (Result<ResponseInformation, Error>) -> Void) {
+    /// - Returns: URLSessionTask?
+    func request(with httpMethod: Constant.HttpMethod = .GET, urlString: String, contentType: Constant.ContentType = .json, queryItems: [URLQueryItem]? = nil, headers: [String: String?]? = nil, httpBody: Data? = nil, result: @escaping (Result<ResponseInformation, Error>) -> Void) -> URLSessionTask? {
         
         guard let urlComponents = URLComponents._build(urlString: urlString, queryItems: queryItems),
               let queryedURL = urlComponents.url,
               var request = Optional.some(URLRequest._build(url: queryedURL, httpMethod: httpMethod))
         else {
-            result(.failure(Constant.MyError.notUrlFormat)); return
+            result(.failure(Constant.MyError.notUrlFormat)); return nil
         }
         
         if let headers = headers {
@@ -497,7 +509,8 @@ private extension WWNetworking {
         request.httpBody = httpBody
         request._setValue(contentType, forHTTPHeaderField: .contentType)
         
-        fetchData(from: request, result: result)
+        let task = fetchData(from: request, result: result)
+        return task
     }
     
     /// 分段下載開始時的設定
@@ -656,7 +669,8 @@ private extension WWNetworking {
     /// - Parameters:
     ///   - request: [URLRequest](https://medium.com/@jerrywang0420/urlsession-教學-swift-3-ios-part-2-a17b2d4cc056)
     ///   - result: Result<Constant.ResponseInformation, Error>
-    func fetchData(from request: URLRequest, result: @escaping (Result<ResponseInformation, Error>) -> Void) {
+    /// - Returns: URLSessionDataTask
+    func fetchData(from request: URLRequest, result: @escaping (Result<ResponseInformation, Error>) -> Void) -> URLSessionDataTask {
 
         let dataTask = URLSession.shared.dataTask(with: request) { (data, response, error) in
 
@@ -667,6 +681,8 @@ private extension WWNetworking {
         }
         
         dataTask.resume()
+        
+        return dataTask
     }
 
     /// [斷點續傳下載檔案 (Data) => HTTPHeaderField = Range / ∵ 是一段一段下載 ∴ 自己要一段一段存](https://www.jianshu.com/p/534ec0d9d758)

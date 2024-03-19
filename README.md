@@ -24,7 +24,7 @@ dependencies: [
 |upload(with:urlString:formData:parameters:headers:result)|上傳檔案 - 模仿Form|
 |fragmentUpload(with:urlString:parameters:filename:delegateQueue:progress:completion:)|分段上傳 - 大型檔案|
 |download(with:urlString:delegateQueue:isResume:progress:completion:)|下載資料 - URLSessionDownloadDelegate|
-|fragmentDownload(with:delegateQueue:timeoutInterval:progress:completion:)|分段下載|
+|fragmentDownload(with:delegateQueue:timeoutInterval:progress:fragmentTask:completion:)|分段下載|
 |multipleDownload(with:urlStrings:delegateQueue:progress:completion:)|下載多筆資料- URLSessionDownloadDelegate|
 
 ### [aynsc / await版本](https://youtu.be/s2PiL_Vte4E)
@@ -75,7 +75,6 @@ final class ViewController: UIViewController {
     @IBAction func httpFragmentUpLoad(_ sender: UIButton) { httpFragmentUploadData() }
 }
 
-// MARK: - ViewController (private class function)
 private extension ViewController {
 
     func httpGetTest() {
@@ -83,7 +82,7 @@ private extension ViewController {
         let urlString = UrlStrings["GET"]!
         let parameters: [String: String?] = ["name": "William.Weng", "github": "https://william-weng.github.io/"]
 
-        WWNetworking.shared.request(with: .GET, urlString: urlString, paramaters: parameters) { result in
+        _ = WWNetworking.shared.request(with: .GET, urlString: urlString, paramaters: parameters) { result in
 
             switch result {
             case .failure(let error): self.displayText(error)
@@ -97,7 +96,7 @@ private extension ViewController {
         let urlString = UrlStrings["POST"]!
         let parameters: [String: String?] = ["name": "William.Weng", "github": "https://william-weng.github.io/"]
         
-        WWNetworking.shared.request(with: .POST, urlString: urlString, paramaters: nil, httpBody: parameters._jsonSerialization()) { result in
+        _ = WWNetworking.shared.request(with: .POST, urlString: urlString, paramaters: nil, httpBody: parameters._jsonSerialization()) { result in
 
             switch result {
             case .failure(let error): self.displayText(error)
@@ -112,7 +111,7 @@ private extension ViewController {
         let imageData = resultImageViews[0].image?.pngData()
         let formData: WWNetworking.FormDataInformation = (name: "file_to_upload", filename: "Demo.png", contentType: .png, data: imageData!)
         
-        WWNetworking.shared.upload(urlString: urlString, formData: formData) { result in
+        _ = WWNetworking.shared.upload(urlString: urlString, formData: formData) { result in
             
             switch result {
             case .failure(let error): self.displayText(error)
@@ -175,6 +174,8 @@ private extension ViewController {
             let progress = Float(info.totalWritten) / Float(info.totalSize)
             self.displayProgressWithIndex(index, progress: progress)
             
+        }, fragmentTask: { _ in
+           
         }, completion: { result in
             
             switch result {
@@ -188,7 +189,7 @@ private extension ViewController {
         
         resultImageViews.forEach { $0.image = nil }
         
-        let _ = WWNetworking.shared.multipleDownload(urlStrings: ImageUrlInfos) { info in
+        _ = WWNetworking.shared.multipleDownload(urlStrings: ImageUrlInfos) { info in
             
             guard let index = self.displayImageIndex(urlStrings: self.ImageUrlInfos, urlString: info.urlString),
                   let progress = Optional.some(Float(info.totalWritten) / Float(info.totalSize))
@@ -210,7 +211,6 @@ private extension ViewController {
     }
 }
 
-// MARK: - 小工具 (class function)
 private extension ViewController {
     
     func displayProgressWithIndex(_ index: Int, progress: Float) {
@@ -221,7 +221,7 @@ private extension ViewController {
         guard let data = data else { return }
         self.resultImageViews[index].image = UIImage(data: data)
     }
-
+    
     func displayText(_ text: Any?) {
         DispatchQueue.main.async { self.resultTextField.text = "\(text ?? "NULL")" }
     }

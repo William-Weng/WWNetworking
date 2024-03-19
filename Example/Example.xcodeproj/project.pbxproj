@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 52;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -13,7 +13,8 @@
 		3DBCD87D26F198F300522E3B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3DBCD87C26F198F300522E3B /* Assets.xcassets */; };
 		3DBCD88026F198F300522E3B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3DBCD87E26F198F300522E3B /* LaunchScreen.storyboard */; };
 		811F6E582B10451700359749 /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 811F6E572B10451700359749 /* WWNetworking */; };
-		811F6E5B2B10465300359749 /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 811F6E5A2B10465300359749 /* WWNetworking */; };
+		8153D0352BA92B0700216FAE /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 8153D0342BA92B0700216FAE /* WWNetworking */; };
+		8153D0382BA9304200216FAE /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 8153D0372BA9304200216FAE /* WWNetworking */; };
 		819D5B762B84421A002C23E9 /* Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 819D5B752B84421A002C23E9 /* Extension.swift */; };
 /* End PBXBuildFile section */
 
@@ -33,7 +34,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				811F6E5B2B10465300359749 /* WWNetworking in Frameworks */,
+				8153D0382BA9304200216FAE /* WWNetworking in Frameworks */,
+				8153D0352BA92B0700216FAE /* WWNetworking in Frameworks */,
 				811F6E582B10451700359749 /* WWNetworking in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -129,7 +131,8 @@
 			name = Example;
 			packageProductDependencies = (
 				811F6E572B10451700359749 /* WWNetworking */,
-				811F6E5A2B10465300359749 /* WWNetworking */,
+				8153D0342BA92B0700216FAE /* WWNetworking */,
+				8153D0372BA9304200216FAE /* WWNetworking */,
 			);
 			productName = Example;
 			productReference = 3DBCD87026F198EF00522E3B /* Example.app */;
@@ -141,8 +144,9 @@
 		3DBCD86826F198EF00522E3B /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				BuildIndependentTargetsInParallel = YES;
 				LastSwiftUpdateCheck = 1250;
-				LastUpgradeCheck = 1250;
+				LastUpgradeCheck = 1520;
 				TargetAttributes = {
 					3DBCD86F26F198EF00522E3B = {
 						CreatedOnToolsVersion = 12.5.1;
@@ -159,7 +163,7 @@
 			);
 			mainGroup = 3DBCD86726F198EF00522E3B;
 			packageReferences = (
-				811F6E592B10465300359749 /* XCRemoteSwiftPackageReference "WWNetworking" */,
+				8153D0362BA9304200216FAE /* XCRemoteSwiftPackageReference "WWNetworking" */,
 			);
 			productRefGroup = 3DBCD87126F198EF00522E3B /* Products */;
 			projectDirPath = "";
@@ -253,6 +257,7 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -314,6 +319,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -350,6 +356,7 @@
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
@@ -373,6 +380,7 @@
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
@@ -402,12 +410,12 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		811F6E592B10465300359749 /* XCRemoteSwiftPackageReference "WWNetworking" */ = {
+		8153D0362BA9304200216FAE /* XCRemoteSwiftPackageReference "WWNetworking" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/William-Weng/WWNetworking";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 1.4.0;
+				minimumVersion = 1.5.2;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -417,9 +425,13 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = WWNetworking;
 		};
-		811F6E5A2B10465300359749 /* WWNetworking */ = {
+		8153D0342BA92B0700216FAE /* WWNetworking */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 811F6E592B10465300359749 /* XCRemoteSwiftPackageReference "WWNetworking" */;
+			productName = WWNetworking;
+		};
+		8153D0372BA9304200216FAE /* WWNetworking */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8153D0362BA9304200216FAE /* XCRemoteSwiftPackageReference "WWNetworking" */;
 			productName = WWNetworking;
 		};
 /* End XCSwiftPackageProductDependency section */
