@@ -462,16 +462,17 @@ public extension WWNetworking {
     ///   - delegateQueue: OperationQueue
     ///   - timeoutInterval: TimeInterval
     ///   - progress: 下載進度
+    ///   - fragmentTask: URLSessionTask
     /// - Returns: Result<Data, Error>
     @MainActor
-    func fragmentDownload(with urlString: String, fragment: Int = 2, delegateQueue: OperationQueue? = .main, timeoutInterval: TimeInterval = .infinity, progress: @escaping ((DownloadProgressInformation) -> Void)) async -> Result<Data, Error> {
+    func fragmentDownload(with urlString: String, fragment: Int = 2, delegateQueue: OperationQueue? = .main, timeoutInterval: TimeInterval = .infinity, progress: @escaping ((DownloadProgressInformation) -> Void), fragmentTask: @escaping (URLSessionTask) -> Void) async -> Result<Data, Error> {
         
         await withCheckedContinuation { continuation in
             
             fragmentDownload(with: urlString, fragment: fragment, delegateQueue: delegateQueue, timeoutInterval: timeoutInterval) { info in
                 progress(info)
-            } fragmentTask: { _ in
-                
+            } fragmentTask: { task in
+                fragmentTask(task)
             }
             completion: { result in
                 Task { @MainActor in continuation.resume(returning: result) }
