@@ -23,9 +23,9 @@ dependencies: [
 |header(urlString:headers:result:)|取得該URL資源的HEAD資訊|
 |upload(with:urlString:formData:parameters:headers:result)|上傳檔案 - 模仿Form|
 |fragmentUpload(with:urlString:parameters:filename:delegateQueue:progress:completion:)|分段上傳 - 大型檔案|
-|download(with:urlString:delegateQueue:isResume:progress:completion:)|下載資料 - URLSessionDownloadDelegate|
-|fragmentDownload(with:delegateQueue:timeoutInterval:progress:fragmentTask:completion:)|分段下載|
-|multipleDownload(with:urlStrings:delegateQueue:progress:completion:)|下載多筆資料- URLSessionDownloadDelegate|
+|download(with:urlString:configuration:delegateQueue:isResume:progress:completion:)|下載資料 - URLSessionDownloadDelegate|
+|fragmentDownload(with:fragment:delegateQueue:timeout:configiguration:progress:fragmentTask:completion:)|分段下載|
+|multipleDownload(with:urlStrings:configuration:delegateQueue:progress:completion:)|下載多筆資料- URLSessionDownloadDelegate|
 
 ### [aynsc / await版本](https://youtu.be/s2PiL_Vte4E)
 |函式|功能|
@@ -34,8 +34,8 @@ dependencies: [
 |header(urlString:headers:)|取得該URL資源的HEAD資訊|
 |upload(with:urlString:formData:parameters:headers:)|上傳檔案 - 模仿Form|
 |fragmentUpload(with:urlString:parameters:filename:delegateQueue:progress:)|分段上傳 - 大型檔案|
-|download(with:urlString:delegateQueue:isResume:progress:)|下載資料 - URLSessionDownloadDelegate|
-|fragmentDownload(with:delegateQueue:timeoutInterval:progress:)|分段下載|
+|download(with:urlString:configuration:delegateQueue:isResume:progress:)|下載資料 - URLSessionDownloadDelegate|
+|fragmentDownload(with:fragment:delegateQueue:timeout:configiguration:progress:)|分段下載|
 |multipleRequest(with:)|發出多個request|
 |multipleRequestWithTaskGroup(info:)|發出多個request|
 

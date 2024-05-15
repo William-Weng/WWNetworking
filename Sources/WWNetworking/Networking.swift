@@ -214,21 +214,21 @@ public extension WWNetworking {
     /// - Parameters:
     ///   - httpMethod: [HTTP方法](https://imququ.com/post/four-ways-to-post-data-in-http.html)
     ///   - urlString: [網址](https://zh-tw.coderbridge.com/series/01d31194cb3c428d9ca2575c91e8b997/posts/2c17813523194f578281c430e8ecca02)
-    ///   - timeout: [Timeout](https://draveness.me/ios-yuan-dai-ma-jie-xi-sdwebimage/)
+    ///   - configuration: [URLSession設定 / timeout](https://draveness.me/ios-yuan-dai-ma-jie-xi-sdwebimage/)
     ///   - delegateQueue: [執行緒](https://zh-tw.coderbridge.com/series/01d31194cb3c428d9ca2575c91e8b997/posts/c44ba1db0ded4d53aec73a8e589ca1e5)
     ///   - isResume: [是否要立刻執行Task](https://liuyousama.top/2020/10/18/Kingfisher源码阅读/)
     ///   - progress: [下載進度](https://www.appcoda.com.tw/ios-concurrency/)
     ///   - completion: 下載完成後
     /// - Returns: URLSessionTask?
-    func download(with httpMethod: Constant.HttpMethod? = .GET, urlString: String, timeout: TimeInterval = .infinity, delegateQueue: OperationQueue? = .main, isResume: Bool = true, progress: @escaping ((DownloadProgressInformation) -> Void), completion: @escaping ((Result<DownloadResultInformation, Error>) -> Void)) -> URLSessionTask? {
+    func download(with httpMethod: Constant.HttpMethod? = .GET, urlString: String, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main, isResume: Bool = true, progress: @escaping ((DownloadProgressInformation) -> Void), completion: @escaping ((Result<DownloadResultInformation, Error>) -> Void)) -> URLSessionTask? {
         
-        guard let downloadTask = self.downloadTaskMaker(with: httpMethod, urlString: urlString, timeout: timeout, delegateQueue: delegateQueue) else { completion(.failure(Constant.MyError.notUrlFormat)); return nil }
+        guard let downloadTask = self.downloadTaskMaker(with: httpMethod, urlString: urlString, configuration: configuration, delegateQueue: delegateQueue) else { completion(.failure(Constant.MyError.notUrlFormat)); return nil }
         
         downloadTaskResultBlock = completion
         downloadProgressResultBlock = progress
-
+        
         if (isResume) { downloadTask.resume() }
-                
+        
         return downloadTask
     }
 
@@ -236,12 +236,12 @@ public extension WWNetworking {
     /// - Parameters:
     ///   - httpMethod: [HTTP方法](https://imququ.com/post/four-ways-to-post-data-in-http.html)
     ///   - urlStrings: [網址](https://zh-tw.coderbridge.com/series/01d31194cb3c428d9ca2575c91e8b997/posts/2c17813523194f578281c430e8ecca02)
-    ///   - timeout: Timeout
+    ///   - configuration: [URLSessionConfiguration](https://cootie8788.medium.com/swift-示範如何客製化元件-2-串上http-get-作法-f9db4524c31c)
     ///   - delegateQueue: [執行緒](https://zh-tw.coderbridge.com/series/01d31194cb3c428d9ca2575c91e8b997/posts/c44ba1db0ded4d53aec73a8e589ca1e5)
     ///   - progress: 下載進度
     ///   - completion: 下載完成後
     /// - Returns: [URLSessionTask]
-    func multipleDownload(with httpMethod: Constant.HttpMethod? = .GET, urlStrings: [String], timeout: TimeInterval = .infinity, delegateQueue: OperationQueue? = .main, progress: @escaping ((DownloadProgressInformation) -> Void), completion: @escaping ((Result<DownloadResultInformation, Error>) -> Void)) -> [URLSessionTask] {
+    func multipleDownload(with httpMethod: Constant.HttpMethod? = .GET, urlStrings: [String], configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main, progress: @escaping ((DownloadProgressInformation) -> Void), completion: @escaping ((Result<DownloadResultInformation, Error>) -> Void)) -> [URLSessionTask] {
         
         cleanAllBlocks()
         
@@ -249,7 +249,7 @@ public extension WWNetworking {
         
         let downloadTasks = _urlStrings.compactMap { urlString in
             
-            self.download(with: httpMethod, urlString: urlString, timeout: timeout, delegateQueue: delegateQueue) { info in
+            self.download(with: httpMethod, urlString: urlString, configuration: configuration, delegateQueue: delegateQueue) { info in
                 progress(info)
             } completion: { result in
                 completion(result)
@@ -264,12 +264,12 @@ public extension WWNetworking {
     ///   - urlString: String
     ///   - fragment: 分段數量
     ///   - delegateQueue: OperationQueue
-    ///   - timeoutInterval: TimeInterval
-    ///   - result: Result<FragmentDownloadDataInfomation, Error>
+    ///   - timeout: TimeInterval
+    ///   - configiguration: URLSessionConfiguration
     ///   - progress: 下載進度
     ///   - fragmentTask: URLSessionTask
     ///   - completion: Result<Data, Error>
-    func fragmentDownload(with urlString: String, fragment: Int = 2, delegateQueue: OperationQueue? = .main, timeoutInterval: TimeInterval = .infinity, progress: @escaping ((DownloadProgressInformation) -> Void), fragmentTask: @escaping (URLSessionTask) -> Void, completion: @escaping ((Result<Data, Error>) -> Void)) {
+    func fragmentDownload(with urlString: String, fragment: Int = 2, delegateQueue: OperationQueue? = .main, timeout: TimeInterval = .infinity, configiguration: URLSessionConfiguration = .default, progress: @escaping ((DownloadProgressInformation) -> Void), fragmentTask: @escaping (URLSessionTask) -> Void, completion: @escaping ((Result<Data, Error>) -> Void)) {
         
         guard fragment > 0 else { completion(.failure(Constant.MyError.fragmentCountError)); return }
         
@@ -295,7 +295,7 @@ public extension WWNetworking {
 
                     let offset: HttpDownloadOffset = (index * fragmentSize, (index + 1) * fragmentSize - 1)
 
-                    let _task = self.fragmentDownloadDataTaskMaker(with: urlString, delegateQueue: delegateQueue, offset: offset, timeout: timeoutInterval) { _result in
+                    let _task = self.fragmentDownloadDataTaskMaker(with: urlString, delegateQueue: delegateQueue, offset: offset, timeout: timeout, configiguration: configiguration) { _result in
                         switch _result {
                         case .failure(let error): completion(.failure(error))
                         case .success(let info): completion(.success(info))
@@ -433,18 +433,18 @@ public extension WWNetworking {
     /// - Parameters:
     ///   - httpMethod: [HTTP方法](https://imququ.com/post/four-ways-to-post-data-in-http.html)
     ///   - urlString: [網址](https://zh-tw.coderbridge.com/series/01d31194cb3c428d9ca2575c91e8b997/posts/2c17813523194f578281c430e8ecca02)
-    ///   - timeout: [Timeout](https://draveness.me/ios-yuan-dai-ma-jie-xi-sdwebimage/)
+    ///   - configuration: [Timeout](https://draveness.me/ios-yuan-dai-ma-jie-xi-sdwebimage/)
     ///   - delegateQueue: [執行緒](https://zh-tw.coderbridge.com/series/01d31194cb3c428d9ca2575c91e8b997/posts/c44ba1db0ded4d53aec73a8e589ca1e5)
     ///   - isResume: [是否要立刻執行Task](https://liuyousama.top/2020/10/18/Kingfisher源码阅读/)
     ///   - progress: [下載進度](https://www.appcoda.com.tw/ios-concurrency/)
     ///   - sessionTask: 執行的Task
     /// - Returns: Result<DownloadResultInformation, Error>
     // @MainActor
-    func download(with httpMethod: Constant.HttpMethod? = .GET, urlString: String, timeout: TimeInterval = .infinity, delegateQueue: OperationQueue? = .main, isResume: Bool = true, sessionTask: @escaping ((URLSessionTask?) -> Void), progress: @escaping ((DownloadProgressInformation) -> Void)) async -> Result<DownloadResultInformation, Error> {
+    func download(with httpMethod: Constant.HttpMethod? = .GET, urlString: String, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main, isResume: Bool = true, sessionTask: @escaping ((URLSessionTask?) -> Void), progress: @escaping ((DownloadProgressInformation) -> Void)) async -> Result<DownloadResultInformation, Error> {
         
         await withCheckedContinuation { continuation in
             
-            let task = download(with: httpMethod, urlString: urlString, timeout: timeout, delegateQueue: delegateQueue, isResume: isResume) { info in
+            let task = download(with: httpMethod, urlString: urlString, configuration: configuration, delegateQueue: delegateQueue, isResume: isResume) { info in
                 progress(info)
             } completion: { result in
                  continuation.resume(returning: result)
@@ -465,11 +465,11 @@ public extension WWNetworking {
     ///   - fragmentTask: URLSessionTask
     /// - Returns: Result<Data, Error>
     @MainActor
-    func fragmentDownload(with urlString: String, fragment: Int = 2, delegateQueue: OperationQueue? = .main, timeoutInterval: TimeInterval = .infinity, progress: @escaping ((DownloadProgressInformation) -> Void), fragmentTask: @escaping (URLSessionTask) -> Void) async -> Result<Data, Error> {
+    func fragmentDownload(with urlString: String, fragment: Int = 2, delegateQueue: OperationQueue? = .main, timeout: TimeInterval = .infinity, configiguration: URLSessionConfiguration = .default, progress: @escaping ((DownloadProgressInformation) -> Void), fragmentTask: @escaping (URLSessionTask) -> Void) async -> Result<Data, Error> {
         
         await withCheckedContinuation { continuation in
             
-            fragmentDownload(with: urlString, fragment: fragment, delegateQueue: delegateQueue, timeoutInterval: timeoutInterval) { info in
+            fragmentDownload(with: urlString, fragment: fragment, delegateQueue: delegateQueue, timeout: timeout, configiguration: configiguration) { info in
                 progress(info)
             } fragmentTask: { task in
                 fragmentTask(task)
@@ -652,17 +652,16 @@ private extension WWNetworking {
     /// - Parameters:
     ///   - httpMethod: [HTTP方法](https://imququ.com/post/four-ways-to-post-data-in-http.html)
     ///   - urlString: [網址](https://imququ.com/post/web-proxy.html)
-    ///   - timeout: Timeout
+    ///   - configuration: URLSessionConfiguration
     ///   - delegateQueue: 執行緒
     /// - Returns: URLSessionDownloadTask
-    func downloadTaskMaker(with httpMethod: Constant.HttpMethod? = .POST, urlString: String, timeout: TimeInterval = .infinity, delegateQueue: OperationQueue? = .main) -> URLSessionDownloadTask? {
+    func downloadTaskMaker(with httpMethod: Constant.HttpMethod? = .POST, urlString: String, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main) -> URLSessionDownloadTask? {
 
         guard let request = URLRequest._build(string: urlString, httpMethod: httpMethod) else { return nil }
-
-        let configiguration = URLSessionConfiguration.background(withIdentifier: urlString)._timeoutInterval(timeout)
-        let urlSession = URLSession(configuration: configiguration, delegate: self, delegateQueue: delegateQueue)
+        
+        let urlSession = URLSession(configuration: configuration, delegate: self, delegateQueue: delegateQueue)
         let downloadTask = urlSession.downloadTask(with: request)
-
+        
         return downloadTask
     }
     
@@ -693,13 +692,13 @@ private extension WWNetworking {
     ///   - delegateQueue: OperationQueue?
     ///   - offset: HttpDownloadOffset
     ///   - timeout: TimeInterval
+    ///   - configiguration: URLSessionConfiguratio
     ///   - result: Result<Data, Error>) -> Void
     /// - Returns: URLSessionDataTask?
-    func fragmentDownloadDataTaskMaker(with urlString: String, delegateQueue: OperationQueue? = .main, offset: HttpDownloadOffset = (0, nil), timeout: TimeInterval = .infinity, result: ((Result<Data, Error>) -> Void)?) -> URLSessionDataTask? {
+    func fragmentDownloadDataTaskMaker(with urlString: String, delegateQueue: OperationQueue?, offset: HttpDownloadOffset = (0, nil), timeout: TimeInterval, configiguration: URLSessionConfiguration, result: ((Result<Data, Error>) -> Void)?) -> URLSessionDataTask? {
 
         guard let url = URL(string: urlString),
               var request = Optional.some(URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: timeout)),
-              let configiguration = Optional.some(URLSessionConfiguration.background(withIdentifier: urlString)._timeoutInterval(timeout)),
               let urlSession = Optional.some(URLSession(configuration: configiguration, delegate: self, delegateQueue: delegateQueue)),
               let headerValue = downloadOffsetMaker(offset: offset)
         else {
