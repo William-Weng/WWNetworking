@@ -173,7 +173,7 @@ public extension WWNetworking {
     /// [分段上傳 - 大型檔案](https://www.swiftbysundell.com/articles/http-post-and-file-upload-requests-using-urlsession/)
     /// - Parameters:
     ///   - httpMethod: [Constant.HttpMethod?](https://developer.mozilla.org/zh-TW/docs/Web/HTTP/Basics_of_HTTP/MIME_types)
-    ///   - urlString: String
+    ///   - urlString: [String](https://cloud.tencent.com/developer/ask/sof/642880)
     ///   - parameters: [String: Data]
     ///   - headers:  [String: String?]?
     ///   - filename: String
@@ -206,7 +206,8 @@ public extension WWNetworking {
         fragmentUploadFinishBlock = completion
         
         uploadTask?.resume()
-        
+        urlSession.finishTasksAndInvalidate()
+
         return uploadTask
     }
 
@@ -662,6 +663,8 @@ private extension WWNetworking {
         let urlSession = URLSession(configuration: configuration, delegate: self, delegateQueue: delegateQueue)
         let downloadTask = urlSession.downloadTask(with: request)
         
+        urlSession.finishTasksAndInvalidate()
+        
         return downloadTask
     }
     
@@ -688,7 +691,7 @@ private extension WWNetworking {
     /// [斷點續傳下載檔案 (Data) => HTTPHeaderField = Range / ∵ 是一段一段下載 ∴ 自己要一段一段存](https://www.jianshu.com/p/534ec0d9d758)
     /// - urlSession(_:dataTask:didReceive:) => completionHandler(.allow)
     /// - Parameters:
-    ///   - urlString: String
+    ///   - urlString: [String](https://stackoverflow.com/questions/58023230/memory-leak-occurring-in-iphone-x-after-updating-to-ios-13)
     ///   - delegateQueue: OperationQueue?
     ///   - offset: HttpDownloadOffset
     ///   - timeout: TimeInterval
@@ -704,10 +707,12 @@ private extension WWNetworking {
         else {
             return nil
         }
-
+        
+        defer { urlSession.finishTasksAndInvalidate() }
+        
         request._setValue(headerValue, forHTTPHeaderField: .range)
         fragmentDownloadFinishBlock = result
-
+        
         return urlSession.dataTask(with: request)
     }
 
