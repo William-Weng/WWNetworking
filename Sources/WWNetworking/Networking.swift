@@ -42,6 +42,12 @@ public extension WWNetworking {
                                     paramaters: [String: String?]?,
                                     headers: [String: String?]?,
                                     httpBody: Data?)
+    typealias RequestInformationType = (httpMethod: Constant.HttpMethod,                                                                    // 多個request的參數值 (同單個request)
+                                        urlString: String,
+                                        contentType: Constant.ContentType,
+                                        paramaters: [String: String?]?,
+                                        headers: [String: String?]?,
+                                        httpBodyType: Constant.HttpBobyType?)
 }
 
 // MARK: - URLSessionTaskDelegate
@@ -98,12 +104,27 @@ public extension WWNetworking {
     ///   - urlString: 網址
     ///   - paramaters: 參數 => ?name=william
     ///   - headers: [Http Header](https://zh.wikipedia.org/zh-tw/HTTP头字段)
+    ///   - contentType: HttpBody的類型
     ///   - httpBody: Data => 所有的資料只要轉成Data都可以傳
-    ///   - contentType: Constant.ContentType
     ///   - result: Result<Constant.ResponseInformation, Error>
     /// - Returns: URLSessionTask?
     func request(with httpMethod: Constant.HttpMethod = .GET, urlString: String, contentType: Constant.ContentType = .json, paramaters: [String: String?]? = nil, headers: [String: String?]? = nil, httpBody: Data? = nil, result: @escaping (Result<ResponseInformation, Error>) -> Void) -> URLSessionTask? {
-        let task = self.request(with: httpMethod, urlString: urlString, contentType: contentType, queryItems: paramaters?._queryItems(), headers: headers, httpBody: httpBody) { result($0) }
+        let task = request(with: httpMethod, urlString: urlString, contentType: contentType, queryItems: paramaters?._queryItems(), headers: headers, httpBody: httpBody) { result($0) }
+        return task
+    }
+    
+    /// 發出URLRequest
+    /// - Parameters:
+    ///   - httpMethod: Constant.HttpMethod
+    ///   - urlString: String
+    ///   - contentType: Constant.ContentType
+    ///   - paramaters: [String: String?]?
+    ///   - headers: [String: String?]?
+    ///   - httpBodyType: Constant.HttpBobyType?
+    ///   - result: Result<Constant.ResponseInformation, Error>
+    /// - Returns: URLSessionTask?
+    func request(with httpMethod: Constant.HttpMethod = .GET, urlString: String, contentType: Constant.ContentType = .json, paramaters: [String: String?]? = nil, headers: [String: String?]? = nil, httpBodyType: Constant.HttpBobyType?, result: @escaping (Result<ResponseInformation, Error>) -> Void) -> URLSessionTask? {
+        let task = request(with: httpMethod, urlString: urlString, contentType: contentType, paramaters: paramaters, headers: headers, httpBody: httpBodyType?.data()) { result($0) }
         return task
     }
     
@@ -115,7 +136,7 @@ public extension WWNetworking {
     /// - Returns: URLSessionTask?
     func header(urlString: String, headers: [String: String?]? = nil, result: @escaping (Result<ResponseInformation, Error>) -> Void) -> URLSessionTask? {
 
-        let task = self.request(with: .HEAD, urlString: urlString, contentType: .plain, paramaters: nil, headers: headers, httpBody: nil) { _result in
+        let task = request(with: .HEAD, urlString: urlString, contentType: .plain, paramaters: nil, headers: headers, httpBody: nil) { _result in
 
             switch _result {
             case .failure(let error): result(.failure(error))
@@ -335,6 +356,19 @@ public extension WWNetworking {
         }
     }
     
+    /// 發出URLRequest
+    /// - Parameters:
+    ///   - httpMethod: Constant.HttpMethod
+    ///   - urlString: String
+    ///   - contentType: Constant.ContentType
+    ///   - paramaters: [String: String?]?
+    ///   - headers: [String: String?]?
+    ///   - httpBodyType: Constant.HttpBobyType?
+    /// - Returns: Result<ResponseInformation, Error>
+    func request(with httpMethod: Constant.HttpMethod = .GET, urlString: String, contentType: Constant.ContentType = .json, paramaters: [String: String?]? = nil, headers: [String: String?]? = nil, httpBodyType: Constant.HttpBobyType? = nil) async -> Result<ResponseInformation, Error> {
+        return await request(with: httpMethod, urlString: urlString, contentType: contentType, paramaters: paramaters, headers: headers, httpBody: httpBodyType?.data())
+    }
+    
     /// [執行多個Request](https://youtu.be/s2PiL_Vte4E)
     /// - Parameter infos: [[RequestInformation]](https://onevcat.com/2021/07/swift-concurrency/)
     /// - Returns: [Result<ResponseInformation, Error>]
@@ -350,7 +384,19 @@ public extension WWNetworking {
         return requests
     }
     
-    /// [執行多個Request](https://hicc.pro/p/swift/whats-new-in-swift-5-5)
+    /// 執行多個Request
+    /// - Parameter types: [RequestInformationType]
+    /// - Returns: [Result<ResponseInformation, Error>]
+    func multipleRequest(for types: [RequestInformationType]) async -> [Result<ResponseInformation, Error>] {
+        
+        let infos = types.map { type -> RequestInformation in
+            return requestInformationTypeToInfo(type)
+        }
+        
+        return await multipleRequest(with: infos)
+    }
+    
+    /// [同時執行多個Request](https://hicc.pro/p/swift/whats-new-in-swift-5-5)
     /// - Parameter infos: [[RequestInformation]](https://www.appcoda.com.tw/task-group/)
     /// - Returns: [Result<ResponseInformation, Error>]
     func multipleRequestWithTaskGroup(infos: [RequestInformation]) async -> [Result<ResponseInformation, Error>] {
@@ -368,6 +414,18 @@ public extension WWNetworking {
             
             return requests
         }
+    }
+        
+    /// 同時執行多個Request
+    /// - Parameter types: [RequestInformationType]
+    /// - Returns: [Result<ResponseInformation, Error>]
+    func multipleRequestWithTaskGroup(types: [RequestInformationType]) async -> [Result<ResponseInformation, Error>] {
+        
+        let infos = types.map { type -> RequestInformation in
+            return requestInformationTypeToInfo(type)
+        }
+        
+        return await multipleRequestWithTaskGroup(infos: infos)
     }
         
     /// 取得該URL資源的HEAD資訊 (檔案大小 / 類型 / 上傳日期…)
@@ -740,6 +798,13 @@ private extension WWNetworking {
         return downloadData
     }
 
+    /// 將RequestInformationType => RequestInformation
+    /// - Parameter type: RequestInformationType
+    /// - Returns: RequestInformation
+    func requestInformationTypeToInfo(_ type: RequestInformationType) -> RequestInformation {
+        return RequestInformation(httpMethod: type.httpMethod, urlString: type.urlString, contentType: type.contentType, paramaters: type.paramaters, headers: type.headers, httpBody: type.httpBodyType?.data())
+    }
+    
     /// 清除分段下載的暫存檔
     func cleanFragmentInformation() {
         fragmentDownloadContentLength = -1

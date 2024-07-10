@@ -12,6 +12,7 @@ public extension WWNetworking.Constant {
 
     /// [HTTP 請求方法](https://developer.mozilla.org/zh-TW/docs/Web/HTTP/Methods)
     enum HttpMethod: String {
+        
         case GET = "GET"
         case HEAD = "HEAD"
         case POST = "POST"
@@ -25,6 +26,7 @@ public extension WWNetworking.Constant {
     
     /// [HTTP標頭欄位](https://zh.wikipedia.org/wiki/HTTP头字段)
     enum HTTPHeaderField: String {
+        
         case acceptRanges = "Accept-Ranges"
         case authorization = "Authorization"
         case contentType = "Content-Type"
@@ -34,6 +36,27 @@ public extension WWNetworking.Constant {
         case date = "Date"
         case lastModified = "Last-Modified"
         case range = "Range"
+    }
+    
+    /// HttpBody的類型 (Data)
+    enum HttpBobyType {
+        
+        case string(_ string: String?, encoding: String.Encoding = .utf8, isLossyConversion: Bool = false)
+        case array(_ array: [Any]?, options: JSONSerialization.WritingOptions = JSONSerialization.WritingOptions())
+        case dictionary(_ dictionary: [String: Any]?, options: JSONSerialization.WritingOptions = JSONSerialization.WritingOptions())
+        case custom(_ data: Data?)
+        
+        /// 轉成Data
+        /// - Returns: Data?
+        func data() -> Data? {
+            
+            switch self {
+            case .string(let string, let encoding, let isLossyConversion): return string?._data(using: encoding, isLossyConversion: isLossyConversion)
+            case .array(let array, let options): return array?._jsonData(options: options)
+            case .dictionary(let dictionary, let options): return dictionary?._jsonData(options: options)
+            case .custom(let data): return data
+            }
+        }
     }
     
     /// 自訂錯誤

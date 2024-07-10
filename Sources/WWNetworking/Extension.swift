@@ -7,14 +7,28 @@
 
 import UIKit
 
-// MARK: - Collection (override class function)
+// MARK: - String (override function)
+extension String {
+    
+    /// String => Data
+    /// - Parameters:
+    ///   - encoding: 字元編碼
+    ///   - isLossyConversion: 失真轉換
+    /// - Returns: Data?
+    func _data(using encoding: String.Encoding = .utf8, isLossyConversion: Bool = false) -> Data? {
+        let data = self.data(using: encoding, allowLossyConversion: isLossyConversion)
+        return data
+    }
+}
+
+// MARK: - Collection (override function)
 extension Collection {
 
     /// [為Array加上安全取值特性 => nil](https://stackoverflow.com/questions/25329186/safe-bounds-checked-array-lookup-in-swift-through-optional-bindings)
     subscript(safe index: Index) -> Element? { return indices.contains(index) ? self[index] : nil }
 }
 
-// MARK: - Collection (class function)
+// MARK: - Collection (function)
 extension Collection where Self.Element: Hashable {
         
     /// 不要有重複的值 => Array -> Set
@@ -30,7 +44,29 @@ extension Collection where Self.Element: Hashable {
     }
 }
 
-// MARK: - Dictionary (class function)
+// MARK: - Sequence (function)
+extension Sequence {
+        
+    /// Array => JSON Data
+    /// - ["name","William"] => ["name","William"] => 5b226e616d65222c2257696c6c69616d225d
+    /// - Returns: Data?
+    func _jsonData(options: JSONSerialization.WritingOptions = JSONSerialization.WritingOptions()) -> Data? {
+        return JSONSerialization._data(with: self, options: options)
+    }
+}
+
+// MARK: - Dictionary (function)
+extension Dictionary {
+    
+    /// Dictionary => JSON Data
+    /// - ["name":"William"] => {"name":"William"} => 7b226e616d65223a2257696c6c69616d227d
+    /// - Returns: Data?
+    func _jsonData(options: JSONSerialization.WritingOptions = JSONSerialization.WritingOptions()) -> Data? {
+        return JSONSerialization._data(with: self, options: options)
+    }
+}
+
+// MARK: - Dictionary (function)
 extension Dictionary where Self.Key == String, Self.Value == String? {
     
     /// [將[String: String?] => [URLQueryItem]](https://medium.com/@jerrywang0420/urlsession-教學-swift-3-ios-part-2-a17b2d4cc056)
@@ -54,7 +90,28 @@ extension Dictionary where Self.Key == String, Self.Value == String? {
     }
 }
 
-// MARK: - UIImage (class function)
+// MARK: - JSONSerialization (static function)
+extension JSONSerialization {
+    
+    /// [JSONObject => JSON Data](https://medium.com/彼得潘的-swift-ios-app-開發問題解答集/利用-jsonserialization-印出美美縮排的-json-308c93b51643)
+    /// - ["name":"William"] => {"name":"William"} => 7b226e616d65223a2257696c6c69616d227d
+    /// - Parameters:
+    ///   - object: Any
+    ///   - options: JSONSerialization.WritingOptions
+    /// - Returns: Data?
+    static func _data(with object: Any, options: JSONSerialization.WritingOptions = JSONSerialization.WritingOptions()) -> Data? {
+        
+        guard JSONSerialization.isValidJSONObject(object),
+              let data = try? JSONSerialization.data(withJSONObject: object, options: options)
+        else {
+            return nil
+        }
+        
+        return data
+    }
+}
+
+// MARK: - UIImage (function)
 extension UIImage {
     
     /// UIImage => Data
@@ -103,7 +160,7 @@ extension URLComponents {
     }
 }
 
-// MARK: - URLRequest (class function)
+// MARK: - URLRequest (function)
 extension URLRequest {
     
     /// 產生URLRequest
@@ -145,7 +202,7 @@ extension URLRequest {
     }
 }
 
-// MARK: - URLRequest (class function)
+// MARK: - URLRequest (function)
 extension URLRequest {
     
     /// enum版的.setValue(_,forHTTPHeaderField:_)
@@ -165,7 +222,7 @@ extension URLRequest {
     }
 }
 
-// MARK: - Data (class function)
+// MARK: - Data (function)
 extension Data {
 
     /// Data加上文字
@@ -176,7 +233,7 @@ extension Data {
     /// - Returns: Bool
     mutating func _append(string: String, using encoding: String.Encoding = .utf8, allowLossyConversion: Bool = true) -> Bool {
         
-        guard let data = string.data(using: encoding, allowLossyConversion: allowLossyConversion) else { return false }
+        guard let data = string._data(using: encoding, isLossyConversion: allowLossyConversion) else { return false }
         self.append(data)
         
         return true
@@ -194,7 +251,7 @@ extension Data {
     }
 }
 
-// MARK: - HTTPURLResponse (class function)
+// MARK: - HTTPURLResponse (function)
 extension HTTPURLResponse {
     
     /// 取得其中一個Field
@@ -212,7 +269,7 @@ extension HTTPURLResponse {
     }
 }
 
-// MARK: - URLSessionConfiguration (class function)
+// MARK: - URLSessionConfiguration (function)
 extension URLSessionConfiguration {
     
     /// 設定timeoutIntervalForRequest / timeoutIntervalForResource

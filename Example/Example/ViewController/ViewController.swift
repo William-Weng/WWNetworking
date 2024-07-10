@@ -47,7 +47,7 @@ private extension ViewController {
         
         let urlString = UrlStrings["GET"]!
         let parameters: [String: String?] = ["name": "William.Weng", "github": "https://william-weng.github.io/"]
-
+        
         _ = WWNetworking.shared.request(with: .GET, urlString: urlString, paramaters: parameters) { result in
 
             switch result {
@@ -56,14 +56,14 @@ private extension ViewController {
             }
         }
     }
-
+    
     /// 測試POST
     func httpPostTest() {
         
         let urlString = UrlStrings["POST"]!
-        let parameters: [String: String?] = ["name": "William.Weng", "github": "https://william-weng.github.io/"]
+        let parameters: [String: Any] = ["name": "William.Weng", "github": "https://william-weng.github.io/"]
         
-        _ = WWNetworking.shared.request(with: .POST, urlString: urlString, paramaters: nil, httpBody: parameters._jsonSerialization()) { result in
+        _ = WWNetworking.shared.request(with: .POST, urlString: urlString, paramaters: nil, httpBodyType: .dictionary(parameters)) { result in
 
             switch result {
             case .failure(let error): self.displayText(error)

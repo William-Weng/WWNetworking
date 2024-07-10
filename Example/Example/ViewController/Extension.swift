@@ -7,24 +7,6 @@
 
 import UIKit
 
-// MARK: - Dictionary (class function)
-extension Dictionary {
-    
-    /// Dictionary => JSON Data
-    /// - ["name":"William"] => {"name":"William"} => 7b226e616d65223a2257696c6c69616d227d
-    /// - Returns: Data?
-    func _jsonSerialization() -> Data? {
-        
-        guard JSONSerialization.isValidJSONObject(self),
-              let data = try? JSONSerialization.data(withJSONObject: self, options: JSONSerialization.WritingOptions())
-        else {
-            return nil
-        }
-        
-        return data
-    }
-}
-
 // MARK: - Data (class function)
 extension Data {
     
