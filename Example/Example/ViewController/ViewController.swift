@@ -48,7 +48,7 @@ private extension ViewController {
         let urlString = UrlStrings["GET"]!
         let parameters: [String: String?] = ["name": "William.Weng", "github": "https://william-weng.github.io/"]
         
-        _ = WWNetworking.shared.request(with: .GET, urlString: urlString, paramaters: parameters) { result in
+        _ = WWNetworking.shared.request(httpMethod: .GET, urlString: urlString, paramaters: parameters) { result in
 
             switch result {
             case .failure(let error): self.displayText(error)
@@ -63,7 +63,7 @@ private extension ViewController {
         let urlString = UrlStrings["POST"]!
         let parameters: [String: Any] = ["name": "William.Weng", "github": "https://william-weng.github.io/"]
         
-        _ = WWNetworking.shared.request(with: .POST, urlString: urlString, paramaters: nil, httpBodyType: .dictionary(parameters)) { result in
+        _ = WWNetworking.shared.request(httpMethod: .POST, urlString: urlString, paramaters: nil, httpBodyType: .dictionary(parameters)) { result in
 
             switch result {
             case .failure(let error): self.displayText(error)
@@ -140,7 +140,7 @@ private extension ViewController {
         
         self.displayText("")
         
-        WWNetworking.shared.fragmentDownload(with: urlString, fragment: fragmentCount, progress: { info in
+        WWNetworking.shared.fragmentDownload(urlString: urlString, fragment: fragmentCount, progress: { info in
             
             let progress = Float(info.totalWritten) / Float(info.totalSize)
             self.displayProgressWithIndex(index, progress: progress)

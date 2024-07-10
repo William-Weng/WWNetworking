@@ -11,7 +11,7 @@
 ### [Installation with Swift Package Manager](https://medium.com/彼得潘的-swift-ios-app-開發問題解答集/使用-spm-安裝第三方套件-xcode-11-新功能-2c4ffcf85b4b)
 ```
 dependencies: [
-    .package(url: "https://github.com/William-Weng/WWNetworking.git", .upToNextMajor(from: "1.6.0"))
+    .package(url: "https://github.com/William-Weng/WWNetworking.git", .upToNextMajor(from: "1.6.1"))
 ]
 ```
 
@@ -19,28 +19,24 @@ dependencies: [
 ### [一般版本](https://medium.com/彼得潘的-swift-ios-app-開發教室/簡易說明swift-4-closures-77351c3bf775)
 |函式|功能|
 |-|-|
-|request(with:urlString:contentType:paramaters:headers:httpBody:result:)|發出URLRequest|
-|request(with:urlString:contentType:paramaters:headers:httpBodyType:result:)|發出URLRequest|
+|request(httpMethod:urlString:contentType:paramaters:headers:httpBodyType:result:)|發出URLRequest|
 |header(urlString:headers:result:)|取得該URL資源的HEAD資訊|
-|upload(with:urlString:formData:parameters:headers:result)|上傳檔案 - 模仿Form|
-|fragmentUpload(with:urlString:parameters:filename:delegateQueue:progress:completion:)|分段上傳 - 大型檔案|
-|download(with:urlString:configuration:delegateQueue:isResume:progress:completion:)|下載資料 - URLSessionDownloadDelegate|
-|fragmentDownload(with:fragment:delegateQueue:timeout:configiguration:progress:fragmentTask:completion:)|分段下載|
-|multipleDownload(with:urlStrings:configuration:delegateQueue:progress:completion:)|下載多筆資料- URLSessionDownloadDelegate|
+|upload(httpMethod:urlString:formData:parameters:headers:result)|上傳檔案 - 模仿Form|
+|fragmentUpload(httpMethod:urlString:parameters:filename:delegateQueue:progress:completion:)|分段上傳 - 大型檔案|
+|download(httpMethod:urlString:configuration:delegateQueue:isResume:progress:completion:)|下載資料 - URLSessionDownloadDelegate|
+|fragmentDownload(urlString:fragment:delegateQueue:timeout:configiguration:progress:fragmentTask:completion:)|分段下載|
+|multipleDownload(httpMethod:urlStrings:configuration:delegateQueue:progress:completion:)|下載多筆資料- URLSessionDownloadDelegate|
 
 ### [aynsc / await版本](https://youtu.be/s2PiL_Vte4E)
 |函式|功能|
 |-|-|
-|request(with:urlString:contentType:paramaters:headers:httpBody:)|發出URLRequest|
-|request(with:urlString:contentType:paramaters:headers:httpBodyType:)|發出URLRequest|
+|request(httpMethod:urlString:contentType:paramaters:headers:httpBodyType:)|發出URLRequest|
 |header(urlString:headers:)|取得該URL資源的HEAD資訊|
-|upload(with:urlString:formData:parameters:headers:)|上傳檔案 - 模仿Form|
-|fragmentUpload(with:urlString:parameters:filename:delegateQueue:progress:)|分段上傳 - 大型檔案|
-|download(with:urlString:configuration:delegateQueue:isResume:progress:)|下載資料 - URLSessionDownloadDelegate|
-|fragmentDownload(with:fragment:delegateQueue:timeout:configiguration:progress:)|分段下載|
-|multipleRequest(with:)|發出多個request|
-|multipleRequest(for:)|發出多個request|
-|multipleRequestWithTaskGroup(infos:)|發出多個request|
+|upload(httpMethod:urlString:formData:parameters:headers:)|上傳檔案 - 模仿Form|
+|fragmentUpload(httpMethod:urlString:parameters:filename:delegateQueue:progress:)|分段上傳 - 大型檔案|
+|download(httpMethod:urlString:configuration:delegateQueue:isResume:progress:)|下載資料 - URLSessionDownloadDelegate|
+|fragmentDownload(urlString:fragment:delegateQueue:timeout:configiguration:progress:)|分段下載|
+|multipleRequest(types:)|發出多個request|
 |multipleRequestWithTaskGroup(types:)|發出多個request|
 
 ## Example
@@ -84,9 +80,9 @@ private extension ViewController {
     func httpGetTest() {
         
         let urlString = UrlStrings["GET"]!
-        let parameters: [String: Any] = ["name": "William.Weng", "github": "https://william-weng.github.io/"]
-
-        _ = WWNetworking.shared.request(with: .GET, urlString: urlString, paramaters: parameters) { result in
+        let parameters: [String: String?] = ["name": "William.Weng", "github": "https://william-weng.github.io/"]
+        
+        _ = WWNetworking.shared.request(httpMethod: .GET, urlString: urlString, paramaters: parameters) { result in
 
             switch result {
             case .failure(let error): self.displayText(error)
@@ -94,13 +90,13 @@ private extension ViewController {
             }
         }
     }
-
+    
     func httpPostTest() {
         
         let urlString = UrlStrings["POST"]!
-        let parameters: [String: String?] = ["name": "William.Weng", "github": "https://william-weng.github.io/"]
+        let parameters: [String: Any] = ["name": "William.Weng", "github": "https://william-weng.github.io/"]
         
-        _ = WWNetworking.shared.request(with: .POST, urlString: urlString, paramaters: nil, httpBodyType: .dictionary(parameters)) { result in
+        _ = WWNetworking.shared.request(httpMethod: .POST, urlString: urlString, paramaters: nil, httpBodyType: .dictionary(parameters)) { result in
 
             switch result {
             case .failure(let error): self.displayText(error)
@@ -173,7 +169,7 @@ private extension ViewController {
         
         self.displayText("")
         
-        WWNetworking.shared.fragmentDownload(with: urlString, fragment: fragmentCount, progress: { info in
+        WWNetworking.shared.fragmentDownload(urlString: urlString, fragment: fragmentCount, progress: { info in
             
             let progress = Float(info.totalWritten) / Float(info.totalSize)
             self.displayProgressWithIndex(index, progress: progress)
