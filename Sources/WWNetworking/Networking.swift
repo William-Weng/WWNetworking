@@ -331,7 +331,12 @@ public extension WWNetworking {
     ///   - contentType: Constant.ContentType
     /// - Returns: Result<ResponseInformation, Error>
     func request(httpMethod: Constant.HttpMethod = .GET, urlString: String, contentType: Constant.ContentType = .json, paramaters: [String: String?]? = nil, headers: [String: String?]? = nil, httpBodyType: Constant.HttpBobyType? = nil) async -> Result<ResponseInformation, Error> {
-        return await request(httpMethod: httpMethod, urlString: urlString, contentType: contentType, paramaters: paramaters, headers: headers, httpBodyType: httpBodyType)
+        
+        await withCheckedContinuation { continuation in
+            request(httpMethod: httpMethod, urlString: urlString, contentType: contentType, paramaters: paramaters, headers: headers, httpBodyType: httpBodyType) { result in
+                continuation.resume(returning: result)
+            }
+        }
     }
     
     /// [執行多個Request](https://youtu.be/s2PiL_Vte4E)
