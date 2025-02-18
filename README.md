@@ -22,7 +22,7 @@ dependencies: [
 |request(httpMethod:urlString:contentType:paramaters:headers:httpBodyType:result:)|發出URLRequest|
 |header(urlString:headers:result:)|取得該URL資源的HEAD資訊|
 |upload(httpMethod:urlString:formData:parameters:headers:result)|上傳檔案 - 模仿Form|
-|fragmentUpload(httpMethod:urlString:parameters:filename:delegateQueue:progress:completion:)|分段上傳 - 大型檔案|
+|fragmentUpload(httpMethod:urlString:formData:headers:delegateQueue:progress:completion:)|分段上傳 - 大型檔案|
 |download(httpMethod:urlString:configuration:delegateQueue:isResume:progress:completion:)|下載資料 - URLSessionDownloadDelegate|
 |fragmentDownload(urlString:fragment:delegateQueue:timeout:configiguration:progress:fragmentTask:completion:)|分段下載|
 |multipleDownload(httpMethod:urlStrings:configuration:delegateQueue:progress:completion:)|下載多筆資料- URLSessionDownloadDelegate|
@@ -33,7 +33,7 @@ dependencies: [
 |request(httpMethod:urlString:contentType:paramaters:headers:httpBodyType:)|發出URLRequest|
 |header(urlString:headers:)|取得該URL資源的HEAD資訊|
 |upload(httpMethod:urlString:formData:parameters:headers:)|上傳檔案 - 模仿Form|
-|fragmentUpload(httpMethod:urlString:parameters:filename:delegateQueue:progress:)|分段上傳 - 大型檔案|
+|fragmentUpload(httpMethod:urlString:formData:headers:delegateQueue:progress:)|分段上傳 - 大型檔案|
 |download(httpMethod:urlString:configuration:delegateQueue:isResume:progress:)|下載資料 - URLSessionDownloadDelegate|
 |fragmentDownload(urlString:fragment:delegateQueue:timeout:configiguration:progress:)|分段下載|
 |multipleRequest(types:)|發出多個request|
@@ -125,9 +125,10 @@ private extension ViewController {
         let urlString = UrlStrings["UPLOAD"]!
         let index = 1
         let imageData = resultImageViews[index].image?.pngData()
-                
-        _ = WWNetworking.shared.fragmentUpload(urlString: urlString, parameters: ["x-filename": imageData!], filename: "Large.png", progress: { info in
-            
+        let formData: WWNetworking.FormDataInformation = (name: "x-filename", filename: "Large.png", contentType: .octetStream, data: imageData!)
+        
+        _ = WWNetworking.shared.fragmentUpload(urlString: urlString, formData: formData, progress: { info in
+             
             let progress = Float(info.totalBytesSent) / Float(info.totalBytesExpectedToSend)
             DispatchQueue.main.async { self.title = "\(progress)" }
             

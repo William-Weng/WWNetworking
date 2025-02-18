@@ -17,9 +17,10 @@
 		8153D0352BA92B0700216FAE /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 8153D0342BA92B0700216FAE /* WWNetworking */; };
 		8171DB882D641C5A00954209 /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 8171DB872D641C5A00954209 /* WWNetworking */; };
 		8171DB8A2D641DF000954209 /* Golang in Resources */ = {isa = PBXBuildFile; fileRef = 8171DB892D641DF000954209 /* Golang */; };
-		8171DB8D2D6421E800954209 /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 8171DB8C2D6421E800954209 /* WWNetworking */; };
 		8189FC522C3E22F30080A100 /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 8189FC512C3E22F30080A100 /* WWNetworking */; };
 		819D5B762B84421A002C23E9 /* Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 819D5B752B84421A002C23E9 /* Extension.swift */; };
+		81FF5DEB2D642A8000A24CF9 /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 81FF5DEA2D642A8000A24CF9 /* WWNetworking */; };
+		81FF5DEE2D64312000A24CF9 /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 81FF5DED2D64312000A24CF9 /* WWNetworking */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -39,11 +40,12 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8171DB8D2D6421E800954209 /* WWNetworking in Frameworks */,
+				81FF5DEB2D642A8000A24CF9 /* WWNetworking in Frameworks */,
 				8189FC522C3E22F30080A100 /* WWNetworking in Frameworks */,
 				8171DB882D641C5A00954209 /* WWNetworking in Frameworks */,
 				8153D0352BA92B0700216FAE /* WWNetworking in Frameworks */,
 				811D16042C3E380E009D1B1C /* WWNetworking in Frameworks */,
+				81FF5DEE2D64312000A24CF9 /* WWNetworking in Frameworks */,
 				811F6E582B10451700359749 /* WWNetworking in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -144,7 +146,8 @@
 				8189FC512C3E22F30080A100 /* WWNetworking */,
 				811D16032C3E380E009D1B1C /* WWNetworking */,
 				8171DB872D641C5A00954209 /* WWNetworking */,
-				8171DB8C2D6421E800954209 /* WWNetworking */,
+				81FF5DEA2D642A8000A24CF9 /* WWNetworking */,
+				81FF5DED2D64312000A24CF9 /* WWNetworking */,
 			);
 			productName = Example;
 			productReference = 3DBCD87026F198EF00522E3B /* Example.app */;
@@ -175,7 +178,7 @@
 			);
 			mainGroup = 3DBCD86726F198EF00522E3B;
 			packageReferences = (
-				8171DB8B2D6421E800954209 /* XCRemoteSwiftPackageReference "WWNetworking" */,
+				81FF5DEC2D64312000A24CF9 /* XCRemoteSwiftPackageReference "WWNetworking" */,
 			);
 			productRefGroup = 3DBCD87126F198EF00522E3B /* Products */;
 			projectDirPath = "";
@@ -423,12 +426,12 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		8171DB8B2D6421E800954209 /* XCRemoteSwiftPackageReference "WWNetworking" */ = {
+		81FF5DEC2D64312000A24CF9 /* XCRemoteSwiftPackageReference "WWNetworking" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/William-Weng/WWNetworking";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 1.6.3;
+				minimumVersion = 1.6.4;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -450,13 +453,17 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = WWNetworking;
 		};
-		8171DB8C2D6421E800954209 /* WWNetworking */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 8171DB8B2D6421E800954209 /* XCRemoteSwiftPackageReference "WWNetworking" */;
-			productName = WWNetworking;
-		};
 		8189FC512C3E22F30080A100 /* WWNetworking */ = {
 			isa = XCSwiftPackageProductDependency;
+			productName = WWNetworking;
+		};
+		81FF5DEA2D642A8000A24CF9 /* WWNetworking */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = WWNetworking;
+		};
+		81FF5DED2D64312000A24CF9 /* WWNetworking */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 81FF5DEC2D64312000A24CF9 /* XCRemoteSwiftPackageReference "WWNetworking" */;
 			productName = WWNetworking;
 		};
 /* End XCSwiftPackageProductDependency section */

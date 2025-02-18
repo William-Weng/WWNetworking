@@ -94,8 +94,9 @@ private extension ViewController {
         let urlString = UrlStrings["UPLOAD"]!
         let index = 1
         let imageData = resultImageViews[index].image?.pngData()
-                
-        _ = WWNetworking.shared.fragmentUpload(urlString: urlString, parameters: ["x-filename": imageData!], filename: "Large.png", progress: { info in
+        let formData: WWNetworking.FormDataInformation = (name: "x-filename", filename: "Large.png", contentType: .octetStream, data: imageData!)
+        
+        _ = WWNetworking.shared.fragmentUpload(urlString: urlString, formData: formData, progress: { info in
             
             let progress = Float(info.totalBytesSent) / Float(info.totalBytesExpectedToSend)
             DispatchQueue.main.async { self.title = "\(progress)" }

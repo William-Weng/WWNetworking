@@ -33,8 +33,8 @@ public extension WWNetworking {
     typealias HttpDownloadOffset = (start: Int?, end: Int?)                                                                                 // 續傳下載開始~結束位置設定值 (bytes=0-1024)
     typealias DownloadResultInformation = (urlString: String, data: Data?)                                                                  // 網路下載資料的結果資訊 (URL, Data)
     typealias UploadProgressInformation = (urlString: String?, bytesSent: Int64, totalBytesSent: Int64, totalBytesExpectedToSend: Int64)    // 網路上傳資料 (URL / 段落上傳大小 / 己上傳大小 / 總大小)
-    typealias FormDataInformation = (name: String, filename: String, contentType: ContentType, data: Data)                         // 上傳檔案資訊 (參數名稱 / 檔名 / 檔案類型 / 資料)
-    typealias RequestInformationType = (httpMethod: HttpMethod,                                                                    // 多個request的參數值 (同單個request)
+    typealias FormDataInformation = (name: String, filename: String, contentType: ContentType, data: Data)                                  // 上傳檔案資訊 (參數名稱 / 檔名 / 檔案類型 / 資料)
+    typealias RequestInformationType = (httpMethod: HttpMethod,                                                                             // 多個request的參數值 (同單個request)
                                         urlString: String,
                                         contentType: ContentType,
                                         paramaters: [String: String?]?,
@@ -176,15 +176,13 @@ public extension WWNetworking {
     /// - Parameters:
     ///   - httpMethod: [HttpMethod?](https://developer.mozilla.org/zh-TW/docs/Web/HTTP/Basics_of_HTTP/MIME_types)
     ///   - urlString: [String](https://cloud.tencent.com/developer/ask/sof/642880)
-    ///   - parameters: [String: Data]
+    ///   - formData: [FormDataInformation](https://ithelp.ithome.com.tw/articles/10185514)
     ///   - headers:  [String: String?]?
-    ///   - filename: String
-    ///   - contentType: [ContentType](https://ithelp.ithome.com.tw/articles/10185514)
     ///   - delegateQueue: OperationQueue?
     ///   - progress: UploadProgressInformation
     ///   - completion: Result<Bool, Error>
     /// - Returns: URLSessionUploadTask?
-    func fragmentUpload(httpMethod: HttpMethod? = .POST, urlString: String, parameters: [String: Data], headers: [String: String?]? = nil, filename: String, contentType: ContentType = .octetStream, delegateQueue: OperationQueue? = .main, progress: @escaping ((UploadProgressInformation) -> Void), completion: @escaping (Result<Bool, Error>) -> Void) -> URLSessionUploadTask? {
+    func fragmentUpload(httpMethod: HttpMethod? = .POST, urlString: String, formData: FormDataInformation, headers: [String: String?]? = nil, delegateQueue: OperationQueue? = .main, progress: @escaping ((UploadProgressInformation) -> Void), completion: @escaping (Result<Bool, Error>) -> Void) -> URLSessionUploadTask? {
         
         cleanAllBlocks()
         
@@ -193,12 +191,9 @@ public extension WWNetworking {
         let urlSession = URLSession(configuration: .default, delegate: self, delegateQueue: delegateQueue)
         var uploadTask: URLSessionUploadTask?
         
-        request._setValue("\(contentType)", forHTTPHeaderField: .contentType)
-        
-        parameters.first.map { (field, data) in
-            request.setValue(filename, forHTTPHeaderField: field)
-            uploadTask = urlSession.uploadTask(with: request, from: data)
-        }
+        request._setValue("\(formData.contentType)", forHTTPHeaderField: .contentType)
+        request.setValue(formData.filename, forHTTPHeaderField: formData.name)
+        uploadTask = urlSession.uploadTask(with: request, from: formData.data)
         
         if let headers = headers {
             headers.forEach { key, value in if let value = value { request.addValue(value, forHTTPHeaderField: key) }}
@@ -407,25 +402,20 @@ public extension WWNetworking {
     /// - Parameters:
     ///   - httpMethod: [HttpMethod?](https://developer.mozilla.org/zh-TW/docs/Web/HTTP/Basics_of_HTTP/MIME_types)
     ///   - urlString: String
-    ///   - parameters: [String: Data]
-    ///   - headers:  [String: String?]?
-    ///   - filename: String
-    ///   - contentType: [ContentType](https://ithelp.ithome.com.tw/articles/10185514)
+    ///   - formData: [FormDataInformation](https://ithelp.ithome.com.tw/articles/10185514)
     ///   - delegateQueue: OperationQueue?
     ///   - progress: UploadProgressInformation
     ///   - completion: Result<Bool, Error>
     /// - Returns: URLSessionUploadTask?
     @MainActor
-    func fragmentUpload(httpMethod: HttpMethod? = .POST, urlString: String, parameters: [String: Data], headers: [String: String?]? = nil, filename: String, contentType: ContentType = .octetStream, delegateQueue: OperationQueue? = .main, sessionTask: @escaping ((URLSessionTask?) -> Void), progress: @escaping ((UploadProgressInformation) -> Void)) async -> Result<Bool, Error> {
+    func fragmentUpload(httpMethod: HttpMethod? = .POST, urlString: String, formData: FormDataInformation, headers: [String: String?]? = nil, delegateQueue: OperationQueue? = .main, sessionTask: @escaping ((URLSessionTask?) -> Void), progress: @escaping ((UploadProgressInformation) -> Void)) async -> Result<Bool, Error> {
         
         await withCheckedContinuation { continuation in
             
-            let task = fragmentUpload(httpMethod: httpMethod, urlString: urlString, parameters: parameters, headers: headers, filename: filename, contentType: contentType, delegateQueue: delegateQueue) { info in
+            let task = fragmentUpload(httpMethod: httpMethod, urlString: urlString, formData: formData, headers: headers, delegateQueue: delegateQueue) { info in
                 progress(info)
             } completion: { result in
-                Task { @MainActor in
-                    continuation.resume(returning: result)
-                }
+                Task { @MainActor in continuation.resume(returning: result) }
             }
             
             sessionTask(task)
