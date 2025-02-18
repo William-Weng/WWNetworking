@@ -118,7 +118,7 @@ extension UIImage {
     /// - jpeg / png
     /// - Parameter mimeType: jpeg / png
     /// - Returns: Data?
-    func _data(mimeType: WWNetworking.Constant.MimeType = .png) -> Data? {
+    func _data(mimeType: WWNetworking.MimeType = .png) -> Data? {
 
         switch mimeType {
         case .jpeg(let compressionQuality): return jpegData(compressionQuality: compressionQuality)
@@ -167,7 +167,7 @@ extension URLRequest {
     /// - Parameters:
     ///   - url: URL網址
     ///   - httpMethod: HTTP方法 (GET / POST / ...)
-    static func _build(url: URL, httpMethod: WWNetworking.Constant.HttpMethod? = nil) -> URLRequest {
+    static func _build(url: URL, httpMethod: WWNetworking.HttpMethod? = nil) -> URLRequest {
         return Self._build(url: url, httpMethod: httpMethod?.rawValue)
     }
     
@@ -196,7 +196,7 @@ extension URLRequest {
     /// - Parameters:
     ///   - string: URL網址
     ///   - httpMethod: HTTP方法 (GET / POST / ...)
-    static func _build(string: String, httpMethod: WWNetworking.Constant.HttpMethod? = nil) -> URLRequest? {
+    static func _build(string: String, httpMethod: WWNetworking.HttpMethod? = nil) -> URLRequest? {
         guard let url = URL(string: string) else { return nil }
         return Self._build(url: url, httpMethod: httpMethod)
     }
@@ -209,7 +209,7 @@ extension URLRequest {
     /// - Parameters:
     ///   - value: 要設定的值
     ///   - field: 要設定的欄位
-    mutating func _setValue(_ value: String?, forHTTPHeaderField field: WWNetworking.Constant.HTTPHeaderField) {
+    mutating func _setValue(_ value: String?, forHTTPHeaderField field: WWNetworking.HTTPHeaderField) {
         self.setValue(value, forHTTPHeaderField: field.rawValue)
     }
     
@@ -217,7 +217,7 @@ extension URLRequest {
     /// - Parameters:
     ///   - value: 要設定的值
     ///   - field: 要設定的欄位
-    mutating func _setValue(_ value: WWNetworking.Constant.ContentType, forHTTPHeaderField field: WWNetworking.Constant.HTTPHeaderField) {
+    mutating func _setValue(_ value: WWNetworking.ContentType, forHTTPHeaderField field: WWNetworking.HTTPHeaderField) {
         self.setValue("\(value)", forHTTPHeaderField: field.rawValue)
     }
 }
@@ -262,9 +262,9 @@ extension HTTPURLResponse {
     }
     
     /// 取得其中一個Field
-    /// - Parameter key: Constant.HTTPHeaderField
+    /// - Parameter key: HTTPHeaderField
     /// - Returns: Any?
-    func _headerField(with key: WWNetworking.Constant.HTTPHeaderField) -> Any? {
+    func _headerField(with key: WWNetworking.HTTPHeaderField) -> Any? {
         return self._headerField(for: key.rawValue)
     }
 }

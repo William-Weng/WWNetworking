@@ -9,8 +9,6 @@ import Foundation
 
 // MARK: - 簡易型的AFNetworking (單例)
 open class WWNetworking: NSObject {
-
-    public class Constant: NSObject {}
     
     public static let shared = WWNetworking()
     
@@ -35,13 +33,13 @@ public extension WWNetworking {
     typealias HttpDownloadOffset = (start: Int?, end: Int?)                                                                                 // 續傳下載開始~結束位置設定值 (bytes=0-1024)
     typealias DownloadResultInformation = (urlString: String, data: Data?)                                                                  // 網路下載資料的結果資訊 (URL, Data)
     typealias UploadProgressInformation = (urlString: String?, bytesSent: Int64, totalBytesSent: Int64, totalBytesExpectedToSend: Int64)    // 網路上傳資料 (URL / 段落上傳大小 / 己上傳大小 / 總大小)
-    typealias FormDataInformation = (name: String, filename: String, contentType: Constant.ContentType, data: Data)                         // 上傳檔案資訊 (參數名稱 / 檔名 / 檔案類型 / 資料)
-    typealias RequestInformationType = (httpMethod: Constant.HttpMethod,                                                                    // 多個request的參數值 (同單個request)
+    typealias FormDataInformation = (name: String, filename: String, contentType: ContentType, data: Data)                         // 上傳檔案資訊 (參數名稱 / 檔名 / 檔案類型 / 資料)
+    typealias RequestInformationType = (httpMethod: HttpMethod,                                                                    // 多個request的參數值 (同單個request)
                                         urlString: String,
-                                        contentType: Constant.ContentType,
+                                        contentType: ContentType,
                                         paramaters: [String: String?]?,
                                         headers: [String: String?]?,
-                                        httpBodyType: Constant.HttpBobyType?)
+                                        httpBodyType: HttpBobyType?)
 }
 
 extension WWNetworking: URLSessionTaskDelegate {}
@@ -103,10 +101,10 @@ public extension WWNetworking {
     ///   - paramaters: 參數 => ?name=william
     ///   - headers: [Http Header](https://zh.wikipedia.org/zh-tw/HTTP头字段)
     ///   - contentType: HttpBody的類型
-    ///   - httpBodyType: Constant.HttpBobyType?
-    ///   - result: Result<Constant.ResponseInformation, Error>
+    ///   - httpBodyType: HttpBobyType?
+    ///   - result: Result<ResponseInformation, Error>
     /// - Returns: URLSessionTask?
-    func request(httpMethod: Constant.HttpMethod = .GET, urlString: String, contentType: Constant.ContentType = .json, paramaters: [String: String?]? = nil, headers: [String: String?]? = nil, httpBodyType: Constant.HttpBobyType? = nil, result: @escaping (Result<ResponseInformation, Error>) -> Void) -> URLSessionTask? {
+    func request(httpMethod: HttpMethod = .GET, urlString: String, contentType: ContentType = .json, paramaters: [String: String?]? = nil, headers: [String: String?]? = nil, httpBodyType: HttpBobyType? = nil, result: @escaping (Result<ResponseInformation, Error>) -> Void) -> URLSessionTask? {
         let task = request(httpMethod: httpMethod, urlString: urlString, contentType: contentType, queryItems: paramaters?._queryItems(), headers: headers, httpBody: httpBodyType?.data()) { result($0) }
         return task
     }
@@ -115,7 +113,7 @@ public extension WWNetworking {
     /// - Parameters:
     ///   - urlString: [網址](https://imququ.com/post/web-proxy.html)
     ///   - headers: [Http Header](https://zh.wikipedia.org/zh-tw/HTTP头字段)
-    ///   - result: Result<Constant.ResponseInformation?, Error>
+    ///   - result: Result<ResponseInformation?, Error>
     /// - Returns: URLSessionTask?
     func header(urlString: String, headers: [String: String?]? = nil, result: @escaping (Result<ResponseInformation, Error>) -> Void) -> URLSessionTask? {
 
@@ -129,7 +127,7 @@ public extension WWNetworking {
         
         return task
     }
-        
+    
     /// [上傳檔案 - 模仿Form](https://www.w3schools.com/nodejs/nodejs_uploadfiles.asp)
     /// - Parameters:
     ///   - httpMethod: [HTTP方法](https://imququ.com/post/four-ways-to-post-data-in-http.html)
@@ -137,11 +135,11 @@ public extension WWNetworking {
     ///   - formData: [圖片Data相關參數](https://pjchender.blogspot.com/2017/06/chrome-dev-tools.html)
     ///   - parameters: [圖片Data](https://ithelp.ithome.com.tw/articles/10244974?sc=rss.iron)
     ///   - headers: [Http Header](https://zh.wikipedia.org/zh-tw/HTTP头字段)
-    ///   - result: Result<Constant.ResponseInformation, Error>
-    func upload(httpMethod: Constant.HttpMethod? = .POST, urlString: String, formData: FormDataInformation, parameters: [String: String]? = nil, headers: [String: String?]? = nil, result: @escaping (Result<ResponseInformation, Error>) -> Void) -> URLSessionTask? {
+    ///   - result: Result<ResponseInformation, Error>
+    func upload(httpMethod: HttpMethod? = .POST, urlString: String, formData: FormDataInformation, parameters: [String: String]? = nil, headers: [String: String?]? = nil, result: @escaping (Result<ResponseInformation, Error>) -> Void) -> URLSessionTask? {
         
-        guard var request = URLRequest._build(string: urlString, httpMethod: httpMethod) else { result(.failure(Constant.MyError.notUrlFormat)); return nil }
-
+        guard var request = URLRequest._build(string: urlString, httpMethod: httpMethod) else { result(.failure(MyError.notUrlFormat)); return nil }
+        
         let boundary = "Boundary+\(arc4random())\(arc4random())"
         var body = Data()
         
@@ -176,21 +174,21 @@ public extension WWNetworking {
     
     /// [分段上傳 - 大型檔案](https://www.swiftbysundell.com/articles/http-post-and-file-upload-requests-using-urlsession/)
     /// - Parameters:
-    ///   - httpMethod: [Constant.HttpMethod?](https://developer.mozilla.org/zh-TW/docs/Web/HTTP/Basics_of_HTTP/MIME_types)
+    ///   - httpMethod: [HttpMethod?](https://developer.mozilla.org/zh-TW/docs/Web/HTTP/Basics_of_HTTP/MIME_types)
     ///   - urlString: [String](https://cloud.tencent.com/developer/ask/sof/642880)
     ///   - parameters: [String: Data]
     ///   - headers:  [String: String?]?
     ///   - filename: String
-    ///   - contentType: [Constant.ContentType](https://ithelp.ithome.com.tw/articles/10185514)
+    ///   - contentType: [ContentType](https://ithelp.ithome.com.tw/articles/10185514)
     ///   - delegateQueue: OperationQueue?
     ///   - progress: UploadProgressInformation
     ///   - completion: Result<Bool, Error>
     /// - Returns: URLSessionUploadTask?
-    func fragmentUpload(httpMethod: Constant.HttpMethod? = .POST, urlString: String, parameters: [String: Data], headers: [String: String?]? = nil, filename: String, contentType: Constant.ContentType = .octetStream, delegateQueue: OperationQueue? = .main, progress: @escaping ((UploadProgressInformation) -> Void), completion: @escaping (Result<Bool, Error>) -> Void) -> URLSessionUploadTask? {
+    func fragmentUpload(httpMethod: HttpMethod? = .POST, urlString: String, parameters: [String: Data], headers: [String: String?]? = nil, filename: String, contentType: ContentType = .octetStream, delegateQueue: OperationQueue? = .main, progress: @escaping ((UploadProgressInformation) -> Void), completion: @escaping (Result<Bool, Error>) -> Void) -> URLSessionUploadTask? {
         
         cleanAllBlocks()
         
-        guard var request = URLRequest._build(string: urlString, httpMethod: httpMethod) else { completion(.failure(Constant.MyError.notOpenURL)); return nil }
+        guard var request = URLRequest._build(string: urlString, httpMethod: httpMethod) else { completion(.failure(MyError.notOpenURL)); return nil }
         
         let urlSession = URLSession(configuration: .default, delegate: self, delegateQueue: delegateQueue)
         var uploadTask: URLSessionUploadTask?
@@ -225,9 +223,9 @@ public extension WWNetworking {
     ///   - progress: [下載進度](https://www.appcoda.com.tw/ios-concurrency/)
     ///   - completion: 下載完成後
     /// - Returns: URLSessionTask?
-    func download(httpMethod: Constant.HttpMethod? = .GET, urlString: String, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main, isResume: Bool = true, progress: @escaping ((DownloadProgressInformation) -> Void), completion: @escaping ((Result<DownloadResultInformation, Error>) -> Void)) -> URLSessionTask? {
+    func download(httpMethod: HttpMethod? = .GET, urlString: String, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main, isResume: Bool = true, progress: @escaping ((DownloadProgressInformation) -> Void), completion: @escaping ((Result<DownloadResultInformation, Error>) -> Void)) -> URLSessionTask? {
         
-        guard let downloadTask = self.downloadTaskMaker(with: httpMethod, urlString: urlString, configuration: configuration, delegateQueue: delegateQueue) else { completion(.failure(Constant.MyError.notUrlFormat)); return nil }
+        guard let downloadTask = self.downloadTaskMaker(with: httpMethod, urlString: urlString, configuration: configuration, delegateQueue: delegateQueue) else { completion(.failure(MyError.notUrlFormat)); return nil }
         
         downloadTaskResultBlock = completion
         downloadProgressResultBlock = progress
@@ -246,7 +244,7 @@ public extension WWNetworking {
     ///   - progress: 下載進度
     ///   - completion: 下載完成後
     /// - Returns: [URLSessionTask]
-    func multipleDownload(httpMethod: Constant.HttpMethod? = .GET, urlStrings: [String], configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main, progress: @escaping ((DownloadProgressInformation) -> Void), completion: @escaping ((Result<DownloadResultInformation, Error>) -> Void)) -> [URLSessionTask] {
+    func multipleDownload(httpMethod: HttpMethod? = .GET, urlStrings: [String], configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main, progress: @escaping ((DownloadProgressInformation) -> Void), completion: @escaping ((Result<DownloadResultInformation, Error>) -> Void)) -> [URLSessionTask] {
         
         cleanAllBlocks()
         
@@ -276,7 +274,7 @@ public extension WWNetworking {
     ///   - completion: Result<Data, Error>
     func fragmentDownload(urlString: String, fragment: Int = 2, delegateQueue: OperationQueue? = .main, timeout: TimeInterval = .infinity, configiguration: URLSessionConfiguration = .default, progress: @escaping ((DownloadProgressInformation) -> Void), fragmentTask: @escaping (URLSessionTask) -> Void, completion: @escaping ((Result<Data, Error>) -> Void)) {
         
-        guard fragment > 0 else { completion(.failure(Constant.MyError.fragmentCountError)); return }
+        guard fragment > 0 else { completion(.failure(MyError.fragmentCountError)); return }
         
         fragmentDownloadProgressResultBlock = progress
         cleanFragmentInformation()
@@ -291,7 +289,7 @@ public extension WWNetworking {
                       let contentLength = Int(contentLengthString),
                       let fragmentSize = Optional.some((contentLength / fragment) + 1)
                 else {
-                    completion(.failure(Constant.MyError.notUrlDownload)); return
+                    completion(.failure(MyError.notUrlDownload)); return
                 }
                 
                 self.fragmentDownloadContentLength = contentLength
@@ -328,9 +326,9 @@ public extension WWNetworking {
     ///   - paramaters: 參數 => ?name=william
     ///   - headers: [Http Header](https://zh.wikipedia.org/zh-tw/HTTP头字段)
     ///   - httpBody: Data => 所有的資料只要轉成Data都可以傳
-    ///   - contentType: Constant.ContentType
+    ///   - contentType: ContentType
     /// - Returns: Result<ResponseInformation, Error>
-    func request(httpMethod: Constant.HttpMethod = .GET, urlString: String, contentType: Constant.ContentType = .json, paramaters: [String: String?]? = nil, headers: [String: String?]? = nil, httpBodyType: Constant.HttpBobyType? = nil) async -> Result<ResponseInformation, Error> {
+    func request(httpMethod: HttpMethod = .GET, urlString: String, contentType: ContentType = .json, paramaters: [String: String?]? = nil, headers: [String: String?]? = nil, httpBodyType: HttpBobyType? = nil) async -> Result<ResponseInformation, Error> {
         
         await withCheckedContinuation { continuation in
             request(httpMethod: httpMethod, urlString: urlString, contentType: contentType, paramaters: paramaters, headers: headers, httpBodyType: httpBodyType) { result in
@@ -396,7 +394,7 @@ public extension WWNetworking {
     ///   - parameters: [圖片Data](https://ithelp.ithome.com.tw/articles/10244974?sc=rss.iron)
     ///   - headers: [Http Header](https://zh.wikipedia.org/zh-tw/HTTP头字段)
     /// - Returns: Result<ResponseInformation, Error>
-    func upload(httpMethod: Constant.HttpMethod? = .POST, urlString: String, formData: FormDataInformation, parameters: [String: String], headers: [String: String?]? = nil) async -> Result<ResponseInformation, Error> {
+    func upload(httpMethod: HttpMethod? = .POST, urlString: String, formData: FormDataInformation, parameters: [String: String], headers: [String: String?]? = nil) async -> Result<ResponseInformation, Error> {
         
         await withCheckedContinuation { continuation in
             upload(httpMethod: httpMethod, urlString: urlString, formData: formData, parameters: parameters, headers: headers) { result in
@@ -407,18 +405,18 @@ public extension WWNetworking {
     
     /// [分段上傳 - 大型檔案](https://www.swiftbysundell.com/articles/http-post-and-file-upload-requests-using-urlsession/)
     /// - Parameters:
-    ///   - httpMethod: [Constant.HttpMethod?](https://developer.mozilla.org/zh-TW/docs/Web/HTTP/Basics_of_HTTP/MIME_types)
+    ///   - httpMethod: [HttpMethod?](https://developer.mozilla.org/zh-TW/docs/Web/HTTP/Basics_of_HTTP/MIME_types)
     ///   - urlString: String
     ///   - parameters: [String: Data]
     ///   - headers:  [String: String?]?
     ///   - filename: String
-    ///   - contentType: [Constant.ContentType](https://ithelp.ithome.com.tw/articles/10185514)
+    ///   - contentType: [ContentType](https://ithelp.ithome.com.tw/articles/10185514)
     ///   - delegateQueue: OperationQueue?
     ///   - progress: UploadProgressInformation
     ///   - completion: Result<Bool, Error>
     /// - Returns: URLSessionUploadTask?
     @MainActor
-    func fragmentUpload(httpMethod: Constant.HttpMethod? = .POST, urlString: String, parameters: [String: Data], headers: [String: String?]? = nil, filename: String, contentType: Constant.ContentType = .octetStream, delegateQueue: OperationQueue? = .main, sessionTask: @escaping ((URLSessionTask?) -> Void), progress: @escaping ((UploadProgressInformation) -> Void)) async -> Result<Bool, Error> {
+    func fragmentUpload(httpMethod: HttpMethod? = .POST, urlString: String, parameters: [String: Data], headers: [String: String?]? = nil, filename: String, contentType: ContentType = .octetStream, delegateQueue: OperationQueue? = .main, sessionTask: @escaping ((URLSessionTask?) -> Void), progress: @escaping ((UploadProgressInformation) -> Void)) async -> Result<Bool, Error> {
         
         await withCheckedContinuation { continuation in
             
@@ -445,7 +443,7 @@ public extension WWNetworking {
     ///   - sessionTask: 執行的Task
     /// - Returns: Result<DownloadResultInformation, Error>
     // @MainActor
-    func download(httpMethod: Constant.HttpMethod? = .GET, urlString: String, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main, isResume: Bool = true, sessionTask: @escaping ((URLSessionTask?) -> Void), progress: @escaping ((DownloadProgressInformation) -> Void)) async -> Result<DownloadResultInformation, Error> {
+    func download(httpMethod: HttpMethod? = .GET, urlString: String, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main, isResume: Bool = true, sessionTask: @escaping ((URLSessionTask?) -> Void), progress: @escaping ((DownloadProgressInformation) -> Void)) async -> Result<DownloadResultInformation, Error> {
         
         await withCheckedContinuation { continuation in
             
@@ -497,15 +495,15 @@ private extension WWNetworking {
     ///   - queryItems: 參數 => ?name=william
     ///   - headers: [Http Header](https://zh.wikipedia.org/zh-tw/HTTP头字段)
     ///   - httpBody: Data => 所有的資料只要轉成Data都可以傳
-    ///   - result: Result<Constant.ResponseInformation, Error>
+    ///   - result: Result<ResponseInformation, Error>
     /// - Returns: URLSessionTask?
-    func request(httpMethod: Constant.HttpMethod = .GET, urlString: String, contentType: Constant.ContentType = .json, queryItems: [URLQueryItem]? = nil, headers: [String: String?]? = nil, httpBody: Data? = nil, result: @escaping (Result<ResponseInformation, Error>) -> Void) -> URLSessionTask? {
+    func request(httpMethod: HttpMethod = .GET, urlString: String, contentType: ContentType = .json, queryItems: [URLQueryItem]? = nil, headers: [String: String?]? = nil, httpBody: Data? = nil, result: @escaping (Result<ResponseInformation, Error>) -> Void) -> URLSessionTask? {
         
         guard let urlComponents = URLComponents._build(urlString: urlString, queryItems: queryItems),
               let queryedURL = urlComponents.url,
               var request = Optional.some(URLRequest._build(url: queryedURL, httpMethod: httpMethod))
         else {
-            result(.failure(Constant.MyError.notUrlFormat)); return nil
+            result(.failure(MyError.notUrlFormat)); return nil
         }
         
         if let headers = headers {
@@ -660,7 +658,7 @@ private extension WWNetworking {
     ///   - configuration: URLSessionConfiguration
     ///   - delegateQueue: 執行緒
     /// - Returns: URLSessionDownloadTask
-    func downloadTaskMaker(with httpMethod: Constant.HttpMethod? = .POST, urlString: String, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main) -> URLSessionDownloadTask? {
+    func downloadTaskMaker(with httpMethod: HttpMethod? = .POST, urlString: String, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main) -> URLSessionDownloadTask? {
 
         guard let request = URLRequest._build(string: urlString, httpMethod: httpMethod) else { return nil }
         
@@ -675,7 +673,7 @@ private extension WWNetworking {
     /// [抓取資料 - dataTask() => URLSessionDataDelegate](https://developer.apple.com/documentation/foundation/urlsessiondatadelegate)
     /// - Parameters:
     ///   - request: [URLRequest](https://medium.com/@jerrywang0420/urlsession-教學-swift-3-ios-part-2-a17b2d4cc056)
-    ///   - result: Result<Constant.ResponseInformation, Error>
+    ///   - result: Result<ResponseInformation, Error>
     /// - Returns: URLSessionDataTask
     func fetchData(from request: URLRequest, result: @escaping (Result<ResponseInformation, Error>) -> Void) -> URLSessionDataTask {
 
@@ -721,7 +719,7 @@ private extension WWNetworking {
     }
 
     /// Range: bytes=0-1024
-    /// - Parameter offset: Constant.HttpDownloadOffset
+    /// - Parameter offset: HttpDownloadOffset
     /// - Returns: String?
     func downloadOffsetMaker(offset: HttpDownloadOffset) -> String? {
 

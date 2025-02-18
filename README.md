@@ -6,12 +6,12 @@
 - This is a simple integration of HTTP transmission, upload and download functions. It is a rare and good tool for iOS engineers.
 - 這是一個簡單的HTTP傳輸、上傳、下載功能整合，是iOS工程師不可多得的好工具。
 
-![WWNetworking](./Example.gif)
+![WWNetworking](./Example.webp)
 
 ### [Installation with Swift Package Manager](https://medium.com/彼得潘的-swift-ios-app-開發問題解答集/使用-spm-安裝第三方套件-xcode-11-新功能-2c4ffcf85b4b)
 ```
 dependencies: [
-    .package(url: "https://github.com/William-Weng/WWNetworking.git", .upToNextMajor(from: "1.6.1"))
+    .package(url: "https://github.com/William-Weng/WWNetworking.git", .upToNextMajor(from: "1.6.3"))
 ]
 ```
 
@@ -39,7 +39,7 @@ dependencies: [
 |multipleRequest(types:)|發出多個request|
 |multipleRequestWithTaskGroup(types:)|發出多個request|
 
-## Example
+## [Example](https://ezgif.com/video-to-webp)
 ```swift
 import UIKit
 import WWNetworking
@@ -60,7 +60,7 @@ final class ViewController: UIViewController {
         "GET": "https://httpbin.org/get",
         "POST": "https://httpbin.org/post",
         "DOWNLOAD": "https://raw.githubusercontent.com/William-Weng/AdobeIllustrator/master/William-Weng.png",
-        "UPLOAD": "http://172.16.20.43:8080/fileupload",
+        "UPLOAD": "http://192.168.4.92:8080/upload",
         "FRAGMENT": "https://photosku.com/images_file/images/i000_803.jpg",
     ]
     
@@ -109,8 +109,8 @@ private extension ViewController {
         
         let urlString = UrlStrings["UPLOAD"]!
         let imageData = resultImageViews[0].image?.pngData()
-        let formData: WWNetworking.FormDataInformation = (name: "file_to_upload", filename: "Demo.png", contentType: .png, data: imageData!)
-        
+        let formData: WWNetworking.FormDataInformation = (name: "file", filename: "Demo.png", contentType: .png, data: imageData!)
+                
         _ = WWNetworking.shared.upload(urlString: urlString, formData: formData) { result in
             
             switch result {

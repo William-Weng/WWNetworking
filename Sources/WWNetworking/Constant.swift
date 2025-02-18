@@ -8,7 +8,7 @@
 import UIKit
 
 // MARK: - 常數
-public extension WWNetworking.Constant {
+public extension WWNetworking {
 
     /// [HTTP 請求方法](https://developer.mozilla.org/zh-TW/docs/Web/HTTP/Methods)
     enum HttpMethod: String {

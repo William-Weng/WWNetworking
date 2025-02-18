@@ -24,7 +24,7 @@ final class ViewController: UIViewController {
         "GET": "https://httpbin.org/get",
         "POST": "https://httpbin.org/post",
         "DOWNLOAD": "https://raw.githubusercontent.com/William-Weng/AdobeIllustrator/master/William-Weng.png",
-        "UPLOAD": "http://172.16.20.43:8080/fileupload",
+        "UPLOAD": "http://192.168.4.92:8080/upload",
         "FRAGMENT": "https://photosku.com/images_file/images/i000_803.jpg",
     ]
     
@@ -77,7 +77,7 @@ private extension ViewController {
         
         let urlString = UrlStrings["UPLOAD"]!
         let imageData = resultImageViews[0].image?.pngData()
-        let formData: WWNetworking.FormDataInformation = (name: "file_to_upload", filename: "Demo.png", contentType: .png, data: imageData!)
+        let formData: WWNetworking.FormDataInformation = (name: "file", filename: "Demo.png", contentType: .png, data: imageData!)
         
         _ = WWNetworking.shared.upload(urlString: urlString, formData: formData) { result in
             
