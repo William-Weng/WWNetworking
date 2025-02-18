@@ -217,8 +217,8 @@ public extension WWNetworking {
     ///   - isResume: [是否要立刻執行Task](https://liuyousama.top/2020/10/18/Kingfisher源码阅读/)
     ///   - progress: [下載進度](https://www.appcoda.com.tw/ios-concurrency/)
     ///   - completion: 下載完成後
-    /// - Returns: URLSessionTask?
-    func download(httpMethod: HttpMethod? = .GET, urlString: String, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main, isResume: Bool = true, progress: @escaping ((DownloadProgressInformation) -> Void), completion: @escaping ((Result<DownloadResultInformation, Error>) -> Void)) -> URLSessionTask? {
+    /// - Returns: URLSessionDownloadTask?
+    func download(httpMethod: HttpMethod? = .GET, urlString: String, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main, isResume: Bool = true, progress: @escaping ((DownloadProgressInformation) -> Void), completion: @escaping ((Result<DownloadResultInformation, Error>) -> Void)) -> URLSessionDownloadTask? {
         
         guard let downloadTask = self.downloadTaskMaker(with: httpMethod, urlString: urlString, configuration: configuration, delegateQueue: delegateQueue) else { completion(.failure(MyError.notUrlFormat)); return nil }
         
@@ -238,8 +238,8 @@ public extension WWNetworking {
     ///   - delegateQueue: [執行緒](https://zh-tw.coderbridge.com/series/01d31194cb3c428d9ca2575c91e8b997/posts/c44ba1db0ded4d53aec73a8e589ca1e5)
     ///   - progress: 下載進度
     ///   - completion: 下載完成後
-    /// - Returns: [URLSessionTask]
-    func multipleDownload(httpMethod: HttpMethod? = .GET, urlStrings: [String], configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main, progress: @escaping ((DownloadProgressInformation) -> Void), completion: @escaping ((Result<DownloadResultInformation, Error>) -> Void)) -> [URLSessionTask] {
+    /// - Returns: [URLSessionDownloadTask]
+    func multipleDownload(httpMethod: HttpMethod? = .GET, urlStrings: [String], configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main, progress: @escaping ((DownloadProgressInformation) -> Void), completion: @escaping ((Result<DownloadResultInformation, Error>) -> Void)) -> [URLSessionDownloadTask] {
         
         cleanAllBlocks()
         
@@ -655,6 +655,7 @@ private extension WWNetworking {
         let urlSession = URLSession(configuration: configuration, delegate: self, delegateQueue: delegateQueue)
         let downloadTask = urlSession.downloadTask(with: request)
         
+        if #available(iOS 15.0, *) { downloadTask.delegate = self }
         urlSession.finishTasksAndInvalidate()
         
         return downloadTask
@@ -705,7 +706,10 @@ private extension WWNetworking {
         request._setValue(headerValue, forHTTPHeaderField: .range)
         fragmentDownloadFinishBlock = result
         
-        return urlSession.dataTask(with: request)
+        let dataTask = urlSession.dataTask(with: request)
+        if #available(iOS 15.0, *) { dataTask.delegate = self }
+        
+        return dataTask
     }
 
     /// Range: bytes=0-1024
