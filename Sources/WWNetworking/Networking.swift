@@ -133,43 +133,47 @@ public extension WWNetworking {
     ///   - httpMethod: [HTTP方法](https://imququ.com/post/four-ways-to-post-data-in-http.html)
     ///   - urlString: [網址](https://imququ.com/post/web-proxy.html)
     ///   - formData: [圖片Data相關參數](https://pjchender.blogspot.com/2017/06/chrome-dev-tools.html)
-    ///   - parameters: [圖片Data](https://ithelp.ithome.com.tw/articles/10244974?sc=rss.iron)
+    ///   - parameters: [額外參數](https://ithelp.ithome.com.tw/articles/10244974?sc=rss.iron)
     ///   - headers: [Http Header](https://zh.wikipedia.org/zh-tw/HTTP头字段)
     ///   - result: Result<ResponseInformation, Error>
-    func upload(httpMethod: HttpMethod? = .POST, urlString: String, formData: FormDataInformation, parameters: [String: String]? = nil, headers: [String: String?]? = nil, result: @escaping (Result<ResponseInformation, Error>) -> Void) -> URLSessionTask? {
+    /// - Returns: URLSessionDataTask?
+    func upload(httpMethod: HttpMethod? = .POST, urlString: String, formData: FormDataInformation, parameters: [String: String]? = nil, headers: [String: String?]? = nil, result: @escaping (Result<ResponseInformation, Error>) -> Void) -> URLSessionDataTask? {
         
         guard var request = URLRequest._build(string: urlString, httpMethod: httpMethod) else { result(.failure(MyError.notUrlFormat)); return nil }
         
         let boundary = "Boundary+\(arc4random())\(arc4random())"
-        var body = Data()
+        let httpBody = multipleUploadBodyMaker(boundary: boundary, formDatas: [formData], parameters: parameters)
         
-        request._setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: .contentType)
-
         if let headers = headers { headers.forEach { key, value in if let value = value { request.addValue(value, forHTTPHeaderField: key) }}}
         
-        /* 上傳Data的部分 */
-        _ = body._append(string: "--\(boundary)\r\n")
-        _ = body._append(string: "Content-Disposition: form-data; name=\"\(formData.name)\"; filename=\"\(formData.filename)\"\r\n")
-        _ = body._append(string: "Content-Type: \(formData.contentType)\r\n")
-        _ = body._append(string: "\r\n")
-        _ = body._append(data: formData.data)
-        _ = body._append(string: "\r\n")
+        request._setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: .contentType)
+        request.httpBody = httpBody
         
-        /* 額外參數的部分 */
-        parameters?.forEach { (key, value) in
-            _ = body._append(string: "--\(boundary)\r\n")
-            _ = body._append(string: "Content-Disposition: form-data; name=\"\(key)\"\r\n")
-            _ = body._append(string: "\r\n")
-            _ = body._append(string: "\(value)")
-            _ = body._append(string: "\r\n")
-        }
+        return fetchData(from: request, result: result)
+    }
+    
+    /// [上傳檔案 (多個) - 模仿Form](https://www.w3schools.com/nodejs/nodejs_uploadfiles.asp)
+    /// - Parameters:
+    ///   - httpMethod: [HTTP方法](https://imququ.com/post/four-ways-to-post-data-in-http.html)
+    ///   - urlString: [網址](https://imququ.com/post/web-proxy.html)
+    ///   - formDatas: [圖片Data相關參數](https://pjchender.blogspot.com/2017/06/chrome-dev-tools.html)
+    ///   - parameters: [額外參數](https://ithelp.ithome.com.tw/articles/10244974?sc=rss.iron)
+    ///   - headers: [Http Header](https://zh.wikipedia.org/zh-tw/HTTP头字段)
+    ///   - result: Result<ResponseInformation, Error>
+    /// - Returns: URLSessionDataTask?
+    func multipleUpload(httpMethod: HttpMethod? = .POST, urlString: String, formDatas: [FormDataInformation], parameters: [String: String]? = nil, headers: [String: String?]? = nil, result: @escaping (Result<ResponseInformation, Error>) -> Void) -> URLSessionDataTask? {
         
-        /* 結尾部分 */
-        _ = body._append(string: "--\(boundary)--\r\n")
+        guard var request = URLRequest._build(string: urlString, httpMethod: httpMethod) else { result(.failure(MyError.notUrlFormat)); return nil }
         
-        request.httpBody = body
-        let task = fetchData(from: request, result: result)
-        return task
+        let boundary = "Boundary+\(arc4random())\(arc4random())"
+        let httpBody = multipleUploadBodyMaker(boundary: boundary, formDatas: formDatas, parameters: parameters)
+        
+        if let headers = headers { headers.forEach { key, value in if let value = value { request.addValue(value, forHTTPHeaderField: key) }}}
+        
+        request._setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: .contentType)
+        request.httpBody = httpBody
+        
+        return fetchData(from: request, result: result)
     }
     
     /// [分段上傳 - 大型檔案](https://www.swiftbysundell.com/articles/http-post-and-file-upload-requests-using-urlsession/)
@@ -386,13 +390,30 @@ public extension WWNetworking {
     ///   - httpMethod: [HTTP方法](https://imququ.com/post/four-ways-to-post-data-in-http.html)
     ///   - urlString: [網址](https://imququ.com/post/web-proxy.html)
     ///   - formData: [圖片Data相關參數](https://pjchender.blogspot.com/2017/06/chrome-dev-tools.html)
-    ///   - parameters: [圖片Data](https://ithelp.ithome.com.tw/articles/10244974?sc=rss.iron)
+    ///   - parameters: [額外參數](https://ithelp.ithome.com.tw/articles/10244974?sc=rss.iron)
     ///   - headers: [Http Header](https://zh.wikipedia.org/zh-tw/HTTP头字段)
     /// - Returns: Result<ResponseInformation, Error>
     func upload(httpMethod: HttpMethod? = .POST, urlString: String, formData: FormDataInformation, parameters: [String: String], headers: [String: String?]? = nil) async -> Result<ResponseInformation, Error> {
         
         await withCheckedContinuation { continuation in
             upload(httpMethod: httpMethod, urlString: urlString, formData: formData, parameters: parameters, headers: headers) { result in
+                continuation.resume(returning: result)
+            }
+        }
+    }
+    
+    /// [上傳檔案 (多個) - 模仿Form](https://www.w3schools.com/nodejs/nodejs_uploadfiles.asp)
+    /// - Parameters:
+    ///   - httpMethod: [HTTP方法](https://imququ.com/post/four-ways-to-post-data-in-http.html)
+    ///   - urlString: [網址](https://imququ.com/post/web-proxy.html)
+    ///   - formDatas: [圖片Data相關參數](https://pjchender.blogspot.com/2017/06/chrome-dev-tools.html)
+    ///   - parameters: [額外參數](https://ithelp.ithome.com.tw/articles/10244974?sc=rss.iron)
+    ///   - headers: [Http Header](https://zh.wikipedia.org/zh-tw/HTTP头字段)
+    /// - Returns: Result<ResponseInformation, Error>
+    func upload(httpMethod: HttpMethod? = .POST, urlString: String, formDatas: [FormDataInformation], parameters: [String: String], headers: [String: String?]? = nil) async -> Result<ResponseInformation, Error> {
+        
+        await withCheckedContinuation { continuation in
+            multipleUpload(httpMethod: httpMethod, urlString: urlString, formDatas: formDatas, parameters: parameters, headers: headers) { result in
                 continuation.resume(returning: result)
             }
         }
@@ -432,7 +453,6 @@ public extension WWNetworking {
     ///   - progress: [下載進度](https://www.appcoda.com.tw/ios-concurrency/)
     ///   - sessionTask: 執行的Task
     /// - Returns: Result<DownloadResultInformation, Error>
-    // @MainActor
     func download(httpMethod: HttpMethod? = .GET, urlString: String, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main, isResume: Bool = true, sessionTask: @escaping ((URLSessionTask?) -> Void), progress: @escaping ((DownloadProgressInformation) -> Void)) async -> Result<DownloadResultInformation, Error> {
         
         await withCheckedContinuation { continuation in
@@ -441,7 +461,6 @@ public extension WWNetworking {
                 progress(info)
             } completion: { result in
                  continuation.resume(returning: result)
-//                 Task { @MainActor in continuation.resume(returning: result) }
             }
             
             sessionTask(task)
@@ -734,6 +753,42 @@ private extension WWNetworking {
         for key in keys { if let _data = datas[key] { downloadData += _data }}
 
         return downloadData
+    }
+    
+    /// 上傳檔案的Body設定 (多個)
+    /// - Parameters:
+    ///   - boundary: 分隔字串
+    ///   - formDatas: 上傳檔案的相關資料
+    ///   - parameters: [String: String]?
+    /// - Returns: Data
+    func multipleUploadBodyMaker(boundary: String, formDatas: [FormDataInformation], parameters: [String: String]?) -> Data {
+        
+        var body = Data()
+        
+        for formData in formDatas {
+            
+            /* 上傳Data的部分 */
+            _ = body._append(string: "--\(boundary)\r\n")
+            _ = body._append(string: "Content-Disposition: form-data; name=\"\(formData.name)\"; filename=\"\(formData.filename)\"\r\n")
+            _ = body._append(string: "Content-Type: \(formData.contentType)\r\n")
+            _ = body._append(string: "\r\n")
+            _ = body._append(data: formData.data)
+            _ = body._append(string: "\r\n")
+        }
+        
+        /* 額外參數的部分 */
+        parameters?.forEach { (key, value) in
+            _ = body._append(string: "--\(boundary)\r\n")
+            _ = body._append(string: "Content-Disposition: form-data; name=\"\(key)\"\r\n")
+            _ = body._append(string: "\r\n")
+            _ = body._append(string: "\(value)")
+            _ = body._append(string: "\r\n")
+        }
+        
+        /* 結尾部分 */
+        _ = body._append(string: "--\(boundary)--\r\n")
+        
+        return body
     }
     
     /// 清除分段下載的暫存檔

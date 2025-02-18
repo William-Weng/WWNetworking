@@ -11,7 +11,7 @@
 ### [Installation with Swift Package Manager](https://medium.com/彼得潘的-swift-ios-app-開發問題解答集/使用-spm-安裝第三方套件-xcode-11-新功能-2c4ffcf85b4b)
 ```
 dependencies: [
-    .package(url: "https://github.com/William-Weng/WWNetworking.git", .upToNextMajor(from: "1.6.5"))
+    .package(url: "https://github.com/William-Weng/WWNetworking.git", .upToNextMajor(from: "1.7.0"))
 ]
 ```
 
@@ -22,6 +22,7 @@ dependencies: [
 |request(httpMethod:urlString:contentType:paramaters:headers:httpBodyType:result:)|發出URLRequest|
 |header(urlString:headers:result:)|取得該URL資源的HEAD資訊|
 |upload(httpMethod:urlString:formData:parameters:headers:result)|上傳檔案 - 模仿Form|
+|multipleUpload(httpMethod:urlString:formDatas:parameters:headers:result)|上傳檔案 (多個) - 模仿Form|
 |fragmentUpload(httpMethod:urlString:formData:headers:delegateQueue:progress:completion:)|分段上傳 - 大型檔案|
 |download(httpMethod:urlString:configuration:delegateQueue:isResume:progress:completion:)|下載資料 - URLSessionDownloadDelegate|
 |fragmentDownload(urlString:fragment:delegateQueue:timeout:configiguration:progress:fragmentTask:completion:)|分段下載|
@@ -33,11 +34,12 @@ dependencies: [
 |request(httpMethod:urlString:contentType:paramaters:headers:httpBodyType:)|發出URLRequest|
 |header(urlString:headers:)|取得該URL資源的HEAD資訊|
 |upload(httpMethod:urlString:formData:parameters:headers:)|上傳檔案 - 模仿Form|
+|multipleUpload(httpMethod:urlString:formDatas:parameters:headers:)|上傳檔案 (多個) - 模仿Form|
 |fragmentUpload(httpMethod:urlString:formData:headers:delegateQueue:progress:)|分段上傳 - 大型檔案|
 |download(httpMethod:urlString:configuration:delegateQueue:isResume:progress:)|下載資料 - URLSessionDownloadDelegate|
 |fragmentDownload(urlString:fragment:delegateQueue:timeout:configiguration:progress:)|分段下載|
 |multipleRequest(types:)|發出多個request|
-|multipleRequestWithTaskGroup(types:)|發出多個request|
+|multipleRequestWithTaskGroup(types:)|同時發出多個request|
 
 ## [Example](https://ezgif.com/video-to-webp)
 ```swift
