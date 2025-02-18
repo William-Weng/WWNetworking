@@ -109,7 +109,7 @@ public extension WWNetworking {
         return task
     }
     
-    /// 取得該URL資源的HEAD資訊 (檔案大小 / 類型 / 上傳日期…)
+    /// [取得該URL資源的HEAD資訊 (檔案大小 / 類型 / 上傳日期…)](https://github.com/pro648/tips/blob/master/sources/URLSession详解.md)
     /// - Parameters:
     ///   - urlString: [網址](https://imququ.com/post/web-proxy.html)
     ///   - headers: [Http Header](https://zh.wikipedia.org/zh-tw/HTTP头字段)
@@ -410,7 +410,7 @@ public extension WWNetworking {
     ///   - parameters: [額外參數](https://ithelp.ithome.com.tw/articles/10244974?sc=rss.iron)
     ///   - headers: [Http Header](https://zh.wikipedia.org/zh-tw/HTTP头字段)
     /// - Returns: Result<ResponseInformation, Error>
-    func upload(httpMethod: HttpMethod? = .POST, urlString: String, formDatas: [FormDataInformation], parameters: [String: String], headers: [String: String?]? = nil) async -> Result<ResponseInformation, Error> {
+    func multipleUpload(httpMethod: HttpMethod? = .POST, urlString: String, formDatas: [FormDataInformation], parameters: [String: String], headers: [String: String?]? = nil) async -> Result<ResponseInformation, Error> {
         
         await withCheckedContinuation { continuation in
             multipleUpload(httpMethod: httpMethod, urlString: urlString, formDatas: formDatas, parameters: parameters, headers: headers) { result in
