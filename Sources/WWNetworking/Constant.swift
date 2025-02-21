@@ -118,7 +118,7 @@ public extension WWNetworking {
         case png
         case jpeg
         case formUrlEncoded
-        case formData
+        case formData(boundary: String)
         case flac
         case mp3
         case mp4
@@ -153,7 +153,7 @@ public extension WWNetworking {
             case .m4a: return "audio/m4a"
             case .flac: return "audio/flac"
             case .formUrlEncoded: return "application/x-www-form-urlencoded"
-            case .formData: return "multipart/form-data"
+            case .formData(boundary: let boundary): return "multipart/form-data; boundary=\(boundary)"
             case .octetStream: return "application/octet-stream"
             case .bearer(forKey: let key): return "Bearer \(key)"
             case .custom(value: let value): return value

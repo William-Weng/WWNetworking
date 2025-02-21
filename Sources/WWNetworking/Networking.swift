@@ -146,7 +146,7 @@ public extension WWNetworking {
         
         if let headers = headers { headers.forEach { key, value in if let value = value { request.addValue(value, forHTTPHeaderField: key) }}}
         
-        request._setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: .contentType)
+        request._setValue(.formData(boundary: boundary), forHTTPHeaderField: .contentType)
         request.httpBody = httpBody
         
         return fetchData(from: request, result: result)
@@ -170,7 +170,7 @@ public extension WWNetworking {
         
         if let headers = headers { headers.forEach { key, value in if let value = value { request.addValue(value, forHTTPHeaderField: key) }}}
         
-        request._setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: .contentType)
+        request._setValue(.formData(boundary: boundary), forHTTPHeaderField: .contentType)
         request.httpBody = httpBody
         
         return fetchData(from: request, result: result)
@@ -686,7 +686,7 @@ private extension WWNetworking {
     ///   - result: Result<ResponseInformation, Error>
     /// - Returns: URLSessionDataTask
     func fetchData(from request: URLRequest, result: @escaping (Result<ResponseInformation, Error>) -> Void) -> URLSessionDataTask {
-
+                
         let dataTask = URLSession.shared.dataTask(with: request) { (data, response, error) in
 
             if let error = error { result(.failure(error)); return }
