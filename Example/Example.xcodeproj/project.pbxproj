@@ -18,7 +18,8 @@
 		8171DB882D641C5A00954209 /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 8171DB872D641C5A00954209 /* WWNetworking */; };
 		8171DB8A2D641DF000954209 /* Golang in Resources */ = {isa = PBXBuildFile; fileRef = 8171DB892D641DF000954209 /* Golang */; };
 		8176122E2D68484B003A0440 /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 8176122D2D68484B003A0440 /* WWNetworking */; };
-		817612312D684B1F003A0440 /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 817612302D684B1F003A0440 /* WWNetworking */; };
+		818840222D6C6007001F50D5 /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 818840212D6C6007001F50D5 /* WWNetworking */; };
+		818840252D6C708B001F50D5 /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 818840242D6C708B001F50D5 /* WWNetworking */; };
 		8189FC522C3E22F30080A100 /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 8189FC512C3E22F30080A100 /* WWNetworking */; };
 		819D5B762B84421A002C23E9 /* Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 819D5B752B84421A002C23E9 /* Extension.swift */; };
 		81AB51132D648AEC00552C83 /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 81AB51122D648AEC00552C83 /* WWNetworking */; };
@@ -46,12 +47,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				81FF5DEB2D642A8000A24CF9 /* WWNetworking in Frameworks */,
+				818840252D6C708B001F50D5 /* WWNetworking in Frameworks */,
 				8189FC522C3E22F30080A100 /* WWNetworking in Frameworks */,
 				8176122E2D68484B003A0440 /* WWNetworking in Frameworks */,
 				81FF5DF72D6456CE00A24CF9 /* WWNetworking in Frameworks */,
 				81AB51132D648AEC00552C83 /* WWNetworking in Frameworks */,
 				8171DB882D641C5A00954209 /* WWNetworking in Frameworks */,
-				817612312D684B1F003A0440 /* WWNetworking in Frameworks */,
+				818840222D6C6007001F50D5 /* WWNetworking in Frameworks */,
 				8153D0352BA92B0700216FAE /* WWNetworking in Frameworks */,
 				81C3612E2D658A2500C6C6A4 /* WWNetworking in Frameworks */,
 				811D16042C3E380E009D1B1C /* WWNetworking in Frameworks */,
@@ -162,7 +164,8 @@
 				81AB51122D648AEC00552C83 /* WWNetworking */,
 				81C3612D2D658A2500C6C6A4 /* WWNetworking */,
 				8176122D2D68484B003A0440 /* WWNetworking */,
-				817612302D684B1F003A0440 /* WWNetworking */,
+				818840212D6C6007001F50D5 /* WWNetworking */,
+				818840242D6C708B001F50D5 /* WWNetworking */,
 			);
 			productName = Example;
 			productReference = 3DBCD87026F198EF00522E3B /* Example.app */;
@@ -193,7 +196,7 @@
 			);
 			mainGroup = 3DBCD86726F198EF00522E3B;
 			packageReferences = (
-				8176122F2D684B1F003A0440 /* XCRemoteSwiftPackageReference "WWNetworking" */,
+				818840232D6C708B001F50D5 /* XCRemoteSwiftPackageReference "WWNetworking" */,
 			);
 			productRefGroup = 3DBCD87126F198EF00522E3B /* Products */;
 			projectDirPath = "";
@@ -441,12 +444,12 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		8176122F2D684B1F003A0440 /* XCRemoteSwiftPackageReference "WWNetworking" */ = {
+		818840232D6C708B001F50D5 /* XCRemoteSwiftPackageReference "WWNetworking" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/William-Weng/WWNetworking";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 1.7.1;
+				minimumVersion = 1.7.2;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -472,9 +475,13 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = WWNetworking;
 		};
-		817612302D684B1F003A0440 /* WWNetworking */ = {
+		818840212D6C6007001F50D5 /* WWNetworking */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 8176122F2D684B1F003A0440 /* XCRemoteSwiftPackageReference "WWNetworking" */;
+			productName = WWNetworking;
+		};
+		818840242D6C708B001F50D5 /* WWNetworking */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 818840232D6C708B001F50D5 /* XCRemoteSwiftPackageReference "WWNetworking" */;
 			productName = WWNetworking;
 		};
 		8189FC512C3E22F30080A100 /* WWNetworking */ = {

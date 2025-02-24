@@ -11,7 +11,7 @@
 ### [Installation with Swift Package Manager](https://medium.com/彼得潘的-swift-ios-app-開發問題解答集/使用-spm-安裝第三方套件-xcode-11-新功能-2c4ffcf85b4b)
 ```
 dependencies: [
-    .package(url: "https://github.com/William-Weng/WWNetworking.git", .upToNextMajor(from: "1.7.0"))
+    .package(url: "https://github.com/William-Weng/WWNetworking.git", .upToNextMajor(from: "1.7.2"))
 ]
 ```
 
@@ -23,7 +23,7 @@ dependencies: [
 |header(urlString:headers:result:)|取得該URL資源的HEAD資訊|
 |upload(httpMethod:urlString:formData:parameters:headers:result)|上傳檔案 - 模仿Form|
 |multipleUpload(httpMethod:urlString:formDatas:parameters:headers:result)|上傳檔案 (多個) - 模仿Form|
-|fragmentUpload(httpMethod:urlString:formData:headers:delegateQueue:progress:completion:)|分段上傳 - 大型檔案|
+|binaryUpload(httpMethod:urlString:formData:headers:delegateQueue:progress:completion:)|二進制檔案上傳 - 大型檔案|
 |download(httpMethod:urlString:configuration:delegateQueue:isResume:progress:completion:)|下載資料 - URLSessionDownloadDelegate|
 |fragmentDownload(urlString:fragment:delegateQueue:timeout:configiguration:progress:fragmentTask:completion:)|分段下載|
 |multipleDownload(httpMethod:urlStrings:configuration:delegateQueue:progress:completion:)|下載多筆資料- URLSessionDownloadDelegate|
@@ -35,7 +35,7 @@ dependencies: [
 |header(urlString:headers:)|取得該URL資源的HEAD資訊|
 |upload(httpMethod:urlString:formData:parameters:headers:)|上傳檔案 - 模仿Form|
 |multipleUpload(httpMethod:urlString:formDatas:parameters:headers:)|上傳檔案 (多個) - 模仿Form|
-|fragmentUpload(httpMethod:urlString:formData:headers:delegateQueue:progress:)|分段上傳 - 大型檔案|
+|binaryUpload(httpMethod:urlString:formData:headers:delegateQueue:progress:)|二進制檔案上傳 - 大型檔案|
 |download(httpMethod:urlString:configuration:delegateQueue:isResume:progress:)|下載資料 - URLSessionDownloadDelegate|
 |fragmentDownload(urlString:fragment:delegateQueue:timeout:configiguration:progress:)|分段下載|
 |multipleRequest(types:)|發出多個request|
@@ -63,6 +63,7 @@ final class ViewController: UIViewController {
         "POST": "https://httpbin.org/post",
         "DOWNLOAD": "https://raw.githubusercontent.com/William-Weng/AdobeIllustrator/master/William-Weng.png",
         "UPLOAD": "http://192.168.4.92:8080/upload",
+        "BINARY-UPLOAD": "http://192.168.4.92:8080/binaryUpload",
         "FRAGMENT": "https://photosku.com/images_file/images/i000_803.jpg",
     ]
     
@@ -74,7 +75,7 @@ final class ViewController: UIViewController {
     @IBAction func httpFragmentDownloadAction(_ sender: UIButton) { fragmentDownloadData() }
     @IBAction func httpMultipleDownloadAction(_ sender: UIButton) { httpMultipleDownload() }
     @IBAction func httpUploadAction(_ sender: UIButton) { httpUploadData() }
-    @IBAction func httpFragmentUpLoad(_ sender: UIButton) { httpFragmentUploadData() }
+    @IBAction func httpBinaryUpload(_ sender: UIButton) { httpBinaryUploadData() }
 }
 
 private extension ViewController {
@@ -122,14 +123,14 @@ private extension ViewController {
         }
     }
     
-    func httpFragmentUploadData() {
+    func httpBinaryUploadData() {
         
-        let urlString = UrlStrings["UPLOAD"]!
+        let urlString = UrlStrings["BINARY-UPLOAD"]!
         let index = 1
         let imageData = resultImageViews[index].image?.pngData()
         let formData: WWNetworking.FormDataInformation = (name: "x-filename", filename: "Large.png", contentType: .octetStream, data: imageData!)
         
-        _ = WWNetworking.shared.fragmentUpload(urlString: urlString, formData: formData, progress: { info in
+        _ = WWNetworking.shared.binaryUpload(urlString: urlString, formData: formData, progress: { info in
              
             let progress = Float(info.totalBytesSent) / Float(info.totalBytesExpectedToSend)
             DispatchQueue.main.async { self.title = "\(progress)" }

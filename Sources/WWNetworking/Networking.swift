@@ -176,7 +176,7 @@ public extension WWNetworking {
         return fetchData(from: request, result: result)
     }
     
-    /// [分段上傳 - 大型檔案](https://www.swiftbysundell.com/articles/http-post-and-file-upload-requests-using-urlsession/)
+    /// [二進制檔案上傳 - 大型檔案](https://www.swiftbysundell.com/articles/http-post-and-file-upload-requests-using-urlsession/)
     /// - Parameters:
     ///   - httpMethod: [HttpMethod?](https://developer.mozilla.org/zh-TW/docs/Web/HTTP/Basics_of_HTTP/MIME_types)
     ///   - urlString: [String](https://cloud.tencent.com/developer/ask/sof/642880)
@@ -186,7 +186,7 @@ public extension WWNetworking {
     ///   - progress: UploadProgressInformation
     ///   - completion: Result<Bool, Error>
     /// - Returns: URLSessionUploadTask?
-    func fragmentUpload(httpMethod: HttpMethod? = .POST, urlString: String, formData: FormDataInformation, headers: [String: String?]? = nil, delegateQueue: OperationQueue? = .main, progress: @escaping ((UploadProgressInformation) -> Void), completion: @escaping (Result<Bool, Error>) -> Void) -> URLSessionUploadTask? {
+    func binaryUpload(httpMethod: HttpMethod? = .POST, urlString: String, formData: FormDataInformation, headers: [String: String?]? = nil, delegateQueue: OperationQueue? = .main, progress: @escaping ((UploadProgressInformation) -> Void), completion: @escaping (Result<Bool, Error>) -> Void) -> URLSessionUploadTask? {
         
         cleanAllBlocks()
         
@@ -198,7 +198,7 @@ public extension WWNetworking {
         request._setValue("\(formData.contentType)", forHTTPHeaderField: .contentType)
         request.setValue(formData.filename, forHTTPHeaderField: formData.name)
         uploadTask = urlSession.uploadTask(with: request, from: formData.data)
-        
+                
         if let headers = headers {
             headers.forEach { key, value in if let value = value { request.addValue(value, forHTTPHeaderField: key) }}
         }
@@ -419,7 +419,7 @@ public extension WWNetworking {
         }
     }
     
-    /// [分段上傳 - 大型檔案](https://www.swiftbysundell.com/articles/http-post-and-file-upload-requests-using-urlsession/)
+    /// [二進制檔案上傳 - 大型檔案](https://www.swiftbysundell.com/articles/http-post-and-file-upload-requests-using-urlsession/)
     /// - Parameters:
     ///   - httpMethod: [HttpMethod?](https://developer.mozilla.org/zh-TW/docs/Web/HTTP/Basics_of_HTTP/MIME_types)
     ///   - urlString: String
@@ -429,11 +429,11 @@ public extension WWNetworking {
     ///   - completion: Result<Bool, Error>
     /// - Returns: URLSessionUploadTask?
     @MainActor
-    func fragmentUpload(httpMethod: HttpMethod? = .POST, urlString: String, formData: FormDataInformation, headers: [String: String?]? = nil, delegateQueue: OperationQueue? = .main, sessionTask: @escaping ((URLSessionTask?) -> Void), progress: @escaping ((UploadProgressInformation) -> Void)) async -> Result<Bool, Error> {
+    func binaryUpload(httpMethod: HttpMethod? = .POST, urlString: String, formData: FormDataInformation, headers: [String: String?]? = nil, delegateQueue: OperationQueue? = .main, sessionTask: @escaping ((URLSessionTask?) -> Void), progress: @escaping ((UploadProgressInformation) -> Void)) async -> Result<Bool, Error> {
         
         await withCheckedContinuation { continuation in
             
-            let task = fragmentUpload(httpMethod: httpMethod, urlString: urlString, formData: formData, headers: headers, delegateQueue: delegateQueue) { info in
+            let task = binaryUpload(httpMethod: httpMethod, urlString: urlString, formData: formData, headers: headers, delegateQueue: delegateQueue) { info in
                 progress(info)
             } completion: { result in
                 Task { @MainActor in continuation.resume(returning: result) }

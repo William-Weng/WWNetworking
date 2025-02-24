@@ -25,6 +25,7 @@ final class ViewController: UIViewController {
         "POST": "https://httpbin.org/post",
         "DOWNLOAD": "https://raw.githubusercontent.com/William-Weng/AdobeIllustrator/master/William-Weng.png",
         "UPLOAD": "http://192.168.4.92:8080/upload",
+        "BINARY-UPLOAD": "http://192.168.4.92:8080/binaryUpload",
         "FRAGMENT": "https://photosku.com/images_file/images/i000_803.jpg",
     ]
     
@@ -36,7 +37,7 @@ final class ViewController: UIViewController {
     @IBAction func httpFragmentDownloadAction(_ sender: UIButton) { fragmentDownloadData() }
     @IBAction func httpMultipleDownloadAction(_ sender: UIButton) { httpMultipleDownload() }
     @IBAction func httpUploadAction(_ sender: UIButton) { httpUploadData() }
-    @IBAction func httpFragmentUpLoad(_ sender: UIButton) { httpFragmentUploadData() }
+    @IBAction func httpBinaryUpload(_ sender: UIButton) { httpBinaryUploadData() }
 }
 
 // MARK: - ViewController (private class function)
@@ -88,18 +89,20 @@ private extension ViewController {
         }
     }
     
-    /// 上傳圖片 (大型檔案)
-    func httpFragmentUploadData() {
+    /// 上傳檔案 (二進制)
+    func httpBinaryUploadData() {
         
-        let urlString = UrlStrings["UPLOAD"]!
+        let urlString = UrlStrings["BINARY-UPLOAD"]!
         let index = 1
         let imageData = resultImageViews[index].image?.pngData()
         let formData: WWNetworking.FormDataInformation = (name: "x-filename", filename: "Large.png", contentType: .octetStream, data: imageData!)
         
-        _ = WWNetworking.shared.fragmentUpload(urlString: urlString, formData: formData, progress: { info in
+        _ = WWNetworking.shared.binaryUpload(urlString: urlString, formData: formData, progress: { info in
             
             let progress = Float(info.totalBytesSent) / Float(info.totalBytesExpectedToSend)
             DispatchQueue.main.async { self.title = "\(progress)" }
+            
+            print(progress)
             
         }, completion: { result in
             
