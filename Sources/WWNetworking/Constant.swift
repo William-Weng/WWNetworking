@@ -36,6 +36,7 @@ public extension WWNetworking {
         case date = "Date"
         case lastModified = "Last-Modified"
         case range = "Range"
+        case soupAction = "SOAPAction"
     }
     
     /// HttpBody的類型 (Data)
