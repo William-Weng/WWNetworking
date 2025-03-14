@@ -167,18 +167,24 @@ extension URLRequest {
     /// - Parameters:
     ///   - url: URL網址
     ///   - httpMethod: HTTP方法 (GET / POST / ...)
-    static func _build(url: URL, httpMethod: WWNetworking.HttpMethod? = nil) -> URLRequest {
-        return Self._build(url: url, httpMethod: httpMethod?.rawValue)
+    ///   - timeoutInterval: TimeInterval
+    /// - Returns: URLRequest
+    static func _build(url: URL, httpMethod: WWNetworking.HttpMethod? = nil, timeout: TimeInterval) -> URLRequest {
+        return Self._build(url: url, httpMethod: httpMethod?.rawValue, timeout: timeout)
     }
     
     /// 產生URLRequest
     /// - Parameters:
     ///   - url: URL網址
     ///   - httpMethod: HTTP方法 (GET / POST / ...)
-    static func _build(url: URL, httpMethod: String? = nil) -> URLRequest {
+    ///   - timeout: TimeInterval
+    /// - Returns: URLRequest
+    static func _build(url: URL, httpMethod: String? = nil, timeout: TimeInterval) -> URLRequest {
         
         var request = URLRequest(url: url)
+        
         request.httpMethod = httpMethod
+        request.timeoutInterval = timeout
         
         return request
     }
@@ -187,18 +193,22 @@ extension URLRequest {
     /// - Parameters:
     ///   - string: URL網址
     ///   - httpMethod: HTTP方法 (GET / POST / ...)
-    static func _build(string: String, httpMethod: String? = nil) -> URLRequest? {
+    ///   - timeout: TimeInterval
+    /// - Returns: URLRequest?
+    static func _build(string: String, httpMethod: String? = nil, timeout: TimeInterval) -> URLRequest? {
         guard let url = URL(string: string) else { return nil }
-        return Self._build(url: url, httpMethod: httpMethod)
+        return Self._build(url: url, httpMethod: httpMethod, timeout: timeout)
     }
     
     /// 產生URLRequest
     /// - Parameters:
     ///   - string: URL網址
     ///   - httpMethod: HTTP方法 (GET / POST / ...)
-    static func _build(string: String, httpMethod: WWNetworking.HttpMethod? = nil) -> URLRequest? {
+    ///   - timeout: TimeInterval
+    /// - Returns: URLRequest?
+    static func _build(string: String, httpMethod: WWNetworking.HttpMethod? = nil, timeout: TimeInterval) -> URLRequest? {
         guard let url = URL(string: string) else { return nil }
-        return Self._build(url: url, httpMethod: httpMethod)
+        return Self._build(url: url, httpMethod: httpMethod, timeout: timeout)
     }
 }
 

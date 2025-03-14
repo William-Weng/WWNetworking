@@ -98,26 +98,28 @@ public extension WWNetworking {
     /// - Parameters:
     ///   - httpMethod: [HTTP方法](https://imququ.com/post/four-ways-to-post-data-in-http.html)
     ///   - urlString: 網址
+    ///   - contentType: HttpBody的類型
+    ///   - timeout: [設定請求超時時間](https://blog.csdn.net/qq_28091923/article/details/86233229)
     ///   - paramaters: 參數 => ?name=william
     ///   - headers: [Http Header](https://zh.wikipedia.org/zh-tw/HTTP头字段)
-    ///   - contentType: HttpBody的類型
     ///   - httpBodyType: HttpBobyType?
     ///   - result: Result<ResponseInformation, Error>
     /// - Returns: URLSessionTask?
-    func request(httpMethod: HttpMethod = .GET, urlString: String, contentType: ContentType = .json, paramaters: [String: String?]? = nil, headers: [String: String?]? = nil, httpBodyType: HttpBobyType? = nil, result: @escaping (Result<ResponseInformation, Error>) -> Void) -> URLSessionTask? {
-        let task = request(httpMethod: httpMethod, urlString: urlString, contentType: contentType, queryItems: paramaters?._queryItems(), headers: headers, httpBody: httpBodyType?.data()) { result($0) }
+    func request(httpMethod: HttpMethod = .GET, urlString: String, timeout: TimeInterval = 60, contentType: ContentType = .json, paramaters: [String: String?]? = nil, headers: [String: String?]? = nil, httpBodyType: HttpBobyType? = nil, result: @escaping (Result<ResponseInformation, Error>) -> Void) -> URLSessionTask? {
+        let task = request(httpMethod: httpMethod, urlString: urlString, contentType: contentType, timeout: timeout, queryItems: paramaters?._queryItems(), headers: headers, httpBody: httpBodyType?.data()) { result($0) }
         return task
     }
     
     /// [取得該URL資源的HEAD資訊 (檔案大小 / 類型 / 上傳日期…)](https://github.com/pro648/tips/blob/master/sources/URLSession详解.md)
     /// - Parameters:
     ///   - urlString: [網址](https://imququ.com/post/web-proxy.html)
+    ///   - timeout: [設定請求超時時間](https://blog.csdn.net/qq_28091923/article/details/86233229)
     ///   - headers: [Http Header](https://zh.wikipedia.org/zh-tw/HTTP头字段)
     ///   - result: Result<ResponseInformation?, Error>
     /// - Returns: URLSessionTask?
-    func header(urlString: String, headers: [String: String?]? = nil, result: @escaping (Result<ResponseInformation, Error>) -> Void) -> URLSessionTask? {
-
-        let task = request(httpMethod: .HEAD, urlString: urlString, contentType: .plain, paramaters: nil, headers: headers, httpBodyType: nil) { _result in
+    func header(urlString: String, timeout: TimeInterval = 60, headers: [String: String?]? = nil, result: @escaping (Result<ResponseInformation, Error>) -> Void) -> URLSessionTask? {
+        
+        let task = request(httpMethod: .HEAD, urlString: urlString, timeout: timeout, contentType: .plain, paramaters: nil, headers: headers, httpBodyType: nil) { _result in
 
             switch _result {
             case .failure(let error): result(.failure(error))
@@ -133,13 +135,14 @@ public extension WWNetworking {
     ///   - httpMethod: [HTTP方法](https://imququ.com/post/four-ways-to-post-data-in-http.html)
     ///   - urlString: [網址](https://imququ.com/post/web-proxy.html)
     ///   - formData: [圖片Data相關參數](https://pjchender.blogspot.com/2017/06/chrome-dev-tools.html)
+    ///   - timeout: [設定請求超時時間](https://blog.csdn.net/qq_28091923/article/details/86233229)
     ///   - parameters: [額外參數](https://ithelp.ithome.com.tw/articles/10244974?sc=rss.iron)
     ///   - headers: [Http Header](https://zh.wikipedia.org/zh-tw/HTTP头字段)
     ///   - result: Result<ResponseInformation, Error>
     /// - Returns: URLSessionDataTask?
-    func upload(httpMethod: HttpMethod? = .POST, urlString: String, formData: FormDataInformation, parameters: [String: String]? = nil, headers: [String: String?]? = nil, result: @escaping (Result<ResponseInformation, Error>) -> Void) -> URLSessionDataTask? {
+    func upload(httpMethod: HttpMethod? = .POST, urlString: String, timeout: TimeInterval = 60, formData: FormDataInformation, parameters: [String: String]? = nil, headers: [String: String?]? = nil, result: @escaping (Result<ResponseInformation, Error>) -> Void) -> URLSessionDataTask? {
         
-        guard var request = URLRequest._build(string: urlString, httpMethod: httpMethod) else { result(.failure(MyError.notUrlFormat)); return nil }
+        guard var request = URLRequest._build(string: urlString, httpMethod: httpMethod, timeout: timeout) else { result(.failure(MyError.notUrlFormat)); return nil }
         
         let boundary = "Boundary+\(arc4random())\(arc4random())"
         let httpBody = multipleUploadBodyMaker(boundary: boundary, formDatas: [formData], parameters: parameters)
@@ -156,14 +159,15 @@ public extension WWNetworking {
     /// - Parameters:
     ///   - httpMethod: [HTTP方法](https://imququ.com/post/four-ways-to-post-data-in-http.html)
     ///   - urlString: [網址](https://imququ.com/post/web-proxy.html)
+    ///   - timeout: [設定請求超時時間](https://blog.csdn.net/qq_28091923/article/details/86233229)
     ///   - formDatas: [圖片Data相關參數](https://pjchender.blogspot.com/2017/06/chrome-dev-tools.html)
     ///   - parameters: [額外參數](https://ithelp.ithome.com.tw/articles/10244974?sc=rss.iron)
     ///   - headers: [Http Header](https://zh.wikipedia.org/zh-tw/HTTP头字段)
     ///   - result: Result<ResponseInformation, Error>
     /// - Returns: URLSessionDataTask?
-    func multipleUpload(httpMethod: HttpMethod? = .POST, urlString: String, formDatas: [FormDataInformation], parameters: [String: String]? = nil, headers: [String: String?]? = nil, result: @escaping (Result<ResponseInformation, Error>) -> Void) -> URLSessionDataTask? {
+    func multipleUpload(httpMethod: HttpMethod? = .POST, urlString: String, timeout: TimeInterval = 60, formDatas: [FormDataInformation], parameters: [String: String]? = nil, headers: [String: String?]? = nil, result: @escaping (Result<ResponseInformation, Error>) -> Void) -> URLSessionDataTask? {
         
-        guard var request = URLRequest._build(string: urlString, httpMethod: httpMethod) else { result(.failure(MyError.notUrlFormat)); return nil }
+        guard var request = URLRequest._build(string: urlString, httpMethod: httpMethod, timeout: timeout) else { result(.failure(MyError.notUrlFormat)); return nil }
         
         let boundary = "Boundary+\(arc4random())\(arc4random())"
         let httpBody = multipleUploadBodyMaker(boundary: boundary, formDatas: formDatas, parameters: parameters)
@@ -181,16 +185,17 @@ public extension WWNetworking {
     ///   - httpMethod: [HttpMethod?](https://developer.mozilla.org/zh-TW/docs/Web/HTTP/Basics_of_HTTP/MIME_types)
     ///   - urlString: [String](https://cloud.tencent.com/developer/ask/sof/642880)
     ///   - formData: [FormDataInformation](https://ithelp.ithome.com.tw/articles/10185514)
+    ///   - timeout: [設定請求超時時間](https://blog.csdn.net/qq_28091923/article/details/86233229)
     ///   - headers:  [String: String?]?
     ///   - delegateQueue: OperationQueue?
     ///   - progress: UploadProgressInformation
     ///   - completion: Result<Bool, Error>
     /// - Returns: URLSessionUploadTask?
-    func binaryUpload(httpMethod: HttpMethod? = .POST, urlString: String, formData: FormDataInformation, headers: [String: String?]? = nil, delegateQueue: OperationQueue? = .main, progress: @escaping ((UploadProgressInformation) -> Void), completion: @escaping (Result<Bool, Error>) -> Void) -> URLSessionUploadTask? {
+    func binaryUpload(httpMethod: HttpMethod? = .POST, urlString: String, timeout: TimeInterval = 60, formData: FormDataInformation, headers: [String: String?]? = nil, delegateQueue: OperationQueue? = .main, progress: @escaping ((UploadProgressInformation) -> Void), completion: @escaping (Result<Bool, Error>) -> Void) -> URLSessionUploadTask? {
         
         cleanAllBlocks()
         
-        guard var request = URLRequest._build(string: urlString, httpMethod: httpMethod) else { completion(.failure(MyError.notOpenURL)); return nil }
+        guard var request = URLRequest._build(string: urlString, httpMethod: httpMethod, timeout: timeout) else { completion(.failure(MyError.notOpenURL)); return nil }
         
         let urlSession = URLSession(configuration: .default, delegate: self, delegateQueue: delegateQueue)
         var uploadTask: URLSessionUploadTask?
@@ -211,20 +216,21 @@ public extension WWNetworking {
 
         return uploadTask
     }
-
+    
     /// [下載資料 => URLSessionDownloadDelegate](https://medium.com/@jerrywang0420/urlsession-教學-swift-3-ios-part-3-34699564fb12)
     /// - Parameters:
     ///   - httpMethod: [HTTP方法](https://imququ.com/post/four-ways-to-post-data-in-http.html)
     ///   - urlString: [網址](https://zh-tw.coderbridge.com/series/01d31194cb3c428d9ca2575c91e8b997/posts/2c17813523194f578281c430e8ecca02)
+    ///   - timeout: [設定請求超時時間](https://blog.csdn.net/qq_28091923/article/details/86233229)
     ///   - configuration: [URLSession設定 / timeout](https://draveness.me/ios-yuan-dai-ma-jie-xi-sdwebimage/)
     ///   - delegateQueue: [執行緒](https://zh-tw.coderbridge.com/series/01d31194cb3c428d9ca2575c91e8b997/posts/c44ba1db0ded4d53aec73a8e589ca1e5)
     ///   - isResume: [是否要立刻執行Task](https://liuyousama.top/2020/10/18/Kingfisher源码阅读/)
     ///   - progress: [下載進度](https://www.appcoda.com.tw/ios-concurrency/)
     ///   - completion: 下載完成後
     /// - Returns: URLSessionDownloadTask?
-    func download(httpMethod: HttpMethod? = .GET, urlString: String, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main, isResume: Bool = true, progress: @escaping ((DownloadProgressInformation) -> Void), completion: @escaping ((Result<DownloadResultInformation, Error>) -> Void)) -> URLSessionDownloadTask? {
+    func download(httpMethod: HttpMethod? = .GET, urlString: String, timeout: TimeInterval = 60, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main, isResume: Bool = true, progress: @escaping ((DownloadProgressInformation) -> Void), completion: @escaping ((Result<DownloadResultInformation, Error>) -> Void)) -> URLSessionDownloadTask? {
         
-        guard let downloadTask = self.downloadTaskMaker(with: httpMethod, urlString: urlString, configuration: configuration, delegateQueue: delegateQueue) else { completion(.failure(MyError.notUrlFormat)); return nil }
+        guard let downloadTask = self.downloadTaskMaker(with: httpMethod, urlString: urlString, timeout: timeout, configuration: configuration, delegateQueue: delegateQueue) else { completion(.failure(MyError.notUrlFormat)); return nil }
         
         downloadTaskResultBlock = completion
         downloadProgressResultBlock = progress
@@ -238,12 +244,13 @@ public extension WWNetworking {
     /// - Parameters:
     ///   - httpMethod: [HTTP方法](https://imququ.com/post/four-ways-to-post-data-in-http.html)
     ///   - urlStrings: [網址](https://zh-tw.coderbridge.com/series/01d31194cb3c428d9ca2575c91e8b997/posts/2c17813523194f578281c430e8ecca02)
+    ///   - timeout: [設定請求超時時間](https://blog.csdn.net/qq_28091923/article/details/86233229)
     ///   - configuration: [URLSessionConfiguration](https://cootie8788.medium.com/swift-示範如何客製化元件-2-串上http-get-作法-f9db4524c31c)
     ///   - delegateQueue: [執行緒](https://zh-tw.coderbridge.com/series/01d31194cb3c428d9ca2575c91e8b997/posts/c44ba1db0ded4d53aec73a8e589ca1e5)
     ///   - progress: 下載進度
     ///   - completion: 下載完成後
     /// - Returns: [URLSessionDownloadTask]
-    func multipleDownload(httpMethod: HttpMethod? = .GET, urlStrings: [String], configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main, progress: @escaping ((DownloadProgressInformation) -> Void), completion: @escaping ((Result<DownloadResultInformation, Error>) -> Void)) -> [URLSessionDownloadTask] {
+    func multipleDownload(httpMethod: HttpMethod? = .GET, urlStrings: [String], timeout: TimeInterval = 60, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main, progress: @escaping ((DownloadProgressInformation) -> Void), completion: @escaping ((Result<DownloadResultInformation, Error>) -> Void)) -> [URLSessionDownloadTask] {
         
         cleanAllBlocks()
         
@@ -251,7 +258,7 @@ public extension WWNetworking {
         
         let downloadTasks = _urlStrings.compactMap { urlString in
             
-            self.download(httpMethod: httpMethod, urlString: urlString, configuration: configuration, delegateQueue: delegateQueue) { info in
+            self.download(httpMethod: httpMethod, urlString: urlString, timeout: timeout, configuration: configuration, delegateQueue: delegateQueue) { info in
                 progress(info)
             } completion: { result in
                 completion(result)
@@ -278,7 +285,7 @@ public extension WWNetworking {
         fragmentDownloadProgressResultBlock = progress
         cleanFragmentInformation()
         
-        self.header(urlString: urlString) { result in
+        self.header(urlString: urlString, timeout: timeout) { result in
 
             switch result {
             case .failure(let error): completion(.failure(error))
@@ -322,15 +329,17 @@ public extension WWNetworking {
     /// - Parameters:
     ///   - httpMethod: [HTTP方法](https://imququ.com/post/four-ways-to-post-data-in-http.html)
     ///   - urlString: 網址
+    ///   - timeout: [設定請求超時時間](https://blog.csdn.net/qq_28091923/article/details/86233229)
     ///   - paramaters: 參數 => ?name=william
     ///   - headers: [Http Header](https://zh.wikipedia.org/zh-tw/HTTP头字段)
     ///   - httpBody: Data => 所有的資料只要轉成Data都可以傳
     ///   - contentType: ContentType
+    ///   - httpBodyType: HttpBobyType?
     /// - Returns: Result<ResponseInformation, Error>
-    func request(httpMethod: HttpMethod = .GET, urlString: String, contentType: ContentType = .json, paramaters: [String: String?]? = nil, headers: [String: String?]? = nil, httpBodyType: HttpBobyType? = nil) async -> Result<ResponseInformation, Error> {
+    func request(httpMethod: HttpMethod = .GET, urlString: String, timeout: TimeInterval = 60, contentType: ContentType = .json, paramaters: [String: String?]? = nil, headers: [String: String?]? = nil, httpBodyType: HttpBobyType? = nil) async -> Result<ResponseInformation, Error> {
         
         await withCheckedContinuation { continuation in
-            request(httpMethod: httpMethod, urlString: urlString, contentType: contentType, paramaters: paramaters, headers: headers, httpBodyType: httpBodyType) { result in
+            request(httpMethod: httpMethod, urlString: urlString, timeout: timeout, contentType: contentType, paramaters: paramaters, headers: headers, httpBodyType: httpBodyType) { result in
                 continuation.resume(returning: result)
             }
         }
@@ -374,12 +383,13 @@ public extension WWNetworking {
     /// 取得該URL資源的HEAD資訊 (檔案大小 / 類型 / 上傳日期…)
     /// - Parameters:
     ///   - urlString: [網址](https://imququ.com/post/web-proxy.html)
+    ///   - timeout: [設定請求超時時間](https://blog.csdn.net/qq_28091923/article/details/86233229)
     ///   - headers: [Http Header](https://zh.wikipedia.org/zh-tw/HTTP头字段)
     /// - Returns: Result<ResponseInformation, Error>
-    func header(urlString: String, headers: [String: String?]? = nil) async -> Result<ResponseInformation, Error> {
+    func header(urlString: String, timeout: TimeInterval = 60, headers: [String: String?]? = nil) async -> Result<ResponseInformation, Error> {
         
         await withCheckedContinuation { continuation in
-            header(urlString: urlString, headers: headers) { result in
+            header(urlString: urlString, timeout: timeout, headers: headers) { result in
                 continuation.resume(returning: result)
             }
         }
@@ -389,14 +399,15 @@ public extension WWNetworking {
     /// - Parameters:
     ///   - httpMethod: [HTTP方法](https://imququ.com/post/four-ways-to-post-data-in-http.html)
     ///   - urlString: [網址](https://imququ.com/post/web-proxy.html)
+    ///   - timeout: [設定請求超時時間](https://blog.csdn.net/qq_28091923/article/details/86233229)
     ///   - formData: [圖片Data相關參數](https://pjchender.blogspot.com/2017/06/chrome-dev-tools.html)
     ///   - parameters: [額外參數](https://ithelp.ithome.com.tw/articles/10244974?sc=rss.iron)
     ///   - headers: [Http Header](https://zh.wikipedia.org/zh-tw/HTTP头字段)
     /// - Returns: Result<ResponseInformation, Error>
-    func upload(httpMethod: HttpMethod? = .POST, urlString: String, formData: FormDataInformation, parameters: [String: String], headers: [String: String?]? = nil) async -> Result<ResponseInformation, Error> {
+    func upload(httpMethod: HttpMethod? = .POST, urlString: String, timeout: TimeInterval = 60, formData: FormDataInformation, parameters: [String: String], headers: [String: String?]? = nil) async -> Result<ResponseInformation, Error> {
         
         await withCheckedContinuation { continuation in
-            upload(httpMethod: httpMethod, urlString: urlString, formData: formData, parameters: parameters, headers: headers) { result in
+            upload(httpMethod: httpMethod, urlString: urlString, timeout: timeout, formData: formData, parameters: parameters, headers: headers) { result in
                 continuation.resume(returning: result)
             }
         }
@@ -406,14 +417,15 @@ public extension WWNetworking {
     /// - Parameters:
     ///   - httpMethod: [HTTP方法](https://imququ.com/post/four-ways-to-post-data-in-http.html)
     ///   - urlString: [網址](https://imququ.com/post/web-proxy.html)
+    ///   - timeout: [設定請求超時時間](https://blog.csdn.net/qq_28091923/article/details/86233229)
     ///   - formDatas: [圖片Data相關參數](https://pjchender.blogspot.com/2017/06/chrome-dev-tools.html)
     ///   - parameters: [額外參數](https://ithelp.ithome.com.tw/articles/10244974?sc=rss.iron)
     ///   - headers: [Http Header](https://zh.wikipedia.org/zh-tw/HTTP头字段)
     /// - Returns: Result<ResponseInformation, Error>
-    func multipleUpload(httpMethod: HttpMethod? = .POST, urlString: String, formDatas: [FormDataInformation], parameters: [String: String], headers: [String: String?]? = nil) async -> Result<ResponseInformation, Error> {
+    func multipleUpload(httpMethod: HttpMethod? = .POST, urlString: String, timeout: TimeInterval = 60, formDatas: [FormDataInformation], parameters: [String: String], headers: [String: String?]? = nil) async -> Result<ResponseInformation, Error> {
         
         await withCheckedContinuation { continuation in
-            multipleUpload(httpMethod: httpMethod, urlString: urlString, formDatas: formDatas, parameters: parameters, headers: headers) { result in
+            multipleUpload(httpMethod: httpMethod, urlString: urlString, timeout: timeout, formDatas: formDatas, parameters: parameters, headers: headers) { result in
                 continuation.resume(returning: result)
             }
         }
@@ -423,17 +435,18 @@ public extension WWNetworking {
     /// - Parameters:
     ///   - httpMethod: [HttpMethod?](https://developer.mozilla.org/zh-TW/docs/Web/HTTP/Basics_of_HTTP/MIME_types)
     ///   - urlString: String
+    ///   - timeout: [設定請求超時時間](https://blog.csdn.net/qq_28091923/article/details/86233229)
     ///   - formData: [FormDataInformation](https://ithelp.ithome.com.tw/articles/10185514)
     ///   - delegateQueue: OperationQueue?
     ///   - progress: UploadProgressInformation
     ///   - completion: Result<Bool, Error>
     /// - Returns: URLSessionUploadTask?
     @MainActor
-    func binaryUpload(httpMethod: HttpMethod? = .POST, urlString: String, formData: FormDataInformation, headers: [String: String?]? = nil, delegateQueue: OperationQueue? = .main, sessionTask: @escaping ((URLSessionTask?) -> Void), progress: @escaping ((UploadProgressInformation) -> Void)) async -> Result<Bool, Error> {
+    func binaryUpload(httpMethod: HttpMethod? = .POST, urlString: String, timeout: TimeInterval = 60, formData: FormDataInformation, headers: [String: String?]? = nil, delegateQueue: OperationQueue? = .main, sessionTask: @escaping ((URLSessionTask?) -> Void), progress: @escaping ((UploadProgressInformation) -> Void)) async -> Result<Bool, Error> {
         
         await withCheckedContinuation { continuation in
             
-            let task = binaryUpload(httpMethod: httpMethod, urlString: urlString, formData: formData, headers: headers, delegateQueue: delegateQueue) { info in
+            let task = binaryUpload(httpMethod: httpMethod, urlString: urlString, timeout: timeout, formData: formData, headers: headers, delegateQueue: delegateQueue) { info in
                 progress(info)
             } completion: { result in
                 Task { @MainActor in continuation.resume(returning: result) }
@@ -447,17 +460,18 @@ public extension WWNetworking {
     /// - Parameters:
     ///   - httpMethod: [HTTP方法](https://imququ.com/post/four-ways-to-post-data-in-http.html)
     ///   - urlString: [網址](https://zh-tw.coderbridge.com/series/01d31194cb3c428d9ca2575c91e8b997/posts/2c17813523194f578281c430e8ecca02)
+    ///   - timeout: [設定請求超時時間](https://blog.csdn.net/qq_28091923/article/details/86233229)
     ///   - configuration: [Timeout](https://draveness.me/ios-yuan-dai-ma-jie-xi-sdwebimage/)
     ///   - delegateQueue: [執行緒](https://zh-tw.coderbridge.com/series/01d31194cb3c428d9ca2575c91e8b997/posts/c44ba1db0ded4d53aec73a8e589ca1e5)
     ///   - isResume: [是否要立刻執行Task](https://liuyousama.top/2020/10/18/Kingfisher源码阅读/)
     ///   - progress: [下載進度](https://www.appcoda.com.tw/ios-concurrency/)
     ///   - sessionTask: 執行的Task
     /// - Returns: Result<DownloadResultInformation, Error>
-    func download(httpMethod: HttpMethod? = .GET, urlString: String, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main, isResume: Bool = true, sessionTask: @escaping ((URLSessionTask?) -> Void), progress: @escaping ((DownloadProgressInformation) -> Void)) async -> Result<DownloadResultInformation, Error> {
+    func download(httpMethod: HttpMethod? = .GET, urlString: String, timeout: TimeInterval = 60, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main, isResume: Bool = true, sessionTask: @escaping ((URLSessionTask?) -> Void), progress: @escaping ((DownloadProgressInformation) -> Void)) async -> Result<DownloadResultInformation, Error> {
         
         await withCheckedContinuation { continuation in
             
-            let task = download(httpMethod: httpMethod, urlString: urlString, configuration: configuration, delegateQueue: delegateQueue, isResume: isResume) { info in
+            let task = download(httpMethod: httpMethod, urlString: urlString, timeout: timeout, configuration: configuration, delegateQueue: delegateQueue, isResume: isResume) { info in
                 progress(info)
             } completion: { result in
                  continuation.resume(returning: result)
@@ -472,7 +486,7 @@ public extension WWNetworking {
     ///   - urlString: String
     ///   - fragment: 分段數量
     ///   - delegateQueue: OperationQueue
-    ///   - timeoutInterval: TimeInterval
+    ///   - timeout: TimeInterval
     ///   - progress: 下載進度
     ///   - fragmentTask: URLSessionTask
     /// - Returns: Result<Data, Error>
@@ -501,16 +515,17 @@ private extension WWNetworking {
     ///   - httpMethod: [HTTP方法](https://imququ.com/post/four-ways-to-post-data-in-http.html)
     ///   - urlString: 網址
     ///   - contentType: [要回傳的格式 => application/json](https://notfalse.net/39/http-message-format)
+    ///   - timeout: [設定請求超時時間](https://blog.csdn.net/qq_28091923/article/details/86233229)
     ///   - queryItems: 參數 => ?name=william
     ///   - headers: [Http Header](https://zh.wikipedia.org/zh-tw/HTTP头字段)
     ///   - httpBody: Data => 所有的資料只要轉成Data都可以傳
     ///   - result: Result<ResponseInformation, Error>
     /// - Returns: URLSessionTask?
-    func request(httpMethod: HttpMethod = .GET, urlString: String, contentType: ContentType = .json, queryItems: [URLQueryItem]? = nil, headers: [String: String?]? = nil, httpBody: Data? = nil, result: @escaping (Result<ResponseInformation, Error>) -> Void) -> URLSessionTask? {
+    func request(httpMethod: HttpMethod = .GET, urlString: String, contentType: ContentType = .json, timeout: TimeInterval, queryItems: [URLQueryItem]? = nil, headers: [String: String?]? = nil, httpBody: Data? = nil, result: @escaping (Result<ResponseInformation, Error>) -> Void) -> URLSessionTask? {
         
         guard let urlComponents = URLComponents._build(urlString: urlString, queryItems: queryItems),
               let queryedURL = urlComponents.url,
-              var request = Optional.some(URLRequest._build(url: queryedURL, httpMethod: httpMethod))
+              var request = Optional.some(URLRequest._build(url: queryedURL, httpMethod: httpMethod, timeout: timeout))
         else {
             result(.failure(MyError.notUrlFormat)); return nil
         }
@@ -664,12 +679,13 @@ private extension WWNetworking {
     /// - Parameters:
     ///   - httpMethod: [HTTP方法](https://imququ.com/post/four-ways-to-post-data-in-http.html)
     ///   - urlString: [網址](https://imququ.com/post/web-proxy.html)
+    ///   - timeout: [設定請求超時時間](https://blog.csdn.net/qq_28091923/article/details/86233229)
     ///   - configuration: URLSessionConfiguration
     ///   - delegateQueue: 執行緒
     /// - Returns: URLSessionDownloadTask
-    func downloadTaskMaker(with httpMethod: HttpMethod? = .POST, urlString: String, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main) -> URLSessionDownloadTask? {
-
-        guard let request = URLRequest._build(string: urlString, httpMethod: httpMethod) else { return nil }
+    func downloadTaskMaker(with httpMethod: HttpMethod? = .POST, urlString: String, timeout: TimeInterval = 60, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main) -> URLSessionDownloadTask? {
+        
+        guard let request = URLRequest._build(string: urlString, httpMethod: httpMethod, timeout: timeout) else { return nil }
         
         let urlSession = URLSession(configuration: configuration, delegate: self, delegateQueue: delegateQueue)
         let downloadTask = urlSession.downloadTask(with: request)
