@@ -25,23 +25,6 @@ open class WWNetworking: NSObject {
     private var fragmentUploadProgressResultBlock: ((UploadProgressInformation) -> Void)?                                                   // 分段下載進行中的進度 - 檔案大小
 }
 
-// MARK: - typealias
-public extension WWNetworking {
-    
-    typealias DownloadProgressInformation = (urlString: String?, totalSize: Int64, totalWritten: Int64, writting: Int64)                    // 網路下載資料 => (URL / 大小 / 己下載 / 一段段的下載量)
-    typealias ResponseInformation = (data: Data?, response: HTTPURLResponse?)                                                               // 網路回傳的資料
-    typealias HttpDownloadOffset = (start: Int?, end: Int?)                                                                                 // 續傳下載開始~結束位置設定值 (bytes=0-1024)
-    typealias DownloadResultInformation = (urlString: String, data: Data?)                                                                  // 網路下載資料的結果資訊 (URL, Data)
-    typealias UploadProgressInformation = (urlString: String?, bytesSent: Int64, totalBytesSent: Int64, totalBytesExpectedToSend: Int64)    // 網路上傳資料 (URL / 段落上傳大小 / 己上傳大小 / 總大小)
-    typealias FormDataInformation = (name: String, filename: String, contentType: ContentType, data: Data)                                  // 上傳檔案資訊 (參數名稱 / 檔名 / 檔案類型 / 資料)
-    typealias RequestInformationType = (httpMethod: HttpMethod,                                                                             // 多個request的參數值 (同單個request)
-                                        urlString: String,
-                                        contentType: ContentType,
-                                        paramaters: [String: String?]?,
-                                        headers: [String: String?]?,
-                                        httpBodyType: HttpBobyType?)
-}
-
 extension WWNetworking: URLSessionTaskDelegate {}
 extension WWNetworking: URLSessionDataDelegate {}
 extension WWNetworking: URLSessionDownloadDelegate {}
@@ -271,14 +254,14 @@ public extension WWNetworking {
     /// [分段下載](https://www.jianshu.com/p/534ec0d9d758)
     /// - Parameters:
     ///   - urlString: String
+    ///   - timeout: TimeInterval
     ///   - fragment: 分段數量
     ///   - delegateQueue: OperationQueue
-    ///   - timeout: TimeInterval
     ///   - configiguration: URLSessionConfiguration
     ///   - progress: 下載進度
     ///   - fragmentTask: URLSessionTask
     ///   - completion: Result<Data, Error>
-    func fragmentDownload(urlString: String, fragment: Int = 2, delegateQueue: OperationQueue? = .main, timeout: TimeInterval = .infinity, configiguration: URLSessionConfiguration = .default, progress: @escaping ((DownloadProgressInformation) -> Void), fragmentTask: @escaping (URLSessionTask) -> Void, completion: @escaping ((Result<Data, Error>) -> Void)) {
+    func fragmentDownload(urlString: String, timeout: TimeInterval = .infinity, fragment: Int = 2, delegateQueue: OperationQueue? = .main, configiguration: URLSessionConfiguration = .default, progress: @escaping ((DownloadProgressInformation) -> Void), fragmentTask: @escaping (URLSessionTask) -> Void, completion: @escaping ((Result<Data, Error>) -> Void)) {
         
         guard fragment > 0 else { completion(.failure(MyError.fragmentCountError)); return }
         
@@ -353,7 +336,7 @@ public extension WWNetworking {
         var requests: [Result<ResponseInformation, Error>] = []
         
         for type in types {
-            async let request = request(httpMethod: type.httpMethod, urlString: type.urlString, contentType: type.contentType, paramaters: type.paramaters, headers: type.headers, httpBodyType: type.httpBodyType)
+            async let request = request(httpMethod: type.httpMethod, urlString: type.urlString, timeout: type.timeout, contentType: type.contentType, paramaters: type.paramaters, headers: type.headers, httpBodyType: type.httpBodyType)
             requests.append(await request)
         }
         
@@ -369,7 +352,7 @@ public extension WWNetworking {
             
             for type in types {
                 group.addTask {
-                    await self.request(httpMethod: type.httpMethod, urlString: type.urlString, contentType: type.contentType, paramaters: type.paramaters, headers: type.headers, httpBodyType: type.httpBodyType)
+                    await self.request(httpMethod: type.httpMethod, urlString: type.urlString, timeout: type.timeout, contentType: type.contentType, paramaters: type.paramaters, headers: type.headers, httpBodyType: type.httpBodyType)
                 }
             }
             
@@ -495,7 +478,7 @@ public extension WWNetworking {
         
         await withCheckedContinuation { continuation in
             
-            fragmentDownload(urlString: urlString, fragment: fragment, delegateQueue: delegateQueue, timeout: timeout, configiguration: configiguration) { info in
+            fragmentDownload(urlString: urlString, timeout: timeout, fragment: fragment, delegateQueue: delegateQueue, configiguration: configiguration) { info in
                 progress(info)
             } fragmentTask: { task in
                 fragmentTask(task)
