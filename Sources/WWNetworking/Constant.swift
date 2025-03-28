@@ -63,6 +63,7 @@ public extension WWNetworking {
         case string(_ string: String?, encoding: String.Encoding = .utf8, isLossyConversion: Bool = false)
         case array(_ array: [Any]?, options: JSONSerialization.WritingOptions = JSONSerialization.WritingOptions())
         case dictionary(_ dictionary: [String: Any]?, options: JSONSerialization.WritingOptions = JSONSerialization.WritingOptions())
+        case form(_ dictionary: [String: String]?, encoding: String.Encoding = .utf8, isLossyConversion: Bool = false)
         case custom(_ data: Data?)
         
         /// 轉成Data
@@ -73,6 +74,7 @@ public extension WWNetworking {
             case .string(let string, let encoding, let isLossyConversion): return string?._data(using: encoding, isLossyConversion: isLossyConversion)
             case .array(let array, let options): return array?._jsonData(options: options)
             case .dictionary(let dictionary, let options): return dictionary?._jsonData(options: options)
+            case .form(let dictionary, let encoding, let isLossyConversion): return dictionary?.map { "\($0)=\($1)" }.joined(separator: "&")._data(using: encoding, isLossyConversion: isLossyConversion)
             case .custom(let data): return data
             }
         }
