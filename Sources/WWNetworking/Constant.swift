@@ -13,7 +13,7 @@ public extension WWNetworking {
     typealias DownloadProgressInformation = (urlString: String?, totalSize: Int64, totalWritten: Int64, writting: Int64)                    // 網路下載資料 => (URL / 大小 / 己下載 / 一段段的下載量)
     typealias ResponseInformation = (data: Data?, response: HTTPURLResponse?)                                                               // 網路回傳的資料
     typealias HttpDownloadOffset = (start: Int?, end: Int?)                                                                                 // 續傳下載開始~結束位置設定值 (bytes=0-1024)
-    typealias DownloadResultInformation = (urlString: String, data: Data?)                                                                  // 網路下載資料的結果資訊 (URL, Data)
+    typealias DownloadResultInformation = (urlString: String, location: URL, data: Data?)                                                   // 網路下載資料的結果資訊 (URL, tempURL, Data)
     typealias UploadProgressInformation = (urlString: String?, bytesSent: Int64, totalBytesSent: Int64, totalBytesExpectedToSend: Int64)    // 網路上傳資料 (URL / 段落上傳大小 / 己上傳大小 / 總大小)
     typealias FormDataInformation = (name: String, filename: String, contentType: ContentType, data: Data)                                  // 上傳檔案資訊 (參數名稱 / 檔名 / 檔案類型 / 資料)
     typealias RequestInformationType = (httpMethod: HttpMethod,                                                                             // 多個request的參數值 (同單個request)

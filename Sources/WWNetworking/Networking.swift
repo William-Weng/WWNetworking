@@ -614,7 +614,7 @@ private extension WWNetworking {
         
         do {
             let data = try Data(contentsOf: location)
-            let info: DownloadResultInformation = (urlString: urlString, data: data)
+            let info: DownloadResultInformation = (urlString: urlString, location: location, data: data)
             block(.success(info))
         } catch {
             block(.failure(error))
