@@ -24,8 +24,8 @@ dependencies: [
 |upload(httpMethod:urlString:timeout:formData:parameters:headers:result)|上傳檔案 - 模仿Form|
 |multipleUpload(httpMethod:urlString:timeout:formDatas:parameters:headers:result)|上傳檔案 (多個) - 模仿Form|
 |binaryUpload(httpMethod:urlString:timeout:formData:headers:delegateQueue:progress:completion:)|二進制檔案上傳 - 大型檔案|
-|download(httpMethod:urlString:timeout:configuration:delegateQueue:isResume:progress:completion:)|下載資料 - URLSessionDownloadDelegate|
-|fragmentDownload(urlString:timeout:fragment:delegateQueue:configiguration:progress:fragmentTask:completion:)|分段下載|
+|download(httpMethod:urlString:timeout:configuration:delegateQueue:progress:completion:)|下載資料 - URLSessionDownloadDelegate|
+|fragmentDownload(urlString:timeout:fragment:configiguration:delegateQueue:progress:fragmentTask:completion:)|分段下載|
 |multipleDownload(httpMethod:urlStrings:timeout:configuration:delegateQueue:progress:completion:)|下載多筆資料- URLSessionDownloadDelegate|
 
 ### [async / await版本](https://youtu.be/s2PiL_Vte4E)
@@ -35,9 +35,10 @@ dependencies: [
 |header(urlString:timeout:headers:)|取得該URL資源的HEAD資訊|
 |upload(httpMethod:timeout:urlString:formData:parameters:headers:)|上傳檔案 - 模仿Form|
 |multipleUpload(httpMethod:urlString:timeout:formDatas:parameters:headers:)|上傳檔案 (多個) - 模仿Form|
-|binaryUpload(httpMethod:urlString:timeout:formData:headers:delegateQueue:progress:)|二進制檔案上傳 - 大型檔案|
-|download(httpMethod:urlString:timeout:configuration:delegateQueue:isResume:)|下載資料 - URLSessionDownloadDelegate|
-|fragmentDownload(urlString:fragment:delegateQueue:timeout:configiguration:)|分段下載|
+|binaryUpload(httpMethod:urlString:timeout:formData:headers:delegateQueue:)|二進制檔案上傳 - 大型檔案|
+|download(httpMethod:urlString:timeout:configuration:delegateQueue:)|下載資料 - URLSessionDownloadDelegate|
+|fragmentDownload(urlString:fragment:timeout:configiguration:delegateQueue:)|分段下載|
+|multipleDownload(httpMethod:urlStrings:timeout:configuration:delegateQueue:)|下載多筆資料- URLSessionDownloadDelegate|
 |multipleRequest(types:)|發出多個request|
 |multipleRequestWithTaskGroup(types:)|同時發出多個request|
 

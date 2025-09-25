@@ -69,12 +69,26 @@ public extension WWNetworking {
         case progress(_ progress: DownloadProgressInformation)
         case finished(_ result: DownloadResultInformation)
     }
-    
+        
     /// 分段檔案下載狀態
     enum FragmentDownloadState {
         case start(_ task: URLSessionTask)
         case progress(_ progress: DownloadProgressInformation)
         case finished(_ data: Data)
+    }
+    
+    /// 多檔案下載狀態
+    enum MultipleDownloadState {
+        case start(_ tasks: [URLSessionDownloadTask])
+        case progress(_ progress: DownloadProgressInformation)
+        case finished(_ result: DownloadResultInformation)
+    }
+
+    /// 檔案上傳狀態
+    enum UploadState {
+        case start(_ task: URLSessionUploadTask)
+        case progress(_ progress: DownloadProgressInformation)
+        case finished(_ isSuccess: Bool)
     }
     
     /// HttpBody的類型 (Data)

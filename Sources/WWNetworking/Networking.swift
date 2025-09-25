@@ -207,18 +207,17 @@ public extension WWNetworking {
     ///   - timeout: [設定請求超時時間](https://blog.csdn.net/qq_28091923/article/details/86233229)
     ///   - configuration: [URLSession設定 / timeout](https://draveness.me/ios-yuan-dai-ma-jie-xi-sdwebimage/)
     ///   - delegateQueue: [執行緒](https://zh-tw.coderbridge.com/series/01d31194cb3c428d9ca2575c91e8b997/posts/c44ba1db0ded4d53aec73a8e589ca1e5)
-    ///   - isResume: [是否要立刻執行Task](https://liuyousama.top/2020/10/18/Kingfisher源码阅读/)
     ///   - progress: [下載進度](https://www.appcoda.com.tw/ios-concurrency/)
     ///   - completion: 下載完成後
     /// - Returns: URLSessionDownloadTask?
-    func download(httpMethod: HttpMethod? = .GET, urlString: String, timeout: TimeInterval = 60, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main, isResume: Bool = true, progress: @escaping ((DownloadProgressInformation) -> Void), completion: @escaping ((Result<DownloadResultInformation, Error>) -> Void)) -> URLSessionDownloadTask? {
+    func download(httpMethod: HttpMethod? = .GET, urlString: String, timeout: TimeInterval = 60, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main, progress: @escaping ((DownloadProgressInformation) -> Void), completion: @escaping ((Result<DownloadResultInformation, Error>) -> Void)) -> URLSessionDownloadTask? {
         
         guard let downloadTask = self.downloadTaskMaker(with: httpMethod, urlString: urlString, timeout: timeout, configuration: configuration, delegateQueue: delegateQueue) else { completion(.failure(CustomError.notUrlFormat)); return nil }
         
         downloadTaskResultBlock = completion
         downloadProgressResultBlock = progress
         
-        if (isResume) { downloadTask.resume() }
+        downloadTask.resume()
         
         return downloadTask
     }
@@ -250,18 +249,18 @@ public extension WWNetworking {
         
         return downloadTasks
     }
-
+    
     /// [分段下載](https://www.jianshu.com/p/534ec0d9d758)
     /// - Parameters:
     ///   - urlString: 下載資料網址
     ///   - timeout: TimeInterval
     ///   - fragment: 分段數量
-    ///   - delegateQueue: OperationQueue
     ///   - configiguration: URLSessionConfiguration
+    ///   - delegateQueue: OperationQueue
     ///   - progress: 下載進度
     ///   - fragmentTask: URLSessionTask
     ///   - completion: Result<Data, Error>
-    func fragmentDownload(urlString: String, timeout: TimeInterval = .infinity, fragment: Int = 2, delegateQueue: OperationQueue? = .main, configiguration: URLSessionConfiguration = .default, progress: @escaping ((DownloadProgressInformation) -> Void), fragmentTask: @escaping (URLSessionTask) -> Void, completion: @escaping ((Result<Data, Error>) -> Void)) {
+    func fragmentDownload(urlString: String, timeout: TimeInterval = .infinity, fragment: Int = 2, configiguration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main, progress: @escaping ((DownloadProgressInformation) -> Void), fragmentTask: @escaping (URLSessionTask) -> Void, completion: @escaping ((Result<Data, Error>) -> Void)) {
         
         guard fragment > 0 else { completion(.failure(CustomError.fragmentCountError)); return }
         
@@ -414,28 +413,35 @@ public extension WWNetworking {
         }
     }
     
-    /// [二進制檔案上傳 - 大型檔案](https://www.swiftbysundell.com/articles/http-post-and-file-upload-requests-using-urlsession/)
+    /// 二進制檔案上傳 - 大型檔案
     /// - Parameters:
-    ///   - httpMethod: [HttpMethod?](https://developer.mozilla.org/zh-TW/docs/Web/HTTP/Basics_of_HTTP/MIME_types)
+    ///   - httpMethod: HttpMethod?
     ///   - urlString: String
-    ///   - timeout: [設定請求超時時間](https://blog.csdn.net/qq_28091923/article/details/86233229)
-    ///   - formData: [FormDataInformation](https://ithelp.ithome.com.tw/articles/10185514)
+    ///   - timeout: TimeInterval
+    ///   - formData: FormDataInformation
+    ///   - headers: [String: String?]?
     ///   - delegateQueue: OperationQueue?
-    ///   - progress: UploadProgressInformation
-    ///   - completion: Result<Bool, Error>
-    /// - Returns: URLSessionUploadTask?
-    @MainActor
-    func binaryUpload(httpMethod: HttpMethod? = .POST, urlString: String, timeout: TimeInterval = 60, formData: FormDataInformation, headers: [String: String?]? = nil, delegateQueue: OperationQueue? = .main, sessionTask: @escaping ((URLSessionTask?) -> Void), progress: @escaping ((UploadProgressInformation) -> Void)) async -> Result<Bool, Error> {
+    /// - Returns: AsyncThrowingStream<UploadState, Error>
+    func binaryUpload(httpMethod: HttpMethod? = .POST, urlString: String, timeout: TimeInterval = 60, formData: FormDataInformation, headers: [String: String?]? = nil, delegateQueue: OperationQueue? = .main) -> AsyncThrowingStream<UploadState, Error> {
         
-        await withCheckedContinuation { continuation in
+        AsyncThrowingStream { continuation in
             
-            let task = binaryUpload(httpMethod: httpMethod, urlString: urlString, timeout: timeout, formData: formData, headers: headers, delegateQueue: delegateQueue) { info in
-                progress(info)
+            let task = binaryUpload(httpMethod: httpMethod, urlString: urlString, timeout: timeout, formData: formData, headers: headers, delegateQueue: delegateQueue) { progress in
+                continuation.yield(with: .success(.progress(progress)))
             } completion: { result in
-                Task { @MainActor in continuation.resume(returning: result) }
+                switch result {
+                case .success(let isSuccess): continuation.yield(with: .success(.finished(isSuccess)))
+                case .failure(let error): continuation.yield(with: .failure(error))
+                }
+                continuation.finish()
             }
             
-            sessionTask(task)
+            if let task {
+                continuation.yield(with: .success(.start(task)))
+            } else {
+                continuation.yield(with: .failure(CustomError.isURLSessionTaskNull))
+                continuation.finish()
+            }
         }
     }
     
@@ -446,13 +452,12 @@ public extension WWNetworking {
     ///   - timeout: 設定請求超時時間
     ///   - configuration: Timeout
     ///   - delegateQueue: 執行緒
-    ///   - isResume: 是否要立刻執行Task
-    /// - Returns: [AsyncThrowingStream<DownloadState, Error>](https://juejin.cn/post/7210216031536185402)
-    func download(httpMethod: HttpMethod? = .GET, urlString: String, timeout: TimeInterval = 60, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main, isResume: Bool = true) -> AsyncThrowingStream<DownloadState, Error> {
+    /// - Returns: AsyncThrowingStream<DownloadState, Error>
+    func download(httpMethod: HttpMethod? = .GET, urlString: String, timeout: TimeInterval = 60, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main) -> AsyncThrowingStream<DownloadState, Error> {
         
         AsyncThrowingStream { continuation in
             
-            let task = download(httpMethod: httpMethod, urlString: urlString, timeout: timeout, configuration: configuration, delegateQueue: delegateQueue, isResume: isResume) { progress in
+            let task = download(httpMethod: httpMethod, urlString: urlString, timeout: timeout, configuration: configuration, delegateQueue: delegateQueue) { progress in
                 continuation.yield(with: .success(.progress(progress)))
             } completion: { result in
                 switch result {
@@ -480,11 +485,11 @@ public extension WWNetworking {
     ///   - timeout: TimeInterval
     ///   - configiguration: URLSessionConfiguration
     /// - Returns: AsyncThrowingStream<FragmentDownloadState, Error>
-    func fragmentDownload(urlString: String, fragment: Int = 10, delegateQueue: OperationQueue? = .main, timeout: TimeInterval = .infinity, configiguration: URLSessionConfiguration = .default) -> AsyncThrowingStream<FragmentDownloadState, Error> {
+    func fragmentDownload(urlString: String, fragment: Int = 10, timeout: TimeInterval = .infinity, configiguration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main) -> AsyncThrowingStream<FragmentDownloadState, Error> {
         
         AsyncThrowingStream { continuation in
             
-            fragmentDownload(urlString: urlString, timeout: timeout, fragment: fragment, delegateQueue: delegateQueue, configiguration: configiguration) { info in
+            fragmentDownload(urlString: urlString, timeout: timeout, fragment: fragment, configiguration: configiguration, delegateQueue: delegateQueue) { info in
                 continuation.yield(with: .success(.progress(info)))
             } fragmentTask: { task in
                 continuation.yield(with: .success(.start(task)))
@@ -495,6 +500,38 @@ public extension WWNetworking {
                 }
                 continuation.finish()
             }
+        }
+    }
+    
+    /// [下載資料 (多個) => URLSessionDownloadDelegate](https://juejin.cn/post/7210216031536185402)
+    /// - Parameters:
+    ///   - httpMethod: HttpMethod?
+    ///   - urlStrings: [String]
+    ///   - timeout: TimeInterval
+    ///   - configuration: URLSessionConfiguration
+    ///   - delegateQueue: OperationQueue?
+    /// - Returns: AsyncThrowingStream<MultipleDownloadState, Error>
+    func multipleDownload(httpMethod: HttpMethod? = .GET, urlStrings: [String], timeout: TimeInterval = 60, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main) -> AsyncThrowingStream<MultipleDownloadState, Error>  {
+        
+        AsyncThrowingStream { continuation in
+            
+            var tasksCount = 0
+            
+            let tasks = multipleDownload(urlStrings: urlStrings) { progress in
+                continuation.yield(with: .success(.progress(progress)))
+            } completion: { result in
+                
+                switch result {
+                case .success(let info): continuation.yield(with: .success(.finished(info)))
+                case .failure(let error): continuation.yield(with: .failure(error))
+                }
+                
+                tasksCount -= 1
+                if (tasksCount < 1) { continuation.finish() }
+            }
+            
+            tasksCount = tasks.count
+            continuation.yield(with: .success(.start(tasks)))
         }
     }
 }
