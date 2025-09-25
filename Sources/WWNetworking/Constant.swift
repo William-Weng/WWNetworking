@@ -27,7 +27,7 @@ public extension WWNetworking {
 
 // MARK: - 常數
 public extension WWNetworking {
-
+    
     /// [HTTP 請求方法](https://developer.mozilla.org/zh-TW/docs/Web/HTTP/Methods)
     enum HttpMethod: String {
         
@@ -57,6 +57,26 @@ public extension WWNetworking {
         case soupAction = "SOAPAction"
     }
     
+    /// [網頁檔案類型的MimeType](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types)
+    enum MimeType {
+        case jpeg(compressionQuality: CGFloat)
+        case png
+    }
+
+    /// 檔案下載狀態
+    enum DownloadState {
+        case start(_ task: URLSessionDownloadTask)
+        case progress(_ progress: DownloadProgressInformation)
+        case finished(_ result: DownloadResultInformation)
+    }
+    
+    /// 分段檔案下載狀態
+    enum FragmentDownloadState {
+        case start(_ task: URLSessionTask)
+        case progress(_ progress: DownloadProgressInformation)
+        case finished(_ data: Data)
+    }
+    
     /// HttpBody的類型 (Data)
     enum HttpBobyType {
         
@@ -81,13 +101,14 @@ public extension WWNetworking {
     }
     
     /// 自訂錯誤
-    enum MyError: Error, LocalizedError {
+    enum CustomError: Error, LocalizedError {
         
         var errorDescription: String { errorMessage() }
 
         case unknown
         case isEmpty
         case isCancel
+        case isURLSessionTaskNull
         case notUrlFormat
         case notGeocodeLocation
         case notUrlDownload
@@ -98,6 +119,7 @@ public extension WWNetworking {
         case notSupports
         case unregistered
         case fragmentCountError
+        case custom(_ message: String)
 
         /// 顯示錯誤說明
         /// - Returns: String
@@ -105,28 +127,24 @@ public extension WWNetworking {
 
             switch self {
             case .unknown: return "未知錯誤"
+            case .isEmpty: return "資料是空的"
+            case .isCancel: return "取消"
+            case .isURLSessionTaskNull: return "URLSessionTask的空的"
             case .notUrlFormat: return "URL格式錯誤"
             case .notCallTelephone: return "播打電話錯誤"
             case .notOpenURL: return "打開URL錯誤"
             case .notOpenSettingsPage: return "打開APP設定頁錯誤"
             case .notGeocodeLocation: return "地理編碼錯誤"
             case .notUrlDownload: return "URL下載錯誤"
-            case .isEmpty: return "資料是空的"
-            case .isCancel: return "取消"
             case .notSupports: return "該手機不支援"
             case .notEncoding: return "該資料編碼錯誤"
             case .unregistered: return "尚未註冊"
             case .fragmentCountError: return "分段下載數量至少要有一段"
+            case .custom(let message): return message
             }
         }
     }
-    
-    /// [網頁檔案類型的MimeType](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types)
-    enum MimeType {
-        case jpeg(compressionQuality: CGFloat)
-        case png
-    }
-    
+        
     /// [HTTP Content-Type](https://www.runoob.com/http/http-content-type.html) => Content-Type: application/json
     enum ContentType: CustomStringConvertible {
         

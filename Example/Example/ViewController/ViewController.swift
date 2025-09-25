@@ -34,7 +34,7 @@ final class ViewController: UIViewController {
     @IBAction func httpGetAction(_ sender: UIButton) { httpGetTest() }
     @IBAction func httpPostAction(_ sender: UIButton) { httpPostTest() }
     @IBAction func httpDownloadAction(_ sender: UIButton) { httpDownloadData() }
-    @IBAction func httpFragmentDownloadAction(_ sender: UIButton) { fragmentDownloadData() }
+    @IBAction func httpFragmentDownloadAction(_ sender: UIButton) { Task { await fragmentDownloadData() }}
     @IBAction func httpMultipleDownloadAction(_ sender: UIButton) { httpMultipleDownload() }
     @IBAction func httpUploadAction(_ sender: UIButton) { httpUploadData() }
     @IBAction func httpBinaryUpload(_ sender: UIButton) { httpBinaryUploadData() }
@@ -136,28 +136,26 @@ private extension ViewController {
     }
     
     /// 分段下載 (單一檔案分多點合併下載)
-    func fragmentDownloadData() {
+    func fragmentDownloadData() async {
         
         let urlString = UrlStrings["FRAGMENT"]!
         let index = 1
-        let fragmentCount = 10
         
         self.displayText("")
         
-        WWNetworking.shared.fragmentDownload(urlString: urlString, fragment: fragmentCount, progress: { info in
-            
-            let progress = Float(info.totalWritten) / Float(info.totalSize)
-            self.displayProgressWithIndex(index, progress: progress)
-            
-        }, fragmentTask: { _ in
-           
-        }, completion: { result in
-            
-            switch result {
-            case .failure(let error): self.displayText(error)
-            case .success(let data): self.displayImageWithIndex(index, data: data)
+        do {
+            for try await state in WWNetworking.shared.fragmentDownload(urlString: urlString) {
+                switch state {
+                case .start(let task): print("task = \(task)")
+                case .finished(let data): displayImageWithIndex(index, data: data)
+                case .progress(let info):
+                    let progress = Float(info.totalWritten) / Float(info.totalSize)
+                    displayProgressWithIndex(index, progress: progress)
+                }
             }
-        })
+        } catch {
+            displayText(error)
+        }
     }
     
     /// 下載檔案 (多個檔案)

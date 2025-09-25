@@ -1,6 +1,6 @@
 # WWNetworking
 
-[![Swift-5.7](https://img.shields.io/badge/Swift-5.7-orange.svg?style=flat)](https://developer.apple.com/swift/) [![iOS-15.0](https://img.shields.io/badge/iOS-15.0-pink.svg?style=flat)](https://developer.apple.com/swift/) ![TAG](https://img.shields.io/github/v/tag/William-Weng/WWNetworking) [![Swift Package Manager-SUCCESS](https://img.shields.io/badge/Swift_Package_Manager-SUCCESS-blue.svg?style=flat)](https://developer.apple.com/swift/) [![LICENSE](https://img.shields.io/badge/LICENSE-MIT-yellow.svg?style=flat)](https://developer.apple.com/swift/)
+[![Swift-5.7](https://img.shields.io/badge/Swift-5.7-orange.svg?style=flat)](https://developer.apple.com/swift/) [![iOS-16.0](https://img.shields.io/badge/iOS-16.0-pink.svg?style=flat)](https://developer.apple.com/swift/) ![TAG](https://img.shields.io/github/v/tag/William-Weng/WWNetworking) [![Swift Package Manager-SUCCESS](https://img.shields.io/badge/Swift_Package_Manager-SUCCESS-blue.svg?style=flat)](https://developer.apple.com/swift/) [![LICENSE](https://img.shields.io/badge/LICENSE-MIT-yellow.svg?style=flat)](https://developer.apple.com/swift/)
 
 ## [Introduction - 簡介](https://swiftpackageindex.com/William-Weng)
 - This is a simple integration of HTTP transmission, upload and download functions. It is a rare and good tool for iOS engineers.
@@ -11,7 +11,7 @@
 ### [Installation with Swift Package Manager](https://medium.com/彼得潘的-swift-ios-app-開發問題解答集/使用-spm-安裝第三方套件-xcode-11-新功能-2c4ffcf85b4b)
 ```
 dependencies: [
-    .package(url: "https://github.com/William-Weng/WWNetworking.git", .upToNextMajor(from: "1.8.0"))
+    .package(url: "https://github.com/William-Weng/WWNetworking.git", .upToNextMajor(from: "1.8.1"))
 ]
 ```
 
@@ -36,8 +36,8 @@ dependencies: [
 |upload(httpMethod:timeout:urlString:formData:parameters:headers:)|上傳檔案 - 模仿Form|
 |multipleUpload(httpMethod:urlString:timeout:formDatas:parameters:headers:)|上傳檔案 (多個) - 模仿Form|
 |binaryUpload(httpMethod:urlString:timeout:formData:headers:delegateQueue:progress:)|二進制檔案上傳 - 大型檔案|
-|download(httpMethod:urlString:timeout:configuration:delegateQueue:isResume:progress:)|下載資料 - URLSessionDownloadDelegate|
-|fragmentDownload(urlString:fragment:delegateQueue:timeout:configiguration:progress:)|分段下載|
+|download(httpMethod:urlString:timeout:configuration:delegateQueue:isResume:)|下載資料 - URLSessionDownloadDelegate|
+|fragmentDownload(urlString:fragment:delegateQueue:timeout:configiguration:)|分段下載|
 |multipleRequest(types:)|發出多個request|
 |multipleRequestWithTaskGroup(types:)|同時發出多個request|
 
@@ -72,7 +72,7 @@ final class ViewController: UIViewController {
     @IBAction func httpGetAction(_ sender: UIButton) { httpGetTest() }
     @IBAction func httpPostAction(_ sender: UIButton) { httpPostTest() }
     @IBAction func httpDownloadAction(_ sender: UIButton) { httpDownloadData() }
-    @IBAction func httpFragmentDownloadAction(_ sender: UIButton) { fragmentDownloadData() }
+    @IBAction func httpFragmentDownloadAction(_ sender: UIButton) { Task { await fragmentDownloadData() }}
     @IBAction func httpMultipleDownloadAction(_ sender: UIButton) { httpMultipleDownload() }
     @IBAction func httpUploadAction(_ sender: UIButton) { httpUploadData() }
     @IBAction func httpBinaryUpload(_ sender: UIButton) { httpBinaryUploadData() }
@@ -165,28 +165,26 @@ private extension ViewController {
         })
     }
     
-    func fragmentDownloadData() {
+    func fragmentDownloadData() async {
         
         let urlString = UrlStrings["FRAGMENT"]!
         let index = 1
-        let fragmentCount = 10
         
         self.displayText("")
         
-        WWNetworking.shared.fragmentDownload(urlString: urlString, fragment: fragmentCount, progress: { info in
-            
-            let progress = Float(info.totalWritten) / Float(info.totalSize)
-            self.displayProgressWithIndex(index, progress: progress)
-            
-        }, fragmentTask: { _ in
-           
-        }, completion: { result in
-            
-            switch result {
-            case .failure(let error): self.displayText(error)
-            case .success(let data): self.displayImageWithIndex(index, data: data)
+        do {
+            for try await state in WWNetworking.shared.fragmentDownload(urlString: urlString) {
+                switch state {
+                case .start(let task): print("task = \(task)")
+                case .finished(let data): displayImageWithIndex(index, data: data)
+                case .progress(let info):
+                    let progress = Float(info.totalWritten) / Float(info.totalSize)
+                    displayProgressWithIndex(index, progress: progress)
+                }
             }
-        })
+        } catch {
+            displayText(error)
+        }
     }
     
     func httpMultipleDownload() {

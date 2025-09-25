@@ -7,7 +7,7 @@
 
 import UIKit
 
-// MARK: - String (override function)
+// MARK: - String
 extension String {
     
     /// String => Data
@@ -21,14 +21,14 @@ extension String {
     }
 }
 
-// MARK: - Collection (override function)
+// MARK: - Collection (subscript)
 extension Collection {
 
     /// [為Array加上安全取值特性 => nil](https://stackoverflow.com/questions/25329186/safe-bounds-checked-array-lookup-in-swift-through-optional-bindings)
     subscript(safe index: Index) -> Element? { return indices.contains(index) ? self[index] : nil }
 }
 
-// MARK: - Collection (function)
+// MARK: - Collection
 extension Collection where Self.Element: Hashable {
         
     /// 不要有重複的值 => Array -> Set
@@ -44,7 +44,7 @@ extension Collection where Self.Element: Hashable {
     }
 }
 
-// MARK: - Sequence (function)
+// MARK: - Sequence
 extension Sequence {
         
     /// Array => JSON Data
@@ -55,7 +55,7 @@ extension Sequence {
     }
 }
 
-// MARK: - Dictionary (function)
+// MARK: - Dictionary
 extension Dictionary {
     
     /// Dictionary => JSON Data
@@ -66,7 +66,7 @@ extension Dictionary {
     }
 }
 
-// MARK: - Dictionary (function)
+// MARK: - Dictionary
 extension Dictionary where Self.Key == String, Self.Value == String? {
     
     /// [將[String: String?] => [URLQueryItem]](https://medium.com/@jerrywang0420/urlsession-教學-swift-3-ios-part-2-a17b2d4cc056)
@@ -90,7 +90,7 @@ extension Dictionary where Self.Key == String, Self.Value == String? {
     }
 }
 
-// MARK: - JSONSerialization (static function)
+// MARK: - JSONSerialization (static)
 extension JSONSerialization {
     
     /// [JSONObject => JSON Data](https://medium.com/彼得潘的-swift-ios-app-開發問題解答集/利用-jsonserialization-印出美美縮排的-json-308c93b51643)
@@ -111,7 +111,36 @@ extension JSONSerialization {
     }
 }
 
-// MARK: - UIImage (function)
+// MARK: - Data
+extension Data {
+
+    /// Data加上文字
+    /// - Parameters:
+    ///   - string: 要加入的字串
+    ///   - encoding: .utf8
+    ///   - allowLossyConversion: true
+    /// - Returns: Bool
+    mutating func _append(string: String, using encoding: String.Encoding = .utf8, allowLossyConversion: Bool = true) -> Bool {
+        
+        guard let data = string._data(using: encoding, isLossyConversion: allowLossyConversion) else { return false }
+        self.append(data)
+        
+        return true
+    }
+    
+    /// Data + Data
+    /// - Parameter data: Data
+    /// - Returns: Bool
+    mutating func _append(data: Data?) -> Bool {
+        
+        guard let data = data else { return false }
+        self.append(data)
+        
+        return true
+    }
+}
+
+// MARK: - UIImage
 extension UIImage {
     
     /// UIImage => Data
@@ -127,7 +156,7 @@ extension UIImage {
     }
 }
 
-// MARK: - URLComponents (static function)
+// MARK: - URLComponents (static)
 extension URLComponents {
     
     /// 產生URLComponents
@@ -160,7 +189,7 @@ extension URLComponents {
     }
 }
 
-// MARK: - URLRequest (function)
+// MARK: - URLRequest
 extension URLRequest {
     
     /// 產生URLRequest
@@ -212,7 +241,7 @@ extension URLRequest {
     }
 }
 
-// MARK: - URLRequest (function)
+// MARK: - URLRequest (mutating)
 extension URLRequest {
     
     /// enum版的.setValue(_,forHTTPHeaderField:_)
@@ -232,36 +261,7 @@ extension URLRequest {
     }
 }
 
-// MARK: - Data (function)
-extension Data {
-
-    /// Data加上文字
-    /// - Parameters:
-    ///   - string: 要加入的字串
-    ///   - encoding: .utf8
-    ///   - allowLossyConversion: true
-    /// - Returns: Bool
-    mutating func _append(string: String, using encoding: String.Encoding = .utf8, allowLossyConversion: Bool = true) -> Bool {
-        
-        guard let data = string._data(using: encoding, isLossyConversion: allowLossyConversion) else { return false }
-        self.append(data)
-        
-        return true
-    }
-    
-    /// Data + Data
-    /// - Parameter data: Data
-    /// - Returns: Bool
-    mutating func _append(data: Data?) -> Bool {
-        
-        guard let data = data else { return false }
-        self.append(data)
-        
-        return true
-    }
-}
-
-// MARK: - HTTPURLResponse (function)
+// MARK: - HTTPURLResponse
 extension HTTPURLResponse {
     
     /// 取得其中一個Field
@@ -279,7 +279,7 @@ extension HTTPURLResponse {
     }
 }
 
-// MARK: - URLSessionConfiguration (function)
+// MARK: - URLSessionConfiguration
 extension URLSessionConfiguration {
     
     /// 設定timeoutIntervalForRequest / timeoutIntervalForResource
