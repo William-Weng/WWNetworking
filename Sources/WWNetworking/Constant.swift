@@ -63,29 +63,29 @@ public extension WWNetworking {
         case png
     }
 
-    /// 檔案下載狀態
-    enum DownloadState {
+    /// 檔案下載狀態事件
+    enum DownloadEvent {
         case start(_ task: URLSessionDownloadTask)
         case progress(_ progress: DownloadProgressInformation)
         case finished(_ result: DownloadResultInformation)
     }
-        
-    /// 分段檔案下載狀態
-    enum FragmentDownloadState {
+    
+    /// 分段檔案下載狀態事件
+    enum FragmentDownloadEvent {
         case start(_ task: URLSessionTask)
         case progress(_ progress: DownloadProgressInformation)
         case finished(_ data: Data)
     }
     
-    /// 多檔案下載狀態
-    enum MultipleDownloadState {
+    /// 多檔案下載狀態事件
+    enum MultipleDownloadEvent {
         case start(_ tasks: [URLSessionDownloadTask])
         case progress(_ progress: DownloadProgressInformation)
         case finished(_ result: DownloadResultInformation)
     }
-
-    /// 檔案上傳狀態
-    enum UploadState {
+    
+    /// 檔案上傳狀態事件
+    enum UploadEvent {
         case start(_ task: URLSessionUploadTask)
         case progress(_ progress: DownloadProgressInformation)
         case finished(_ isSuccess: Bool)

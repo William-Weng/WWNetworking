@@ -422,7 +422,7 @@ public extension WWNetworking {
     ///   - headers: [String: String?]?
     ///   - delegateQueue: OperationQueue?
     /// - Returns: AsyncThrowingStream<UploadState, Error>
-    func binaryUpload(httpMethod: HttpMethod? = .POST, urlString: String, timeout: TimeInterval = 60, formData: FormDataInformation, headers: [String: String?]? = nil, delegateQueue: OperationQueue? = .main) -> AsyncThrowingStream<UploadState, Error> {
+    func binaryUpload(httpMethod: HttpMethod? = .POST, urlString: String, timeout: TimeInterval = 60, formData: FormDataInformation, headers: [String: String?]? = nil, delegateQueue: OperationQueue? = .main) -> AsyncThrowingStream<UploadEvent, Error> {
         
         AsyncThrowingStream { continuation in
             
@@ -453,7 +453,7 @@ public extension WWNetworking {
     ///   - configuration: Timeout
     ///   - delegateQueue: 執行緒
     /// - Returns: AsyncThrowingStream<DownloadState, Error>
-    func download(httpMethod: HttpMethod? = .GET, urlString: String, timeout: TimeInterval = 60, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main) -> AsyncThrowingStream<DownloadState, Error> {
+    func download(httpMethod: HttpMethod? = .GET, urlString: String, timeout: TimeInterval = 60, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main) -> AsyncThrowingStream<DownloadEvent, Error> {
         
         AsyncThrowingStream { continuation in
             
@@ -485,7 +485,7 @@ public extension WWNetworking {
     ///   - timeout: TimeInterval
     ///   - configiguration: URLSessionConfiguration
     /// - Returns: AsyncThrowingStream<FragmentDownloadState, Error>
-    func fragmentDownload(urlString: String, fragment: Int = 10, timeout: TimeInterval = .infinity, configiguration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main) -> AsyncThrowingStream<FragmentDownloadState, Error> {
+    func fragmentDownload(urlString: String, fragment: Int = 10, timeout: TimeInterval = .infinity, configiguration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main) -> AsyncThrowingStream<FragmentDownloadEvent, Error> {
         
         AsyncThrowingStream { continuation in
             
@@ -511,13 +511,13 @@ public extension WWNetworking {
     ///   - configuration: URLSessionConfiguration
     ///   - delegateQueue: OperationQueue?
     /// - Returns: AsyncThrowingStream<MultipleDownloadState, Error>
-    func multipleDownload(httpMethod: HttpMethod? = .GET, urlStrings: [String], timeout: TimeInterval = 60, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main) -> AsyncThrowingStream<MultipleDownloadState, Error>  {
+    func multipleDownload(httpMethod: HttpMethod? = .GET, urlStrings: [String], timeout: TimeInterval = 60, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main) -> AsyncThrowingStream<MultipleDownloadEvent, Error>  {
         
         AsyncThrowingStream { continuation in
             
             var tasksCount = 0
             
-            let tasks = multipleDownload(urlStrings: urlStrings) { progress in
+            let tasks = multipleDownload(httpMethod: httpMethod, urlStrings: urlStrings, timeout: timeout, configuration: configuration, delegateQueue: delegateQueue) { progress in
                 continuation.yield(with: .success(.progress(progress)))
             } completion: { result in
                 

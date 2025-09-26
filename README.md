@@ -11,7 +11,7 @@
 ### [Installation with Swift Package Manager](https://medium.com/彼得潘的-swift-ios-app-開發問題解答集/使用-spm-安裝第三方套件-xcode-11-新功能-2c4ffcf85b4b)
 ```
 dependencies: [
-    .package(url: "https://github.com/William-Weng/WWNetworking.git", .upToNextMajor(from: "1.8.1"))
+    .package(url: "https://github.com/William-Weng/WWNetworking.git", .upToNextMajor(from: "1.8.3"))
 ]
 ```
 
@@ -70,7 +70,7 @@ final class ViewController: UIViewController {
     
     override func viewDidLoad() { super.viewDidLoad() }
     
-    @IBAction func httpGetAction(_ sender: UIButton) { httpGetTest() }
+    @IBAction func httpGetAction(_ sender: UIButton) { Task { await httpGetTest() }}
     @IBAction func httpPostAction(_ sender: UIButton) { httpPostTest() }
     @IBAction func httpDownloadAction(_ sender: UIButton) { httpDownloadData() }
     @IBAction func httpFragmentDownloadAction(_ sender: UIButton) { Task { await fragmentDownloadData() }}
@@ -81,17 +81,16 @@ final class ViewController: UIViewController {
 
 private extension ViewController {
 
-    func httpGetTest() {
+    func httpGetTest() async {
         
         let urlString = UrlStrings["GET"]!
         let parameters: [String: String?] = ["name": "William.Weng", "github": "https://william-weng.github.io/"]
-        
-        _ = WWNetworking.shared.request(httpMethod: .GET, urlString: urlString, paramaters: parameters) { result in
-
-            switch result {
-            case .failure(let error): self.displayText(error)
-            case .success(let info): self.displayText(info.data?._jsonSerialization())
-            }
+                
+        do {
+            let info = try await WWNetworking.shared.request(httpMethod: .GET, urlString: urlString, paramaters: parameters).get()
+            displayText(info.data?._jsonSerialization())
+        } catch {
+            displayText(error)
         }
     }
     
