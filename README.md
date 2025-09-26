@@ -19,6 +19,7 @@ dependencies: [
 ### [一般版本](https://medium.com/彼得潘的-swift-ios-app-開發教室/簡易說明swift-4-closures-77351c3bf775)
 |函式|功能|
 |-|-|
+|builder()|建立一個新的WWNetworking|
 |request(httpMethod:urlString:timeout:contentType:paramaters:headers:httpBodyType:result:)|發出URLRequest|
 |header(urlString:timeout:headers:result:)|取得該URL資源的HEAD資訊|
 |upload(httpMethod:urlString:timeout:formData:parameters:headers:result)|上傳檔案 - 模仿Form|

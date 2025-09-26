@@ -71,7 +71,7 @@ public extension WWNetworking {
     
     /// 建立一個新的WWNetworking
     /// - Returns: WWNetworking
-    static func build() -> WWNetworking { return WWNetworking() }
+    static func builder() -> WWNetworking { return WWNetworking() }
 }
 
 // MARK: - 公開函數
@@ -267,19 +267,19 @@ public extension WWNetworking {
         fragmentDownloadProgressResultBlock = progress
         cleanFragmentInformation()
         
-        self.header(urlString: urlString, timeout: timeout) { result in
+        header(urlString: urlString, timeout: timeout) { result in
 
             switch result {
             case .failure(let error): completion(.failure(error))
             case .success(let info):
 
                 guard let contentLengthString = info.response?._headerField(with: .contentLength) as? String,
-                      let contentLength = Int(contentLengthString),
-                      let fragmentSize = Optional.some((contentLength / fragment) + 1)
+                      let contentLength = Int(contentLengthString)
                 else {
                     completion(.failure(CustomError.notUrlDownload)); return
                 }
                 
+                let fragmentSize = (contentLength / fragment) + 1
                 self.fragmentDownloadContentLength = contentLength
                 
                 for index in 0..<fragment {
@@ -553,11 +553,12 @@ private extension WWNetworking {
     func request(httpMethod: HttpMethod = .GET, urlString: String, contentType: ContentType = .json, timeout: TimeInterval, queryItems: [URLQueryItem]? = nil, headers: [String: String?]? = nil, httpBody: Data? = nil, result: @escaping (Result<ResponseInformation, Error>) -> Void) -> URLSessionTask? {
         
         guard let urlComponents = URLComponents._build(urlString: urlString, queryItems: queryItems),
-              let queryedURL = urlComponents.url,
-              var request = Optional.some(URLRequest._build(url: queryedURL, httpMethod: httpMethod, timeout: timeout))
+              let queryedURL = urlComponents.url
         else {
             result(.failure(CustomError.notUrlFormat)); return nil
         }
+        
+        var request = URLRequest._build(url: queryedURL, httpMethod: httpMethod, timeout: timeout)
         
         if let headers = headers {
             headers.forEach { key, value in if let value = value { request.addValue(value, forHTTPHeaderField: key) }}
@@ -591,12 +592,12 @@ private extension WWNetworking {
         fragmentDownloadDatas["\(dataTask)"]? += data
         
         guard let fragmentDownloadFinishBlock = fragmentDownloadFinishBlock,
-              let fragmentDownloadProgressResultBlock = fragmentDownloadProgressResultBlock,
-              let downloadData = Optional.some(downloadTotalData(with: fragmentDownloadDatas, for: fragmentDownloadKeys))
+              let fragmentDownloadProgressResultBlock = fragmentDownloadProgressResultBlock
         else {
             return
         }
         
+        let downloadData = downloadTotalData(with: fragmentDownloadDatas, for: fragmentDownloadKeys)
         let progress: DownloadProgressInformation = (urlString: dataTask.currentRequest?.url?.absoluteString, totalSize: Int64(fragmentDownloadContentLength), totalWritten: Int64(downloadData.count), writting: Int64(data.count))
         fragmentDownloadProgressResultBlock(progress)
         
@@ -758,12 +759,13 @@ private extension WWNetworking {
     func fragmentDownloadDataTaskMaker(with urlString: String, delegateQueue: OperationQueue?, offset: HttpDownloadOffset = (0, nil), timeout: TimeInterval, configiguration: URLSessionConfiguration, result: ((Result<Data, Error>) -> Void)?) -> URLSessionDataTask? {
 
         guard let url = URL(string: urlString),
-              var request = Optional.some(URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: timeout)),
-              let urlSession = Optional.some(URLSession(configuration: configiguration, delegate: self, delegateQueue: delegateQueue)),
               let headerValue = downloadOffsetMaker(offset: offset)
         else {
             return nil
         }
+        
+        let urlSession = URLSession(configuration: configiguration, delegate: self, delegateQueue: delegateQueue)
+        var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: timeout)
         
         defer { urlSession.finishTasksAndInvalidate() }
         
