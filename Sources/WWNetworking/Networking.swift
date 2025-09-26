@@ -327,7 +327,7 @@ public extension WWNetworking {
         }
     }
     
-    /// [執行多個Request](https://youtu.be/s2PiL_Vte4E)
+    /// [順序執行多個Request](https://youtu.be/s2PiL_Vte4E)
     /// - Parameter types: [[RequestInformationType]](https://onevcat.com/2021/07/swift-concurrency/)
     /// - Returns: [Result<ResponseInformation, Error>]
     func multipleRequest(types: [RequestInformationType]) async -> [Result<ResponseInformation, Error>] {
@@ -361,7 +361,35 @@ public extension WWNetworking {
             return requests
         }
     }
+    
+    /// 串流執行多個Request
+    /// - Parameter types: [RequestInformationType]
+    /// - Returns: [Result<ResponseInformation, Error>]
+    func multipleRequestWithStream(types: [RequestInformationType]) -> AsyncStream<Result<ResponseInformation, Error>> {
         
+        return AsyncStream { continuation in
+            
+            var parentTask: Task<Void, Never>?
+            
+            parentTask = Task {
+                
+                await withTaskGroup(of: Result<ResponseInformation, Error>.self) { [self] group in
+                    
+                    for type in types {
+                        group.addTask {
+                            await self.request(httpMethod: type.httpMethod, urlString: type.urlString, timeout: type.timeout, contentType: type.contentType, paramaters: type.paramaters, headers: type.headers, httpBodyType: type.httpBodyType)
+                        }
+                    }
+                    
+                    for await result in group { continuation.yield(result) }
+                    continuation.finish()
+                }
+            }
+            
+            continuation.onTermination = { @Sendable _ in parentTask?.cancel() }
+        }
+    }
+    
     /// 取得該URL資源的HEAD資訊 (檔案大小 / 類型 / 上傳日期…)
     /// - Parameters:
     ///   - urlString: [網址](https://imququ.com/post/web-proxy.html)
@@ -442,6 +470,8 @@ public extension WWNetworking {
                 continuation.yield(with: .failure(CustomError.isURLSessionTaskNull))
                 continuation.finish()
             }
+            
+            continuation.onTermination = { @Sendable _ in task?.cancel() }
         }
     }
     
@@ -474,6 +504,8 @@ public extension WWNetworking {
                 continuation.yield(with: .failure(CustomError.isURLSessionTaskNull))
                 continuation.finish()
             }
+            
+            continuation.onTermination = { @Sendable _ in task?.cancel() }
         }
     }
     
@@ -489,17 +521,21 @@ public extension WWNetworking {
         
         AsyncThrowingStream { continuation in
             
+            var tasks: [URLSessionTask] = []
+            
             fragmentDownload(urlString: urlString, timeout: timeout, fragment: fragment, configiguration: configiguration, delegateQueue: delegateQueue) { info in
-                continuation.yield(with: .success(.progress(info)))
+                continuation.yield(.progress(info))
             } fragmentTask: { task in
-                continuation.yield(with: .success(.start(task)))
+                tasks.append(task)
+                continuation.yield(.start(task))
             } completion: { result in
                 switch result {
-                case .success(let data): continuation.yield(with: .success(.finished(data)))
-                case .failure(let error): continuation.yield(with: .failure(error))
+                case .success(let data): continuation.yield(.finished(data)); continuation.finish()
+                case .failure(let error): continuation.finish(throwing: error)
                 }
-                continuation.finish()
             }
+            
+            continuation.onTermination = { _ in tasks.forEach { $0.cancel() }}
         }
     }
     
@@ -510,28 +546,34 @@ public extension WWNetworking {
     ///   - timeout: TimeInterval
     ///   - configuration: URLSessionConfiguration
     ///   - delegateQueue: OperationQueue?
-    /// - Returns: AsyncThrowingStream<MultipleDownloadState, Error>
-    func multipleDownload(httpMethod: HttpMethod? = .GET, urlStrings: [String], timeout: TimeInterval = 60, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main) -> AsyncThrowingStream<MultipleDownloadEvent, Error>  {
+    /// - Returns: AsyncStream<Result<MultipleDownloadEvent, Error>>
+    func multipleDownload(httpMethod: HttpMethod? = .GET, urlStrings: [String], timeout: TimeInterval = 60, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main) -> AsyncStream<Result<MultipleDownloadEvent, Error>>  {
         
-        AsyncThrowingStream { continuation in
+        AsyncStream { continuation in
             
-            var tasksCount = 0
+            let stateManager = MultipleDownloadStateManager()
             
             let tasks = multipleDownload(httpMethod: httpMethod, urlStrings: urlStrings, timeout: timeout, configuration: configuration, delegateQueue: delegateQueue) { progress in
-                continuation.yield(with: .success(.progress(progress)))
+                continuation.yield(.success(.progress(progress)))
             } completion: { result in
                 
-                switch result {
-                case .success(let info): continuation.yield(with: .success(.finished(info)))
-                case .failure(let error): continuation.yield(with: .failure(error))
+                Task {
+                    switch result {
+                    case .success(let info): continuation.yield(.success(.finished(info)))
+                    case .failure(let error): continuation.yield(.failure(error))
+                    }
+                    
+                    let allFinished = await stateManager.taskDidFinish()
+                    if allFinished { continuation.finish() }
                 }
-                
-                tasksCount -= 1
-                if (tasksCount < 1) { continuation.finish() }
             }
             
-            tasksCount = tasks.count
-            continuation.yield(with: .success(.start(tasks)))
+            continuation.onTermination = { _ in tasks.forEach { $0.cancel() }}
+            
+            Task {
+                await stateManager.tasksCount(tasks.count)
+                continuation.yield(.success(.start(tasks)))
+            }
         }
     }
 }

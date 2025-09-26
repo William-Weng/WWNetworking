@@ -40,8 +40,9 @@ dependencies: [
 |download(httpMethod:urlString:timeout:configuration:delegateQueue:)|下載資料 - URLSessionDownloadDelegate|
 |fragmentDownload(urlString:fragment:timeout:configiguration:delegateQueue:)|分段下載|
 |multipleDownload(httpMethod:urlStrings:timeout:configuration:delegateQueue:)|下載多筆資料- URLSessionDownloadDelegate|
-|multipleRequest(types:)|發出多個request|
-|multipleRequestWithTaskGroup(types:)|同時發出多個request|
+|multipleRequest(types:)|順序執行多個Request|
+|multipleRequestWithTaskGroup(types:)|同時執行多個Request|
+|multipleRequestWithStream(types:)|串流執行多個Request|
 
 ## [Example](https://ezgif.com/video-to-webp)
 ```swift
