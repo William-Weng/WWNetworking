@@ -31,7 +31,7 @@ extension WWNetworking: URLSessionDownloadDelegate {}
 
 // MARK: - URLSessionTaskDelegate
 public extension WWNetworking {
-
+    
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         self.fragmentDownloadCompleteAction(session, task: task, didCompleteWithError: error)
         self.fragmentUploadCompleteAction(session, task: task, didCompleteWithError: error)
@@ -212,7 +212,7 @@ public extension WWNetworking {
     /// - Returns: URLSessionDownloadTask?
     func download(httpMethod: HttpMethod? = .GET, urlString: String, timeout: TimeInterval = 60, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main, progress: @escaping ((DownloadProgressInformation) -> Void), completion: @escaping ((Result<DownloadResultInformation, Error>) -> Void)) -> URLSessionDownloadTask? {
         
-        guard let downloadTask = self.downloadTaskMaker(with: httpMethod, urlString: urlString, timeout: timeout, configuration: configuration, delegateQueue: delegateQueue) else { completion(.failure(CustomError.notUrlFormat)); return nil }
+        guard let downloadTask = downloadTaskMaker(with: httpMethod, urlString: urlString, timeout: timeout, configuration: configuration, delegateQueue: delegateQueue) else { completion(.failure(CustomError.notUrlFormat)); return nil }
         
         downloadTaskResultBlock = completion
         downloadProgressResultBlock = progress
@@ -236,11 +236,9 @@ public extension WWNetworking {
         
         cleanAllBlocks()
         
-        let _urlStrings = urlStrings._arraySet()
-        
-        let downloadTasks = _urlStrings.compactMap { urlString in
+        let downloadTasks = urlStrings.compactMap { urlString in
             
-            self.download(httpMethod: httpMethod, urlString: urlString, timeout: timeout, configuration: configuration, delegateQueue: delegateQueue) { info in
+            download(httpMethod: httpMethod, urlString: urlString, timeout: timeout, configuration: configuration, delegateQueue: delegateQueue) { info in
                 progress(info)
             } completion: { result in
                 completion(result)
@@ -628,11 +626,15 @@ private extension WWNetworking {
         
         fragmentDownloadDatas["\(dataTask)"]? += data
         
-        guard let fragmentDownloadFinishBlock = fragmentDownloadFinishBlock,
+        guard let response = dataTask.response as? HTTPURLResponse,
+              let fragmentDownloadFinishBlock = fragmentDownloadFinishBlock,
               let fragmentDownloadProgressResultBlock = fragmentDownloadProgressResultBlock
         else {
             return
         }
+        
+        let httpResponse = HttpResponse.builder(response: response)
+        if (httpResponse.hasError()) { fragmentDownloadFinishBlock(.failure(httpResponse)); dataTask.cancel(); return }
         
         let downloadData = downloadTotalData(with: fragmentDownloadDatas, for: fragmentDownloadKeys)
         let progress: DownloadProgressInformation = (urlString: dataTask.currentRequest?.url?.absoluteString, totalSize: Int64(fragmentDownloadContentLength), totalWritten: Int64(downloadData.count), writting: Int64(data.count))
@@ -642,7 +644,7 @@ private extension WWNetworking {
             fragmentDownloadFinishBlock(.success(downloadData))
         }
     }
-    
+        
     /// 分段下載錯誤的處理
     /// - Parameters:
     ///   - session: URLSession
@@ -673,14 +675,19 @@ private extension WWNetworking {
     ///   - totalBytesExpectedToWrite: Int64
     func downloadProgressAction(_ session: URLSession, downloadTask: URLSessionDownloadTask, didWriteData bytesWritten: Int64, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
         
-        guard let block = downloadProgressResultBlock,
+        guard let response = downloadTask.response as? HTTPURLResponse,
+              let downloadProgressResultBlock = downloadProgressResultBlock,
+              let downloadTaskResultBlock = downloadTaskResultBlock,
               let urlString = downloadTask.originalRequest?.url?.absoluteString
         else {
             return
         }
         
+        let httpResponse = HttpResponse.builder(response: response)
+        if (httpResponse.hasError()) { downloadTaskResultBlock(.failure(httpResponse)); downloadTask.cancel(); return }
+                
         let progress: DownloadProgressInformation = (urlString: urlString, totalSize: totalBytesExpectedToWrite, totalWritten: totalBytesWritten, writting: bytesWritten)
-        block(progress)
+        downloadProgressResultBlock(progress)
     }
     
     /// 下載完成處理
@@ -689,12 +696,16 @@ private extension WWNetworking {
     ///   - downloadTask: URLSessionDownloadTask
     ///   - location: URL
     func downloadFinishedAction(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
-        
+                
         guard let block = downloadTaskResultBlock,
+              let response = downloadTask.response as? HTTPURLResponse,
               let urlString = downloadTask.currentRequest?.url?.absoluteString
         else {
             return
         }
+        
+        let httpResponse = HttpResponse.builder(response: response)
+        if (httpResponse.hasError()) { return }
         
         do {
             let data = try Data(contentsOf: location)
