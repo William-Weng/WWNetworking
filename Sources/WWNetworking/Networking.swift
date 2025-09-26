@@ -367,7 +367,7 @@ public extension WWNetworking {
     /// - Returns: [Result<ResponseInformation, Error>]
     func multipleRequestWithStream(types: [RequestInformationType]) -> AsyncStream<Result<ResponseInformation, Error>> {
         
-        return AsyncStream { continuation in
+        AsyncStream { continuation in
             
             var parentTask: Task<Void, Never>?
             
@@ -455,23 +455,21 @@ public extension WWNetworking {
         AsyncThrowingStream { continuation in
             
             let task = binaryUpload(httpMethod: httpMethod, urlString: urlString, timeout: timeout, formData: formData, headers: headers, delegateQueue: delegateQueue) { progress in
-                continuation.yield(with: .success(.progress(progress)))
+                continuation.yield(.progress(progress))
             } completion: { result in
                 switch result {
-                case .success(let isSuccess): continuation.yield(with: .success(.finished(isSuccess)))
-                case .failure(let error): continuation.yield(with: .failure(error))
+                case .success(let isSuccess): continuation.yield(.finished(isSuccess)); continuation.finish()
+                case .failure(let error): continuation.finish(throwing: error)
                 }
-                continuation.finish()
-            }
-            
-            if let task {
-                continuation.yield(with: .success(.start(task)))
-            } else {
-                continuation.yield(with: .failure(CustomError.isURLSessionTaskNull))
-                continuation.finish()
             }
             
             continuation.onTermination = { @Sendable _ in task?.cancel() }
+            
+            if let task {
+                continuation.yield(.start(task))
+            } else {
+                continuation.finish(throwing: CustomError.isURLSessionTaskNull)
+            }
         }
     }
     
@@ -488,24 +486,21 @@ public extension WWNetworking {
         AsyncThrowingStream { continuation in
             
             let task = download(httpMethod: httpMethod, urlString: urlString, timeout: timeout, configuration: configuration, delegateQueue: delegateQueue) { progress in
-                continuation.yield(with: .success(.progress(progress)))
+                continuation.yield(.progress(progress))
             } completion: { result in
                 switch result {
-                case .failure(let error): continuation.yield(with: .failure(error))
-                case .success(let info): continuation.yield(with: .success(.finished(info)))
+                case .success(let info): continuation.yield(.finished(info)); continuation.finish()
+                case .failure(let error): continuation.finish(throwing: error)
                 }
-                
-                continuation.finish()
-            }
-            
-            if let task {
-                continuation.yield(with: .success(.start(task)))
-            } else {
-                continuation.yield(with: .failure(CustomError.isURLSessionTaskNull))
-                continuation.finish()
             }
             
             continuation.onTermination = { @Sendable _ in task?.cancel() }
+            
+            if let task {
+                continuation.yield(.start(task))
+            } else {
+                continuation.finish(throwing: CustomError.isURLSessionTaskNull)
+            }
         }
     }
     
