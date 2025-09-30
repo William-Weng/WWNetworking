@@ -136,8 +136,9 @@ public extension WWNetworking {
         case notSecurityTrust
         case unregistered
         case fragmentCountError
+        case publicKeyError(_ serverKey: SecKey, _ localKey: SecKey)
         case custom(_ message: String)
-
+        
         /// 顯示錯誤說明
         /// - Returns: String
         private func errorMessage() -> String {
@@ -159,6 +160,7 @@ public extension WWNetworking {
             case .notSecurityTrust: return "不是一個正確的安全信任"
             case .unregistered: return "尚未註冊"
             case .fragmentCountError: return "分段下載數量至少要有一段"
+            case .publicKeyError(let serverKey, let localKey): return "serverKey = \(serverKey._base64String())\nlocalKey = \(localKey._base64String())"
             case .custom(let message): return message
             }
         }

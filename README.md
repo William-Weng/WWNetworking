@@ -21,6 +21,12 @@ dependencies: [
 |-|-|
 |sslPinning|SSL-Pinning設定 => host + .cer|
 
+## 取得公鑰
+```bash
+openssl s_client -connect <your.server.com>:443 -showcerts </dev/null | openssl x509 -outform DER > <server>.cer
+openssl s_client -connect google.com:443 -showcerts </dev/null | openssl x509 -outform DER > google.cer
+```
+
 ## [Function - 可用函式](https://gitbook.swiftgg.team/swift/swift-jiao-cheng)
 ### [一般版本](https://medium.com/彼得潘的-swift-ios-app-開發教室/簡易說明swift-4-closures-77351c3bf775)
 |函式|功能|

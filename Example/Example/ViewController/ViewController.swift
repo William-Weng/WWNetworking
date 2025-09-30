@@ -30,7 +30,8 @@ final class ViewController: UIViewController {
     ]
     
     override func viewDidLoad() {
-        // WWNetworking.sslPinning = (bundle: .main, values: ["github.io": "google.cer"])
+        // openssl s_client -connect google.com:443 -showcerts </dev/null | openssl x509 -outform DER > google.cer
+        // WWNetworking.sslPinning = (bundle: .main, values: ["www.google.com": "google.cer"])
         super.viewDidLoad()
     }
     

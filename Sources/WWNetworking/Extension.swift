@@ -309,8 +309,8 @@ extension URLAuthenticationChallenge {
             let serverCertificate = try _serverCertificate(with: serverTrust, at: 0).get()
             let serverPublicKey = try _serverPublicKey(with: serverCertificate, at: 0).get()
             let localPublicKey = try _localPublicKey(with: bundle, resource: certificate).get()
-            
-            if (serverPublicKey == localPublicKey) { return .failure(WWNetworking.CustomError.notSecurityTrust) }
+
+            if (serverPublicKey != localPublicKey) { return .failure(WWNetworking.CustomError.publicKeyError(serverPublicKey, localPublicKey)) }
             return .success(serverTrust)
         } catch {
             return .failure(error)
@@ -332,8 +332,10 @@ private extension URLAuthenticationChallenge {
     /// - Returns: Result<SecTrust, Error>
     func _serverTrust() -> Result<SecTrust, Error> {
         
+        var trustError: CFError?
+        
         guard let securityTrust = protectionSpace.serverTrust else { return .failure(WWNetworking.CustomError.isEmpty) }
-        guard !SecTrustEvaluateWithError(securityTrust, nil) else { return .failure(WWNetworking.CustomError.notSecurityTrust) }
+        guard SecTrustEvaluateWithError(securityTrust, &trustError) else { return .failure(trustError ?? WWNetworking.CustomError.notSecurityTrust) }
         
         return .success(securityTrust)
     }
@@ -374,5 +376,24 @@ private extension URLAuthenticationChallenge {
         }
         
         return .success(publicKey)
+    }
+}
+
+// MARK: - SecKey
+extension SecKey {
+    
+    /// SecKey => base64字串
+    /// - Parameter options: Data.Base64EncodingOptions
+    /// - Returns: Result<String, Error>
+    func _base64String(options: Data.Base64EncodingOptions = []) -> Result<String, Error> {
+        
+        var error: Unmanaged<CFError>?
+        
+        guard let keyData = SecKeyCopyExternalRepresentation(self, &error) as Data? else {
+            if let err = error?.takeRetainedValue() { return .failure(err) }
+            return .failure(WWNetworking.CustomError.unknown)
+        }
+        
+        return .success(keyData.base64EncodedString(options: options))
     }
 }

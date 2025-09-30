@@ -21,6 +21,7 @@
 		8171DB882D641C5A00954209 /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 8171DB872D641C5A00954209 /* WWNetworking */; };
 		8171DB8A2D641DF000954209 /* Golang in Resources */ = {isa = PBXBuildFile; fileRef = 8171DB892D641DF000954209 /* Golang */; };
 		8176122E2D68484B003A0440 /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 8176122D2D68484B003A0440 /* WWNetworking */; };
+		817CC7682E8BCD8100D473D8 /* google.cer in Resources */ = {isa = PBXBuildFile; fileRef = 817CC7672E8BCD8100D473D8 /* google.cer */; };
 		818840222D6C6007001F50D5 /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 818840212D6C6007001F50D5 /* WWNetworking */; };
 		8189FC522C3E22F30080A100 /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 8189FC512C3E22F30080A100 /* WWNetworking */; };
 		819145B92D966C6E00D73A41 /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 819145B82D966C6E00D73A41 /* WWNetworking */; };
@@ -43,6 +44,7 @@
 		3DBCD87F26F198F300522E3B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		3DBCD88126F198F300522E3B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8171DB892D641DF000954209 /* Golang */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Golang; sourceTree = "<group>"; };
+		817CC7672E8BCD8100D473D8 /* google.cer */ = {isa = PBXFileReference; lastKnownFileType = file; path = google.cer; sourceTree = "<group>"; };
 		819D5B752B84421A002C23E9 /* Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extension.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -127,6 +129,7 @@
 			children = (
 				8171DB892D641DF000954209 /* Golang */,
 				3DBCD87C26F198F300522E3B /* Assets.xcassets */,
+				817CC7672E8BCD8100D473D8 /* google.cer */,
 			);
 			path = Material;
 			sourceTree = "<group>";
@@ -230,6 +233,7 @@
 				3DBCD88026F198F300522E3B /* LaunchScreen.storyboard in Resources */,
 				3DBCD87D26F198F300522E3B /* Assets.xcassets in Resources */,
 				8171DB8A2D641DF000954209 /* Golang in Resources */,
+				817CC7682E8BCD8100D473D8 /* google.cer in Resources */,
 				3DBCD87B26F198EF00522E3B /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
