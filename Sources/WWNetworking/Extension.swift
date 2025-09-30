@@ -300,7 +300,7 @@ extension URLAuthenticationChallenge {
     ///   - bundle: 憑證所在的 Bundle
     ///   - certificate: 憑證檔案名稱
     /// - Returns: Result<SecTrust, Error>
-    func _checkAuthSSLPinning(bundle: Bundle, resource certificate: String) -> Result<SecTrust, Error> {
+    func _checkAuthenticationSSLPinning(bundle: Bundle, filename certificate: String) -> Result<SecTrust, Error> {
         
         guard _checkAuthenticationMethod(NSURLAuthenticationMethodServerTrust) else { return .failure(WWNetworking.CustomError.notSSL) }
         

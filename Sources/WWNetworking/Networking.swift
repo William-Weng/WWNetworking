@@ -776,15 +776,15 @@ private extension WWNetworking {
         
         let host = challenge.protectionSpace.host
         let pinning = WWNetworking.sslPinning
-        let pinninghosts = pinning.values.keys.map { "\($0)" }
+        let pinningHosts = pinning.values.keys.map { "\($0)" }
         
-        guard pinninghosts.contains(host),
+        guard pinningHosts.contains(host),
               let filename = pinning.values[host]
         else {
             return completionHandler(.performDefaultHandling, nil)
         }
         
-        switch challenge._checkAuthSSLPinning(bundle: pinning.bundle, resource: filename) {
+        switch challenge._checkAuthenticationSSLPinning(bundle: pinning.bundle, filename: filename) {
         case .success(let trust): completionHandler(.useCredential, URLCredential(trust: trust))
         case .failure: completionHandler(.cancelAuthenticationChallenge, nil)
         }
