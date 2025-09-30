@@ -47,6 +47,7 @@ final class ViewController: UIViewController {
 private extension ViewController {
 
     /// 測試GET (GET不能有httpBody)
+    @MainActor
     func httpGetTest() async {
         
         let urlString = UrlStrings["GET"]!
@@ -138,6 +139,7 @@ private extension ViewController {
     }
     
     /// 分段下載 (單一檔案分多點合併下載)
+    @MainActor
     func fragmentDownloadData() async {
         
         let urlString = UrlStrings["FRAGMENT"]!
