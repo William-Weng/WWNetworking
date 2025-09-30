@@ -6,7 +6,7 @@
 - This is a simple integration of HTTP transmission, upload and download functions. It is a rare and good tool for iOS engineers.
 - 這是一個簡單的HTTP傳輸、上傳、下載功能整合，是iOS工程師不可多得的好工具。
 
-![WWNetworking](./Example.webp)
+https://github.com/user-attachments/assets/b516a28a-3a0b-4366-89fe-22be75a82f3c
 
 ### [Installation with Swift Package Manager](https://medium.com/彼得潘的-swift-ios-app-開發問題解答集/使用-spm-安裝第三方套件-xcode-11-新功能-2c4ffcf85b4b)
 ```
