@@ -10,7 +10,8 @@ import UIKit
 // MARK: - typealias
 public extension WWNetworking {
     
-    typealias DownloadProgressInformation = (urlString: String?, totalSize: Int64, totalWritten: Int64, writting: Int64)                    // 網路下載資料 => (URL / 大小 / 己下載 / 一段段的下載量)
+    typealias SSLPinningInformation = (bundle: Bundle, values: Dictionary<String, String>)                                                  // SSL Pinning資訊 (文件Bundle / <host: 證書名稱>)
+    typealias DownloadProgressInformation = (urlString: String?, totalSize: Int64, totalWritten: Int64, writting: Int64)                    // 網路下載資料 (URL / 大小 / 己下載 / 一段段的下載量)
     typealias ResponseInformation = (data: Data?, response: HTTPURLResponse?)                                                               // 網路回傳的資料
     typealias HttpDownloadOffset = (start: Int?, end: Int?)                                                                                 // 續傳下載開始~結束位置設定值 (bytes=0-1024)
     typealias DownloadResultInformation = (urlString: String, location: URL, data: Data?)                                                   // 網路下載資料的結果資訊 (URL, tempURL, Data)
@@ -131,6 +132,8 @@ public extension WWNetworking {
         case notOpenURL
         case notOpenSettingsPage
         case notSupports
+        case notSSL
+        case notSecurityTrust
         case unregistered
         case fragmentCountError
         case custom(_ message: String)
@@ -152,6 +155,8 @@ public extension WWNetworking {
             case .notUrlDownload: return "URL下載錯誤"
             case .notSupports: return "該手機不支援"
             case .notEncoding: return "該資料編碼錯誤"
+            case .notSSL: return "不是SSL / TLS"
+            case .notSecurityTrust: return "不是一個正確的安全信任"
             case .unregistered: return "尚未註冊"
             case .fragmentCountError: return "分段下載數量至少要有一段"
             case .custom(let message): return message

@@ -466,7 +466,7 @@
 			repositoryURL = "https://github.com/William-Weng/WWNetworking";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 1.8.5;
+				minimumVersion = 1.8.6;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */

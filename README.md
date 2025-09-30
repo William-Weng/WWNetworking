@@ -11,9 +11,15 @@
 ### [Installation with Swift Package Manager](https://medium.com/彼得潘的-swift-ios-app-開發問題解答集/使用-spm-安裝第三方套件-xcode-11-新功能-2c4ffcf85b4b)
 ```
 dependencies: [
-    .package(url: "https://github.com/William-Weng/WWNetworking.git", .upToNextMajor(from: "1.8.3"))
+    .package(url: "https://github.com/William-Weng/WWNetworking.git", .upToNextMajor(from: "1.8.7"))
 ]
 ```
+
+## [Parameter - 可用變數](https://gitbook.swiftgg.team/swift/swift-jiao-cheng)
+
+|變數|功能|
+|-|-|
+|sslPinning|SSL-Pinning設定 => host + .cer|
 
 ## [Function - 可用函式](https://gitbook.swiftgg.team/swift/swift-jiao-cheng)
 ### [一般版本](https://medium.com/彼得潘的-swift-ios-app-開發教室/簡易說明swift-4-closures-77351c3bf775)

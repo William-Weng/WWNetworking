@@ -1,5 +1,5 @@
 //
-//  WWNetworking.swift
+//  Networking.swift
 //  WWNetworking
 //
 //  Created by William.Weng on 2021/8/3.
@@ -11,6 +11,9 @@ import Foundation
 open class WWNetworking: NSObject {
     
     public static let shared = WWNetworking()
+    
+    // openssl s_client -connect <your.server.com>:443 -showcerts </dev/null | openssl x509 -outform DER > <server>.cer
+    public static var sslPinning: SSLPinningInformation = (bundle: .main, values: [:])
     
     private var downloadTaskResultBlock: ((Result<DownloadResultInformation, Error>) -> Void)?      // 下載檔案完成的動作
     private var downloadProgressResultBlock: ((DownloadProgressInformation) -> Void)?               // 下載進行中的進度 - 檔案
@@ -63,6 +66,10 @@ public extension WWNetworking {
     
     func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
         self.downloadFinishedAction(session, downloadTask: downloadTask, didFinishDownloadingTo: location)
+    }
+    
+    func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+        sslPinning(with: session, didReceive: challenge, completionHandler: completionHandler)
     }
 }
 
@@ -210,7 +217,7 @@ public extension WWNetworking {
     ///   - progress: [下載進度](https://www.appcoda.com.tw/ios-concurrency/)
     ///   - completion: 下載完成後
     /// - Returns: URLSessionDownloadTask?
-    func download(httpMethod: HttpMethod? = .GET, urlString: String, timeout: TimeInterval = 60, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .main, progress: @escaping ((DownloadProgressInformation) -> Void), completion: @escaping ((Result<DownloadResultInformation, Error>) -> Void)) -> URLSessionDownloadTask? {
+    func download(httpMethod: HttpMethod? = .GET, urlString: String, timeout: TimeInterval = 60, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = nil, progress: @escaping ((DownloadProgressInformation) -> Void), completion: @escaping ((Result<DownloadResultInformation, Error>) -> Void)) -> URLSessionDownloadTask? {
         
         guard let downloadTask = downloadTaskMaker(with: httpMethod, urlString: urlString, timeout: timeout, configuration: configuration, delegateQueue: delegateQueue) else { completion(.failure(CustomError.notUrlFormat)); return nil }
         
@@ -705,14 +712,19 @@ private extension WWNetworking {
         }
         
         let httpResponse = HttpResponse.builder(response: response)
-        if (httpResponse.hasError()) { return }
+        if (httpResponse.hasError()) {
+            DispatchQueue.main.async { block(.failure(httpResponse)) }
+            return
+        }
         
-        do {
-            let data = try Data(contentsOf: location)
-            let info: DownloadResultInformation = (urlString: urlString, location: location, data: data)
-            block(.success(info))
-        } catch {
-            block(.failure(error))
+        DispatchQueue.global().async {
+            do {
+                let data = try Data(contentsOf: location)
+                let info: DownloadResultInformation = (urlString: urlString, location: location, data: data)
+                DispatchQueue.main.async { block(.success(info)) }
+            } catch {
+                DispatchQueue.main.async { block(.failure(error)) }
+            }
         }
     }
 }
@@ -750,6 +762,36 @@ private extension WWNetworking {
     }
 }
 
+// MARK: - SSL Pinning
+private extension WWNetworking {
+    
+    /// [處理 URLSession 的身份驗證挑戰](https://developer.apple.com/documentation/foundation/urlsessiontaskdelegate/1411595-urlsession)
+    /// - Parameters:
+    ///   - session: URLSession
+    ///   - challenge: URLAuthenticationChallenge
+    ///   - completionHandler: (URLSession.AuthChallengeDisposition, URLCredential?)
+    func sslPinning(with session: URLSession, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+        
+        if WWNetworking.sslPinning.values.isEmpty { return completionHandler(.performDefaultHandling, nil) }
+        
+        let host = challenge.protectionSpace.host
+        let pinning = WWNetworking.sslPinning
+        let pinninghosts = pinning.values.keys.map { "\($0)" }
+        
+        guard pinninghosts.contains(host),
+              let filename = pinning.values[host]
+        else {
+            return completionHandler(.performDefaultHandling, nil)
+        }
+        
+        switch challenge._checkAuthSSLPinning(bundle: pinning.bundle, resource: filename) {
+        case .success(let trust): completionHandler(.useCredential, URLCredential(trust: trust))
+        case .failure: completionHandler(.cancelAuthenticationChallenge, nil)
+        }
+    }
+}
+
+
 // MARK: - 小工具
 private extension WWNetworking {
     
@@ -777,20 +819,23 @@ private extension WWNetworking {
     /// [抓取資料 - dataTask() => URLSessionDataDelegate](https://developer.apple.com/documentation/foundation/urlsessiondatadelegate)
     /// - Parameters:
     ///   - request: [URLRequest](https://medium.com/@jerrywang0420/urlsession-教學-swift-3-ios-part-2-a17b2d4cc056)
+    ///   - configuration: URLSessionConfiguration
+    ///   - delegateQueue: 執行緒
     ///   - result: Result<ResponseInformation, Error>
     /// - Returns: URLSessionDataTask
-    func fetchData(from request: URLRequest, result: @escaping (Result<ResponseInformation, Error>) -> Void) -> URLSessionDataTask {
-                
-        let dataTask = URLSession.shared.dataTask(with: request) { (data, response, error) in
-
-            if let error = error { result(.failure(error)); return }
-
-            let info: ResponseInformation = (data: data, response: response as? HTTPURLResponse)
-            result(.success(info))
+    func fetchData(from request: URLRequest, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = nil, result: @escaping (Result<ResponseInformation, Error>) -> Void) -> URLSessionDataTask {
+        
+        let session = URLSession(configuration: configuration, delegate: self, delegateQueue: delegateQueue)
+        
+        let dataTask = session.dataTask(with: request) { (data, response, error) in
+            DispatchQueue.main.async {
+                if let error = error { result(.failure(error)); return }
+                let info: ResponseInformation = (data: data, response: response as? HTTPURLResponse)
+                result(.success(info))
+            }
         }
         
         dataTask.resume()
-        
         return dataTask
     }
 
@@ -837,7 +882,7 @@ private extension WWNetworking {
         return String(format: "bytes=%lld-%lld", startOffset, endOffset)
     }
 
-    /// 計算下載的檔案總和
+    /// 計算下載的檔案總和 (將分段的Data組合起來)
     /// - Parameters:
     ///   - datas: [<Task String>: Data]
     ///   - keys: [<Task String>]
@@ -850,7 +895,7 @@ private extension WWNetworking {
         return downloadData
     }
     
-    /// 上傳檔案的Body設定 (多個)
+    /// 產生上傳檔案的Body (多個檔案) - Content-Type: multipart/form-data
     /// - Parameters:
     ///   - boundary: 分隔字串
     ///   - formDatas: 上傳檔案的相關資料
@@ -886,14 +931,14 @@ private extension WWNetworking {
         return body
     }
     
-    /// 清除分段下載的暫存檔
+    /// 清除分段下載的暫存資訊
     func cleanFragmentInformation() {
         fragmentDownloadContentLength = -1
         fragmentDownloadDatas = [:]
         fragmentDownloadKeys = []
     }
     
-    /// 清除所有的Block
+    /// 清除所有的Callback Block (避免記憶體洩漏)
     func cleanAllBlocks() {
         downloadTaskResultBlock = nil
         downloadProgressResultBlock = nil

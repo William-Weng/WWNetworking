@@ -29,7 +29,10 @@ final class ViewController: UIViewController {
         "FRAGMENT": "https://photosku.com/images_file/images/i000_803.jpg",
     ]
     
-    override func viewDidLoad() { super.viewDidLoad() }
+    override func viewDidLoad() {
+        // WWNetworking.sslPinning = (bundle: .main, values: ["github.io": "google.cer"])
+        super.viewDidLoad()
+    }
     
     @IBAction func httpGetAction(_ sender: UIButton) { Task { await httpGetTest() }}
     @IBAction func httpPostAction(_ sender: UIButton) { httpPostTest() }
@@ -48,7 +51,7 @@ private extension ViewController {
         
         let urlString = UrlStrings["GET"]!
         let parameters: [String: String?] = ["name": "William.Weng", "github": "https://william-weng.github.io/"]
-                
+        
         do {
             let info = try await WWNetworking.shared.request(httpMethod: .GET, urlString: urlString, paramaters: parameters).get()
             displayText(info.data?._jsonSerialization())

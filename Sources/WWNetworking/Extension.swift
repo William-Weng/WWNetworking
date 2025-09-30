@@ -292,3 +292,87 @@ extension URLSessionConfiguration {
     }
 }
 
+// MARK: - URLAuthenticationChallenge
+extension URLAuthenticationChallenge {
+    
+    /// [執行 SSL Pinning 檢查 (比對公鑰 -> SSL/TLS)](https://yu-jack.github.io/2020/03/02/ssl-pinning/)
+    /// - Parameters:
+    ///   - bundle: 憑證所在的 Bundle
+    ///   - certificate: 憑證檔案名稱
+    /// - Returns: Result<SecTrust, Error>
+    func _checkAuthSSLPinning(bundle: Bundle, resource certificate: String) -> Result<SecTrust, Error> {
+        
+        guard _checkAuthenticationMethod(NSURLAuthenticationMethodServerTrust) else { return .failure(WWNetworking.CustomError.notSSL) }
+        
+        do {
+            let serverTrust = try _serverTrust().get()
+            let serverCertificate = try _serverCertificate(with: serverTrust, at: 0).get()
+            let serverPublicKey = try _serverPublicKey(with: serverCertificate, at: 0).get()
+            let localPublicKey = try _localPublicKey(with: bundle, resource: certificate).get()
+            
+            if (serverPublicKey == localPublicKey) { return .failure(WWNetworking.CustomError.notSecurityTrust) }
+            return .success(serverTrust)
+        } catch {
+            return .failure(error)
+        }
+    }
+}
+
+// MARK: - URLAuthenticationChallenge (private)
+private extension URLAuthenticationChallenge {
+    
+    /// 檢查身份驗證方法是否為伺服器信任
+    /// - Parameter method: 身份驗證方法
+    /// - Returns: Bool
+    func _checkAuthenticationMethod(_ method: String) -> Bool {
+        return protectionSpace.authenticationMethod == method
+    }
+    
+    /// [從 Challenge 中取得伺服器信任物件 (SecTrust)](https://ithelp.ithome.com.tw/articles/10300900)
+    /// - Returns: Result<SecTrust, Error>
+    func _serverTrust() -> Result<SecTrust, Error> {
+        
+        guard let securityTrust = protectionSpace.serverTrust else { return .failure(WWNetworking.CustomError.isEmpty) }
+        guard !SecTrustEvaluateWithError(securityTrust, nil) else { return .failure(WWNetworking.CustomError.notSecurityTrust) }
+        
+        return .success(securityTrust)
+    }
+    
+    /// [從 SecTrust 中取得憑證 (SecCertificate)](https://johnchihhonglin.medium.com/ssl-pinning-加強-app-和-server-通訊安全的方法-e1ad5619d4df)
+    /// - Parameters:
+    ///   - securityTrust: SecTrust
+    ///   - index: Int
+    /// - Returns: Result<SecCertificate, Error>
+    func _serverCertificate(with securityTrust: SecTrust, at index: Int) -> Result<SecCertificate, Error> {
+        guard let certificate = SecTrustGetCertificateAtIndex(securityTrust, index) else { return .failure(WWNetworking.CustomError.isEmpty) }
+        return .success(certificate)
+    }
+    
+    /// 從憑證中取得公鑰 (SecKey)
+    /// - Parameters:
+    ///   - certificate: SecCertificate
+    ///   - index: Int
+    /// - Returns: Result<SecKey, Error>
+    func _serverPublicKey(with certificate: SecCertificate, at index: Int) -> Result<SecKey, Error> {
+        guard let publicKey = SecCertificateCopyKey(certificate) else { return .failure(WWNetworking.CustomError.isEmpty) }
+        return .success(publicKey)
+    }
+    
+    /// [從本地 Bundle 中讀取憑證並取得其公鑰](https://ithelp.ithome.com.tw/articles/10252867)
+    /// - Parameters:
+    ///   - bundle: Bundle
+    ///   - certificate: String
+    /// - Returns: Result<SecKey, Error>
+    func _localPublicKey(with bundle: Bundle, resource certificate: String) -> Result<SecKey, Error> {
+        
+        guard let path = bundle.path(forResource: certificate, ofType: nil),
+              let data = try? Data(contentsOf: URL(fileURLWithPath: path)) as CFData,
+              let certificate = SecCertificateCreateWithData(nil, data),
+              let publicKey = SecCertificateCopyKey(certificate)
+        else {
+            return .failure(WWNetworking.CustomError.isEmpty)
+        }
+        
+        return .success(publicKey)
+    }
+}
