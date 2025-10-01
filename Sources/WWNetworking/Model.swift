@@ -7,6 +7,30 @@
 
 import Foundation
 
+// MARK: - struct
+public extension WWNetworking {
+    
+    /// SSLPinning的設定值 => 只分辨host有沒有重複 (不分大小寫)
+    struct SSLPinningValue: Hashable {
+        
+        let host: String
+        let cer: String
+        
+        public init(host: String, cer: String) {
+            self.host = host
+            self.cer = cer
+        }
+        
+        public static func == (lhs: SSLPinningValue, rhs: SSLPinningValue) -> Bool {
+            return lhs.host.lowercased() == rhs.host.lowercased()
+        }
+        
+        public func hash(into hasher: inout Hasher) {
+            hasher.combine(host.lowercased())
+        }
+    }
+}
+
 // MARK: - actor
 extension WWNetworking {
     

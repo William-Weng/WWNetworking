@@ -10,7 +10,7 @@ import UIKit
 // MARK: - typealias
 public extension WWNetworking {
     
-    typealias SSLPinningInformation = (bundle: Bundle, values: Dictionary<String, String>)                                                  // SSL Pinning資訊 (文件Bundle / <host: 證書名稱>)
+    typealias SSLPinningInformation = (bundle: Bundle, values: Set<SSLPinningValue>)                                                        // SSL Pinning資訊 (文件Bundle / <host: 證書名稱>)
     typealias DownloadProgressInformation = (urlString: String?, totalSize: Int64, totalWritten: Int64, writting: Int64)                    // 網路下載資料 (URL / 大小 / 己下載 / 一段段的下載量)
     typealias ResponseInformation = (data: Data?, response: HTTPURLResponse?)                                                               // 網路回傳的資料
     typealias HttpDownloadOffset = (start: Int?, end: Int?)                                                                                 // 續傳下載開始~結束位置設定值 (bytes=0-1024)

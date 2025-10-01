@@ -12,8 +12,7 @@ open class WWNetworking: NSObject {
     
     public static let shared = WWNetworking()
     
-    // openssl s_client -connect <your.server.com>:443 -showcerts </dev/null | openssl x509 -outform DER > <server>.cer
-    public static var sslPinning: SSLPinningInformation = (bundle: .main, values: [:])
+    public static var sslPinning: SSLPinningInformation = (bundle: .main, values: [])
     
     private var downloadTaskResultBlock: ((Result<DownloadResultInformation, Error>) -> Void)?      // 下載檔案完成的動作
     private var downloadProgressResultBlock: ((DownloadProgressInformation) -> Void)?               // 下載進行中的進度 - 檔案
@@ -774,17 +773,17 @@ private extension WWNetworking {
         
         if WWNetworking.sslPinning.values.isEmpty { return completionHandler(.performDefaultHandling, nil) }
         
-        let host = challenge.protectionSpace.host
+        let host = challenge.protectionSpace.host.lowercased()
         let pinning = WWNetworking.sslPinning
-        let pinningHosts = pinning.values.keys.map { "\($0)" }
+        let pinningHosts = pinning.values.map { $0.host }
         
         guard pinningHosts.contains(host),
-              let filename = pinning.values[host]
+              let value = pinning.values.first(where: {$0.host.lowercased() == host.lowercased()})
         else {
             return completionHandler(.performDefaultHandling, nil)
         }
         
-        switch challenge._checkAuthenticationSSLPinning(bundle: pinning.bundle, filename: filename) {
+        switch challenge._checkAuthenticationSSLPinning(bundle: pinning.bundle, filename: value.cer) {
         case .success(let trust): completionHandler(.useCredential, URLCredential(trust: trust))
         case .failure: completionHandler(.cancelAuthenticationChallenge, nil)
         }
