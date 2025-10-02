@@ -6,7 +6,7 @@
 - [This is a simple integration of HTTP transmission, upload and download functions. It is a rare and good tool for iOS engineers.](https://github.com/pro648/tips/blob/master/sources/URLSession详解.md)
 - [這是一個簡單的HTTP傳輸、上傳、下載功能整合，是iOS工程師不可多得的好工具。](https://medium.com/@jerrywang0420/urlsession-教學-swift-3-ios-part-1-a1029fc9c427)
 
-https://github.com/user-attachments/assets/e9ad598c-4eb2-4c0b-aade-313be26a71d7
+https://github.com/user-attachments/assets/6c2a02b4-34e8-4678-8d0b-48169dda53fe
 
 ### [Installation with Swift Package Manager](https://medium.com/彼得潘的-swift-ios-app-開發問題解答集/使用-spm-安裝第三方套件-xcode-11-新功能-2c4ffcf85b4b)
 ```
