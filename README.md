@@ -3,15 +3,15 @@
 [![Swift-5.7](https://img.shields.io/badge/Swift-5.7-orange.svg?style=flat)](https://developer.apple.com/swift/) [![iOS-16.0](https://img.shields.io/badge/iOS-16.0-pink.svg?style=flat)](https://developer.apple.com/swift/) ![TAG](https://img.shields.io/github/v/tag/William-Weng/WWNetworking) [![Swift Package Manager-SUCCESS](https://img.shields.io/badge/Swift_Package_Manager-SUCCESS-blue.svg?style=flat)](https://developer.apple.com/swift/) [![LICENSE](https://img.shields.io/badge/LICENSE-MIT-yellow.svg?style=flat)](https://developer.apple.com/swift/)
 
 ## [Introduction - 簡介](https://swiftpackageindex.com/William-Weng)
-- This is a simple integration of HTTP transmission, upload and download functions. It is a rare and good tool for iOS engineers.
-- 這是一個簡單的HTTP傳輸、上傳、下載功能整合，是iOS工程師不可多得的好工具。
+- [This is a simple integration of HTTP transmission, upload and download functions. It is a rare and good tool for iOS engineers.](https://github.com/pro648/tips/blob/master/sources/URLSession详解.md)
+- [這是一個簡單的HTTP傳輸、上傳、下載功能整合，是iOS工程師不可多得的好工具。](https://medium.com/@jerrywang0420/urlsession-教學-swift-3-ios-part-1-a1029fc9c427)
 
 https://github.com/user-attachments/assets/e9ad598c-4eb2-4c0b-aade-313be26a71d7
 
 ### [Installation with Swift Package Manager](https://medium.com/彼得潘的-swift-ios-app-開發問題解答集/使用-spm-安裝第三方套件-xcode-11-新功能-2c4ffcf85b4b)
 ```
 dependencies: [
-    .package(url: "https://github.com/William-Weng/WWNetworking.git", .upToNextMajor(from: "1.8.9"))
+    .package(url: "https://github.com/William-Weng/WWNetworking.git", .upToNextMajor(from: "1.8.10"))
 ]
 ```
 
@@ -24,6 +24,7 @@ dependencies: [
 ## 取得公鑰
 ```bash
 openssl s_client -connect <your.server.com>:443 -showcerts </dev/null | openssl x509 -outform DER > <server>.cer
+
 openssl s_client -connect google.com:443 -showcerts </dev/null | openssl x509 -outform DER > google.cer
 ```
 
@@ -77,12 +78,10 @@ final class ViewController: UIViewController {
         "GET": "https://httpbin.org/get",
         "POST": "https://httpbin.org/post",
         "DOWNLOAD": "https://raw.githubusercontent.com/William-Weng/AdobeIllustrator/master/William-Weng.png",
-        "UPLOAD": "http://192.168.4.92:8080/upload",
-        "BINARY-UPLOAD": "http://192.168.4.92:8080/binaryUpload",
         "FRAGMENT": "https://photosku.com/images_file/images/i000_803.jpg",
+        "UPLOAD": "http://192.168.4.92:8080/upload",
+        "BINARY-UPLOAD": "http://192.168.4.92:8081/binaryUpload",
     ]
-    
-    override func viewDidLoad() { super.viewDidLoad() }
     
     @IBAction func httpGetAction(_ sender: UIButton) { Task { await httpGetTest() }}
     @IBAction func httpPostAction(_ sender: UIButton) { httpPostTest() }
@@ -95,12 +94,11 @@ final class ViewController: UIViewController {
 
 private extension ViewController {
 
-    @MainActor
     func httpGetTest() async {
         
         let urlString = UrlStrings["GET"]!
         let parameters: [String: String?] = ["name": "William.Weng", "github": "https://william-weng.github.io/"]
-                
+        
         do {
             let info = try await WWNetworking.shared.request(httpMethod: .GET, urlString: urlString, paramaters: parameters).get()
             displayText(info.data?._jsonSerialization())
@@ -123,54 +121,18 @@ private extension ViewController {
         }
     }
     
-    func httpUploadData() {
-        
-        let urlString = UrlStrings["UPLOAD"]!
-        let imageData = resultImageViews[0].image?.pngData()
-        let formData: WWNetworking.FormDataInformation = (name: "file", filename: "Demo.png", contentType: .png, data: imageData!)
-                
-        _ = WWNetworking.shared.upload(urlString: urlString, formData: formData) { result in
-            
-            switch result {
-            case .failure(let error): self.displayText(error)
-            case .success(let info): self.displayText("\(info.data?._jsonSerialization() ?? "NOT JSON")")
-            }
-        }
-    }
-    
-    func httpBinaryUploadData() {
-        
-        let urlString = UrlStrings["BINARY-UPLOAD"]!
-        let index = 1
-        let imageData = resultImageViews[index].image?.pngData()
-        let formData: WWNetworking.FormDataInformation = (name: "x-filename", filename: "Large.png", contentType: .octetStream, data: imageData!)
-        
-        _ = WWNetworking.shared.binaryUpload(urlString: urlString, formData: formData, progress: { info in
-             
-            let progress = Float(info.totalBytesSent) / Float(info.totalBytesExpectedToSend)
-            DispatchQueue.main.async { self.title = "\(progress)" }
-            
-        }, completion: { result in
-            
-            switch result {
-            case .failure(let error): self.displayText(error)
-            case .success(let isSuccess): self.displayText(isSuccess)
-            }
-        })
-    }
-    
     func httpDownloadData() {
         
         let urlString = UrlStrings["DOWNLOAD"]!
         let index = 0
         
-        self.displayText("")
+        displayText("")
         
         _ = WWNetworking.shared.download(urlString: urlString, progress: { info in
             
             let progress = Float(info.totalWritten) / Float(info.totalSize)
             self.displayProgressWithIndex(index, progress: progress)
-                        
+            
         }, completion: { result in
             
             switch result {
@@ -180,13 +142,12 @@ private extension ViewController {
         })
     }
     
-    @MainActor
     func fragmentDownloadData() async {
         
         let urlString = UrlStrings["FRAGMENT"]!
         let index = 1
         
-        self.displayText("")
+        displayText("")
         
         do {
             for try await state in WWNetworking.shared.fragmentDownload(urlString: urlString) {
@@ -227,21 +188,57 @@ private extension ViewController {
             }
         }
     }
+    
+    func httpUploadData() {
+        
+        let urlString = UrlStrings["UPLOAD"]!
+        let imageData = resultImageViews[0].image?.pngData()
+        let formData: WWNetworking.FormDataInformation = (name: "file", filename: "Demo.png", contentType: .png, data: imageData!)
+        
+        _ = WWNetworking.shared.upload(urlString: urlString, formData: formData) { result in
+            
+            switch result {
+            case .failure(let error): self.displayText(error)
+            case .success(let info): self.displayText(info.response?.statusCode ?? 404)
+            }
+        }
+    }
+    
+    func httpBinaryUploadData() {
+        
+        let urlString = UrlStrings["BINARY-UPLOAD"]!
+        let index = 1
+        let imageData = resultImageViews[index].image?.pngData()
+        let formData: WWNetworking.FormDataInformation = (name: "x-filename", filename: "Large.png", contentType: .octetStream, data: imageData!)
+        
+        _ = WWNetworking.shared.binaryUpload(urlString: urlString, formData: formData, progress: { info in
+            
+            let progress = Float(info.totalBytesSent) / Float(info.totalBytesExpectedToSend)
+            self.title = "\(progress)"
+                        
+        }, completion: { result in
+            
+            switch result {
+            case .failure(let error): self.displayText(error)
+            case .success(let isSuccess): self.displayText(isSuccess)
+            }
+        })
+    }
 }
 
 private extension ViewController {
     
     func displayProgressWithIndex(_ index: Int, progress: Float) {
-        self.resultProgressLabels[index].text = "\(progress * 100.0) %"
+        resultProgressLabels[index].text = "\(progress * 100.0) %"
     }
-    
+
     func displayImageWithIndex(_ index: Int, data: Data?) {
         guard let data = data else { return }
-        self.resultImageViews[index].image = UIImage(data: data)
+        resultImageViews[index].image = UIImage(data: data)
     }
     
     func displayText(_ text: Any?) {
-        DispatchQueue.main.async { self.resultTextField.text = "\(text ?? "NULL")" }
+        self.resultTextField.text = "\(text ?? "NULL")"
     }
     
     func displayImageIndex(urlStrings: [String], urlString: String?) -> Int? {

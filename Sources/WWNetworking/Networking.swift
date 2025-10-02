@@ -523,14 +523,14 @@ public extension WWNetworking {
             var tasks: [URLSessionTask] = []
             
             fragmentDownload(urlString: urlString, timeout: timeout, fragment: fragment, configiguration: configiguration, delegateQueue: delegateQueue) { info in
-                continuation.yield(.progress(info))
+                DispatchQueue.main.async { continuation.yield(.progress(info)) }
             } fragmentTask: { task in
                 tasks.append(task)
-                continuation.yield(.start(task))
+                DispatchQueue.main.async { continuation.yield(.start(task)) }
             } completion: { result in
                 switch result {
-                case .success(let data): continuation.yield(.finished(data)); continuation.finish()
-                case .failure(let error): continuation.finish(throwing: error)
+                case .success(let data): DispatchQueue.main.async { continuation.yield(.finished(data)); continuation.finish() }
+                case .failure(let error): DispatchQueue.main.async { continuation.finish(throwing: error) }
                 }
             }
             
@@ -690,10 +690,10 @@ private extension WWNetworking {
         }
         
         let httpResponse = HttpResponse.builder(response: response)
-        if (httpResponse.hasError()) { downloadTaskResultBlock(.failure(httpResponse)); downloadTask.cancel(); return }
-                
+        if (httpResponse.hasError()) { DispatchQueue.main.async {downloadTaskResultBlock(.failure(httpResponse)); downloadTask.cancel(); return }}
+        
         let progress: DownloadProgressInformation = (urlString: urlString, totalSize: totalBytesExpectedToWrite, totalWritten: totalBytesWritten, writting: bytesWritten)
-        downloadProgressResultBlock(progress)
+        DispatchQueue.main.async { downloadProgressResultBlock(progress) }
     }
     
     /// 下載完成處理
@@ -703,7 +703,7 @@ private extension WWNetworking {
     ///   - location: URL
     func downloadFinishedAction(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
                 
-        guard let block = downloadTaskResultBlock,
+        guard let downloadTaskResultBlock = downloadTaskResultBlock,
               let response = downloadTask.response as? HTTPURLResponse,
               let urlString = downloadTask.currentRequest?.url?.absoluteString
         else {
@@ -711,19 +711,14 @@ private extension WWNetworking {
         }
         
         let httpResponse = HttpResponse.builder(response: response)
-        if (httpResponse.hasError()) {
-            DispatchQueue.main.async { block(.failure(httpResponse)) }
-            return
-        }
+        if (httpResponse.hasError()) { DispatchQueue.main.async { downloadTaskResultBlock(.failure(httpResponse)) }; return }
         
-        DispatchQueue.global().async {
-            do {
-                let data = try Data(contentsOf: location)
-                let info: DownloadResultInformation = (urlString: urlString, location: location, data: data)
-                DispatchQueue.main.async { block(.success(info)) }
-            } catch {
-                DispatchQueue.main.async { block(.failure(error)) }
-            }
+        do {
+            let data = try Data(contentsOf: location)
+            let info: DownloadResultInformation = (urlString: urlString, location: location, data: data)
+            DispatchQueue.main.async { downloadTaskResultBlock(.success(info)) }
+        } catch {
+            DispatchQueue.main.async { downloadTaskResultBlock(.failure(error)) }
         }
     }
 }
@@ -744,7 +739,7 @@ private extension WWNetworking {
         
         let progress: UploadProgressInformation = (urlString: task.currentRequest?.url?.absoluteString, bytesSent: bytesSent, totalBytesSent: totalBytesSent, totalBytesExpectedToSend: totalBytesExpectedToSend)
         
-        fragmentUploadProgressResultBlock(progress)
+        DispatchQueue.main.async { fragmentUploadProgressResultBlock(progress) }
     }
     
     /// 分段上傳完成處理
@@ -757,7 +752,7 @@ private extension WWNetworking {
         guard let fragmentUploadFinishBlock = fragmentUploadFinishBlock else { return }
         guard let error = error else { fragmentUploadFinishBlock(.success(true)); return }
         
-        fragmentUploadFinishBlock(.failure(error))
+        DispatchQueue.main.async { fragmentUploadFinishBlock(.failure(error)) }
     }
 }
 

@@ -24,9 +24,9 @@ final class ViewController: UIViewController {
         "GET": "https://httpbin.org/get",
         "POST": "https://httpbin.org/post",
         "DOWNLOAD": "https://raw.githubusercontent.com/William-Weng/AdobeIllustrator/master/William-Weng.png",
-        "UPLOAD": "http://192.168.4.92:8080/upload",
-        "BINARY-UPLOAD": "http://192.168.4.92:8080/binaryUpload",
         "FRAGMENT": "https://photosku.com/images_file/images/i000_803.jpg",
+        "UPLOAD": "http://192.168.4.92:8080/upload",
+        "BINARY-UPLOAD": "http://192.168.4.92:8081/binaryUpload",
     ]
     
     override func viewDidLoad() {
@@ -48,7 +48,6 @@ final class ViewController: UIViewController {
 private extension ViewController {
 
     /// 測試GET (GET不能有httpBody)
-    @MainActor
     func httpGetTest() async {
         
         let urlString = UrlStrings["GET"]!
@@ -77,59 +76,19 @@ private extension ViewController {
         }
     }
     
-    /// 上傳圖片
-    func httpUploadData() {
-        
-        let urlString = UrlStrings["UPLOAD"]!
-        let imageData = resultImageViews[0].image?.pngData()
-        let formData: WWNetworking.FormDataInformation = (name: "file", filename: "Demo.png", contentType: .png, data: imageData!)
-        
-        _ = WWNetworking.shared.upload(urlString: urlString, formData: formData) { result in
-            
-            switch result {
-            case .failure(let error): self.displayText(error)
-            case .success(let info): self.displayText("\(info.data?._jsonSerialization() ?? "NOT JSON")")
-            }
-        }
-    }
-    
-    /// 上傳檔案 (二進制)
-    func httpBinaryUploadData() {
-        
-        let urlString = UrlStrings["BINARY-UPLOAD"]!
-        let index = 1
-        let imageData = resultImageViews[index].image?.pngData()
-        let formData: WWNetworking.FormDataInformation = (name: "x-filename", filename: "Large.png", contentType: .octetStream, data: imageData!)
-        
-        _ = WWNetworking.shared.binaryUpload(urlString: urlString, formData: formData, progress: { info in
-            
-            let progress = Float(info.totalBytesSent) / Float(info.totalBytesExpectedToSend)
-            DispatchQueue.main.async { self.title = "\(progress)" }
-            
-            print(progress)
-            
-        }, completion: { result in
-            
-            switch result {
-            case .failure(let error): self.displayText(error)
-            case .success(let isSuccess): self.displayText(isSuccess)
-            }
-        })
-    }
-    
     /// 下載檔案 (單個)
     func httpDownloadData() {
         
         let urlString = UrlStrings["DOWNLOAD"]!
         let index = 0
         
-        self.displayText("")
+        displayText("")
         
         _ = WWNetworking.shared.download(urlString: urlString, progress: { info in
             
             let progress = Float(info.totalWritten) / Float(info.totalSize)
             self.displayProgressWithIndex(index, progress: progress)
-                        
+            
         }, completion: { result in
             
             switch result {
@@ -140,13 +99,12 @@ private extension ViewController {
     }
     
     /// 分段下載 (單一檔案分多點合併下載)
-    @MainActor
     func fragmentDownloadData() async {
         
         let urlString = UrlStrings["FRAGMENT"]!
         let index = 1
         
-        self.displayText("")
+        displayText("")
         
         do {
             for try await state in WWNetworking.shared.fragmentDownload(urlString: urlString) {
@@ -188,6 +146,44 @@ private extension ViewController {
             }
         }
     }
+    
+    /// 上傳圖片
+    func httpUploadData() {
+        
+        let urlString = UrlStrings["UPLOAD"]!
+        let imageData = resultImageViews[0].image?.pngData()
+        let formData: WWNetworking.FormDataInformation = (name: "file", filename: "Demo.png", contentType: .png, data: imageData!)
+        
+        _ = WWNetworking.shared.upload(urlString: urlString, formData: formData) { result in
+            
+            switch result {
+            case .failure(let error): self.displayText(error)
+            case .success(let info): self.displayText(info.response?.statusCode ?? 404)
+            }
+        }
+    }
+    
+    /// 上傳檔案 (二進制)
+    func httpBinaryUploadData() {
+        
+        let urlString = UrlStrings["BINARY-UPLOAD"]!
+        let index = 1
+        let imageData = resultImageViews[index].image?.pngData()
+        let formData: WWNetworking.FormDataInformation = (name: "x-filename", filename: "Large.png", contentType: .octetStream, data: imageData!)
+        
+        _ = WWNetworking.shared.binaryUpload(urlString: urlString, formData: formData, progress: { info in
+            
+            let progress = Float(info.totalBytesSent) / Float(info.totalBytesExpectedToSend)
+            self.title = "\(progress)"
+                        
+        }, completion: { result in
+            
+            switch result {
+            case .failure(let error): self.displayText(error)
+            case .success(let isSuccess): self.displayText(isSuccess)
+            }
+        })
+    }
 }
 
 // MARK: - 小工具 (class function)
@@ -198,7 +194,7 @@ private extension ViewController {
     ///   - index: Int
     ///   - progress: Float
     func displayProgressWithIndex(_ index: Int, progress: Float) {
-        self.resultProgressLabels[index].text = "\(progress * 100.0) %"
+        resultProgressLabels[index].text = "\(progress * 100.0) %"
     }
     
     /// 顯示圖片
@@ -207,13 +203,13 @@ private extension ViewController {
     ///   - data: Data?
     func displayImageWithIndex(_ index: Int, data: Data?) {
         guard let data = data else { return }
-        self.resultImageViews[index].image = UIImage(data: data)
+        resultImageViews[index].image = UIImage(data: data)
     }
     
     /// 顯示文字
     /// - Parameter text: Any?
     func displayText(_ text: Any?) {
-        DispatchQueue.main.async { self.resultTextField.text = "\(text ?? "NULL")" }
+        self.resultTextField.text = "\(text ?? "NULL")"
     }
     
     /// 尋找UIImageViewd的index
