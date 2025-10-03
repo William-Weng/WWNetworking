@@ -122,6 +122,7 @@ public extension WWNetworking {
 
         case unknown
         case isEmpty
+        case isCachesDirectoryEmpty
         case isCancel
         case isURLSessionTaskNull
         case notUrlFormat
@@ -146,6 +147,7 @@ public extension WWNetworking {
             switch self {
             case .unknown: return "未知錯誤"
             case .isEmpty: return "資料是空的"
+            case .isCachesDirectoryEmpty: return "快取資料夾是空的"
             case .isCancel: return "取消"
             case .isURLSessionTaskNull: return "URLSessionTask的空的"
             case .notUrlFormat: return "URL格式錯誤"

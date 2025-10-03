@@ -714,8 +714,9 @@ private extension WWNetworking {
         if (httpResponse.hasError()) { DispatchQueue.main.async { downloadTaskResultBlock(.failure(httpResponse)) }; return }
         
         do {
-            let data = try Data(contentsOf: location)
-            let info: DownloadResultInformation = (urlString: urlString, location: location, data: data)
+            let fileUrl = try moveLocationFile(at: location).get()
+            let data = try Data(contentsOf: fileUrl)
+            let info: DownloadResultInformation = (urlString: urlString, location: fileUrl, data: data)
             DispatchQueue.main.async { downloadTaskResultBlock(.success(info)) }
         } catch {
             DispatchQueue.main.async { downloadTaskResultBlock(.failure(error)) }
@@ -864,7 +865,22 @@ private extension WWNetworking {
         
         return dataTask
     }
-
+    
+    /// 移動本地下載完成的檔案 (因為在tmp的檔案會不見)
+    /// - Parameter location: tmp檔位置
+    /// - Returns: Result<URL, any Error>
+    func moveLocationFile(at location: URL) -> Result<URL, any Error> {
+        
+        guard let cachesDirectory = FileManager.default._cachesDirectory() else { return .failure(CustomError.isCachesDirectoryEmpty) }
+        
+        let fileURL = cachesDirectory.appending(component: location.lastPathComponent)
+        
+        switch FileManager.default._moveFile(at: location, to: fileURL) {
+        case .success(_): return .success(fileURL)
+        case .failure(let error): return .failure(error)
+        }
+    }
+    
     /// Range: bytes=0-1024
     /// - Parameter offset: HttpDownloadOffset
     /// - Returns: String?

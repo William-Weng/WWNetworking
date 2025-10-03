@@ -140,6 +140,36 @@ extension Data {
     }
 }
 
+// MARK: - FileManager
+extension FileManager {
+    
+    ///appSupportDirectory [取得User的資料夾](https://cdfq152313.github.io/post/2016-10-11/)
+    /// - UIFileSharingEnabled = YES => iOS設置iTunes文件共享
+    /// - Parameter directory: User的資料夾名稱
+    /// - Returns: [URL]
+    func _userDirectory(for directory: FileManager.SearchPathDirectory) -> [URL] { return Self.default.urls(for: directory, in: .userDomainMask) }
+
+    /// User的「快取」資料夾
+    /// - => ~/Library/Caches/
+    /// - Returns: URL?
+    func _cachesDirectory() -> URL? { return self._userDirectory(for: .cachesDirectory).first }
+    
+    /// 移動檔案
+    /// - Parameters:
+    ///   - atURL: 從這裡移動 =>
+    ///   - toURL: => 到這裡
+    /// - Returns: Result<Bool, Error>
+    func _moveFile(at atURL: URL, to toURL: URL) -> Result<Bool, Error> {
+        
+        do {
+            try moveItem(at: atURL, to: toURL)
+            return .success(true)
+        } catch {
+            return .failure(error)
+        }
+    }
+}
+
 // MARK: - UIImage
 extension UIImage {
     
