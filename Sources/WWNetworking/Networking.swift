@@ -773,6 +773,8 @@ private extension WWNetworking {
         let pinning = WWNetworking.sslPinning
         let pinningHosts = pinning.values.map { $0.host }
         
+        print("⚠️ [Challenge Host] => \(host)")
+        
         guard pinningHosts.contains(host),
               let value = pinning.values.first(where: {$0.host.lowercased() == host.lowercased()})
         else {
