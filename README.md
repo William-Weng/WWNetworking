@@ -3,8 +3,8 @@
 [![Swift-5.7](https://img.shields.io/badge/Swift-5.7-orange.svg?style=flat)](https://developer.apple.com/swift/) [![iOS-16.0](https://img.shields.io/badge/iOS-16.0-pink.svg?style=flat)](https://developer.apple.com/swift/) ![TAG](https://img.shields.io/github/v/tag/William-Weng/WWNetworking) [![Swift Package Manager-SUCCESS](https://img.shields.io/badge/Swift_Package_Manager-SUCCESS-blue.svg?style=flat)](https://developer.apple.com/swift/) [![LICENSE](https://img.shields.io/badge/LICENSE-MIT-yellow.svg?style=flat)](https://developer.apple.com/swift/)
 
 ## [Introduction - 簡介](https://swiftpackageindex.com/William-Weng)
-- [This is a simple integration of HTTP transmission, upload and download functions. It is a rare and good tool for iOS engineers.](https://github.com/pro648/tips/blob/master/sources/URLSession详解.md)
-- [這是一個簡單的HTTP傳輸、上傳、下載功能整合，是iOS工程師不可多得的好工具。](https://medium.com/@jerrywang0420/urlsession-教學-swift-3-ios-part-1-a1029fc9c427)
+- [This is a simple integration of HTTP transmission, elegant HTTP networking, upload and download functions. It is a rare and good tool for iOS engineers.](https://github.com/pro648/tips/blob/master/sources/URLSession详解.md)
+- [這是一個簡單的HTTP傳輸、上傳、下載功能整合，優雅的HTTP網路功能，是iOS工程師不可多得的好工具。](https://medium.com/@jerrywang0420/urlsession-教學-swift-3-ios-part-1-a1029fc9c427)
 
 https://github.com/user-attachments/assets/6c2a02b4-34e8-4678-8d0b-48169dda53fe
 
