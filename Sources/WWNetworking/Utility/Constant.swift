@@ -23,7 +23,9 @@ public extension WWNetworking {
                                         contentType: ContentType,
                                         paramaters: [String: String?]?,
                                         headers: [String: String?]?,
-                                        httpBodyType: HttpBobyType?)
+                                        httpBodyType: HttpBobyType?,
+                                        delegateQueue: OperationQueue?
+                                        )
 }
 
 // MARK: - 常數
