@@ -27,6 +27,7 @@ open class WWNetworking: NSObject {
     private var fragmentUploadProgressResultBlock: ((UploadProgressInformation) -> Void)?           // 分段下載進行中的進度 - 檔案大小
 }
 
+// MARK: - 有用到的Delegate
 extension WWNetworking: URLSessionTaskDelegate {}
 extension WWNetworking: URLSessionDataDelegate {}
 extension WWNetworking: URLSessionDownloadDelegate {}
@@ -880,14 +881,8 @@ private extension WWNetworking {
         
         guard let cachesDirectory = FileManager.default._cachesDirectory() else { return .failure(CustomError.isCachesDirectoryEmpty) }
         
-        let fileURL: URL
-        
-        if #available(iOS 16.0, *) {
-            fileURL = cachesDirectory.appending(component: location.lastPathComponent)
-        } else {
-            fileURL = cachesDirectory.appendingPathComponent(location.lastPathComponent)
-        }
-        
+        let fileURL = cachesDirectory.appending(component: location.lastPathComponent)
+                
         switch FileManager.default._moveFile(at: location, to: fileURL) {
         case .success(_): return .success(fileURL)
         case .failure(let error): return .failure(error)

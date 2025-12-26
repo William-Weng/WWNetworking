@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 60;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -19,7 +19,7 @@
 		811D16042C3E380E009D1B1C /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 811D16032C3E380E009D1B1C /* WWNetworking */; };
 		811F6E582B10451700359749 /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 811F6E572B10451700359749 /* WWNetworking */; };
 		8141CA7D2EFE2110002C6BF0 /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 8141CA7C2EFE2110002C6BF0 /* WWNetworking */; };
-		8141CA802EFE2372002C6BF0 /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 8141CA7F2EFE2372002C6BF0 /* WWNetworking */; };
+		8141CA832EFE23FE002C6BF0 /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 8141CA822EFE23FE002C6BF0 /* WWNetworking */; };
 		81487B422E8D2C0D000F490D /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 81487B412E8D2C0D000F490D /* WWNetworking */; };
 		8153D0352BA92B0700216FAE /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 8153D0342BA92B0700216FAE /* WWNetworking */; };
 		8171DB882D641C5A00954209 /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 8171DB872D641C5A00954209 /* WWNetworking */; };
@@ -77,7 +77,7 @@
 				8153D0352BA92B0700216FAE /* WWNetworking in Frameworks */,
 				81C3612E2D658A2500C6C6A4 /* WWNetworking in Frameworks */,
 				81487B422E8D2C0D000F490D /* WWNetworking in Frameworks */,
-				8141CA802EFE2372002C6BF0 /* WWNetworking in Frameworks */,
+				8141CA832EFE23FE002C6BF0 /* WWNetworking in Frameworks */,
 				811D16042C3E380E009D1B1C /* WWNetworking in Frameworks */,
 				81FF5DF12D64342100A24CF9 /* WWNetworking in Frameworks */,
 				81E46F682E84E20900C847B0 /* WWNetworking in Frameworks */,
@@ -201,7 +201,7 @@
 				81A769772E94AEF1009C03CA /* WWNetworking */,
 				81ECC34A2EDE820C00BF9019 /* WWNetworking */,
 				8141CA7C2EFE2110002C6BF0 /* WWNetworking */,
-				8141CA7F2EFE2372002C6BF0 /* WWNetworking */,
+				8141CA822EFE23FE002C6BF0 /* WWNetworking */,
 			);
 			productName = Example;
 			productReference = 3DBCD87026F198EF00522E3B /* Example.app */;
@@ -232,7 +232,7 @@
 			);
 			mainGroup = 3DBCD86726F198EF00522E3B;
 			packageReferences = (
-				8141CA7E2EFE2372002C6BF0 /* XCRemoteSwiftPackageReference "WWNetworking" */,
+				8141CA812EFE23FE002C6BF0 /* XCLocalSwiftPackageReference "../../WWNetworking" */,
 			);
 			productRefGroup = 3DBCD87126F198EF00522E3B /* Products */;
 			projectDirPath = "";
@@ -419,7 +419,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 4Q5CYDAG3B;
 				INFOPLIST_FILE = Example/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -443,7 +443,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 4Q5CYDAG3B;
 				INFOPLIST_FILE = Example/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -482,16 +482,12 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCRemoteSwiftPackageReference section */
-		8141CA7E2EFE2372002C6BF0 /* XCRemoteSwiftPackageReference "WWNetworking" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/William-Weng/WWNetworking";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.9.0;
-			};
+/* Begin XCLocalSwiftPackageReference section */
+		8141CA812EFE23FE002C6BF0 /* XCLocalSwiftPackageReference "../../WWNetworking" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../../WWNetworking;
 		};
-/* End XCRemoteSwiftPackageReference section */
+/* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
 		3D5C9BE22D85A3460037E78A /* WWNetworking */ = {
@@ -522,9 +518,8 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = WWNetworking;
 		};
-		8141CA7F2EFE2372002C6BF0 /* WWNetworking */ = {
+		8141CA822EFE23FE002C6BF0 /* WWNetworking */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 8141CA7E2EFE2372002C6BF0 /* XCRemoteSwiftPackageReference "WWNetworking" */;
 			productName = WWNetworking;
 		};
 		81487B412E8D2C0D000F490D /* WWNetworking */ = {
