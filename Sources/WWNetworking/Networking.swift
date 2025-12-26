@@ -14,6 +14,10 @@ open class WWNetworking: NSObject {
     
     public static var sslPinning: SSLPinningInformation = (bundle: .main, values: [])
     
+    private let downloadDelegateProxy = DownloadDelegateProxy()
+    private let taskDelegateProxy = TaskDelegateProxy()
+    private let dataDelegateProxy = DataDelegateProxy()
+    
     private var downloadTaskResultBlock: ((Result<DownloadResultInformation, Error>) -> Void)?      // 下載檔案完成的動作
     private var downloadProgressResultBlock: ((DownloadProgressInformation) -> Void)?               // 下載進行中的進度 - 檔案
 
@@ -25,52 +29,13 @@ open class WWNetworking: NSObject {
     
     private var fragmentUploadFinishBlock: ((Result<Bool, Error>) -> Void)?                         // 分段上傳完成的動作
     private var fragmentUploadProgressResultBlock: ((UploadProgressInformation) -> Void)?           // 分段下載進行中的進度 - 檔案大小
-}
-
-// MARK: - 有用到的Delegate
-extension WWNetworking: URLSessionTaskDelegate {}
-extension WWNetworking: URLSessionDataDelegate {}
-extension WWNetworking: URLSessionDownloadDelegate {}
-
-// MARK: - URLSessionTaskDelegate
-public extension WWNetworking {
     
-    func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
-        self.fragmentDownloadCompleteAction(session, task: task, didCompleteWithError: error)
-        self.fragmentUploadCompleteAction(session, task: task, didCompleteWithError: error)
-    }
-
-    func urlSession(_ session: URLSession, task: URLSessionTask, didSendBodyData bytesSent: Int64, totalBytesSent: Int64, totalBytesExpectedToSend: Int64) {
-        self.fragmentUploadProgressAction(session, task: task, didSendBodyData: bytesSent, totalBytesSent: totalBytesSent, totalBytesExpectedToSend: totalBytesExpectedToSend)
-    }
-}
-
-// MARK: - URLSessionDataDelegate
-public extension WWNetworking {
-
-    func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse, completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
-        self.fragmentDownloadAction(session, dataTask: dataTask, didReceive: response, completionHandler: completionHandler)
-    }
-
-    func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
-        self.fragmentDownloadedAction(session, dataTask: dataTask, didReceive: data)
-    }
-}
-
-// MARK: - URLSessionDownloadDelegate
-public extension WWNetworking {
-
-    func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didWriteData bytesWritten: Int64, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
-        self.downloadProgressAction(session, downloadTask: downloadTask, didWriteData: bytesWritten, totalBytesWritten: totalBytesWritten, totalBytesExpectedToWrite: totalBytesExpectedToWrite)
+    private override init() {
+        super.init()
+        initDelegateProxy()
     }
     
-    func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
-        self.downloadFinishedAction(session, downloadTask: downloadTask, didFinishDownloadingTo: location)
-    }
-    
-    func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
-        sslPinning(with: session, didReceive: challenge, completionHandler: completionHandler)
-    }
+    deinit { removeDelegateProxy() }
 }
 
 // MARK: - 公開函數 (static)
@@ -191,7 +156,7 @@ public extension WWNetworking {
         
         guard var request = URLRequest._build(string: urlString, httpMethod: httpMethod, timeout: timeout) else { completion(.failure(CustomError.notOpenURL)); return nil }
         
-        let urlSession = URLSession(configuration: .default, delegate: self, delegateQueue: delegateQueue)
+        let urlSession = URLSession(configuration: .default, delegate: dataDelegateProxy, delegateQueue: delegateQueue)
         var uploadTask: URLSessionUploadTask?
         
         request._setValue("\(formData.contentType)", forHTTPHeaderField: .contentType)
@@ -584,7 +549,7 @@ public extension WWNetworking {
 }
 
 // MARK: - URLSessionDataDelegate
-private extension WWNetworking {
+extension WWNetworking {
     
     /// [發出URLRequest](https://medium.com/@jerrywang0420/urlsession-教學-swift-3-ios-part-1-a1029fc9c427)
     /// - Parameters:
@@ -677,7 +642,7 @@ private extension WWNetworking {
 }
 
 // MARK: - URLSessionTaskDelegate
-private extension WWNetworking {
+extension WWNetworking {
     
     /// 下載進度處理
     /// - Parameters:
@@ -732,7 +697,7 @@ private extension WWNetworking {
 }
 
 // MARK: - URLSessionUploadTask
-private extension WWNetworking {
+extension WWNetworking {
     
     /// 分段上傳進度處理
     /// - Parameters:
@@ -765,7 +730,7 @@ private extension WWNetworking {
 }
 
 // MARK: - SSL Pinning
-private extension WWNetworking {
+extension WWNetworking {
     
     /// [處理 URLSession 的身份驗證挑戰](https://developer.apple.com/documentation/foundation/urlsessiontaskdelegate/1411595-urlsession)
     /// - Parameters:
@@ -798,6 +763,20 @@ private extension WWNetworking {
 // MARK: - 小工具
 private extension WWNetworking {
     
+    /// 初始化DelegateProxy
+    func initDelegateProxy() {
+        downloadDelegateProxy.owner = self
+        taskDelegateProxy.owner = self
+        dataDelegateProxy.owner = self
+    }
+    
+    /// 清除DelegateProxy
+    func removeDelegateProxy() {
+        downloadDelegateProxy.owner = nil
+        taskDelegateProxy.owner = nil
+        dataDelegateProxy.owner = nil
+    }
+    
     /// [產生下載用的HttpTask - downloadTask() => URLSessionDownloadDelegate](https://developer.apple.com/documentation/foundation/urlsessiondownloaddelegate)
     /// - Parameters:
     ///   - httpMethod: [HTTP方法](https://imququ.com/post/four-ways-to-post-data-in-http.html)
@@ -810,10 +789,10 @@ private extension WWNetworking {
         
         guard let request = URLRequest._build(string: urlString, httpMethod: httpMethod, timeout: timeout) else { return nil }
         
-        let urlSession = URLSession(configuration: configuration, delegate: self, delegateQueue: delegateQueue)
+        let urlSession = URLSession(configuration: configuration, delegate: downloadDelegateProxy, delegateQueue: delegateQueue)
         let downloadTask = urlSession.downloadTask(with: request)
         
-        downloadTask.delegate = self
+        downloadTask.delegate = dataDelegateProxy
         urlSession.finishTasksAndInvalidate()
         
         return downloadTask
@@ -828,7 +807,7 @@ private extension WWNetworking {
     /// - Returns: URLSessionDataTask
     func fetchData(from request: URLRequest, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue?, result: @escaping (Result<ResponseInformation, Error>) -> Void) -> URLSessionDataTask {
         
-        let session = URLSession(configuration: configuration, delegate: self, delegateQueue: delegateQueue)
+        let session = URLSession(configuration: configuration, delegate: dataDelegateProxy, delegateQueue: delegateQueue)
         
         let dataTask = session.dataTask(with: request) { (data, response, error) in
             DispatchQueue.main.async {
@@ -842,7 +821,7 @@ private extension WWNetworking {
         return dataTask
     }
 
-    /// [斷點續傳下載檔案 (Data) => HTTPHeaderField = Range / ∵ 是一段一段下載 ∴ 自己要一段一段存](https://www.jianshu.com/p/534ec0d9d758)
+    /// [斷點續傳下載檔案 - URLSessionTaskDelegate (Data) => HTTPHeaderField = Range / ∵ 是一段一段下載 ∴ 自己要一段一段存](https://www.jianshu.com/p/534ec0d9d758)
     /// - urlSession(_:dataTask:didReceive:) => completionHandler(.allow)
     /// - Parameters:
     ///   - urlString: [String](https://stackoverflow.com/questions/58023230/memory-leak-occurring-in-iphone-x-after-updating-to-ios-13)
@@ -860,7 +839,7 @@ private extension WWNetworking {
             return nil
         }
         
-        let urlSession = URLSession(configuration: configiguration, delegate: self, delegateQueue: delegateQueue)
+        let urlSession = URLSession(configuration: configiguration, delegate: taskDelegateProxy, delegateQueue: delegateQueue)
         var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: timeout)
         
         defer { urlSession.finishTasksAndInvalidate() }
@@ -869,7 +848,7 @@ private extension WWNetworking {
         fragmentDownloadFinishBlock = result
         
         let dataTask = urlSession.dataTask(with: request)
-        dataTask.delegate = self
+        dataTask.delegate = dataDelegateProxy
         
         return dataTask
     }
