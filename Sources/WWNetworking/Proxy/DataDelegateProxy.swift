@@ -19,10 +19,10 @@ final class DataDelegateProxy: NSObject {
 extension DataDelegateProxy: URLSessionDataDelegate {
 
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse, completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
-        Task { await owner?.fragmentDownloadAction(session, dataTask: dataTask, didReceive: response, completionHandler: completionHandler) }
+        Task { [weak owner] in await owner?.fragmentDownloadAction(session, dataTask: dataTask, didReceive: response, completionHandler: completionHandler) }
     }
 
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
-        Task { await owner?.fragmentDownloadedAction(session, dataTask: dataTask, didReceive: data) }
+        Task { [weak owner] in await owner?.fragmentDownloadedAction(session, dataTask: dataTask, didReceive: data) }
     }
 }

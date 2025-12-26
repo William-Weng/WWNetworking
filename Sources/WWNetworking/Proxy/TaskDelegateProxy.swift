@@ -22,7 +22,7 @@ extension TaskDelegateProxy: URLSessionTaskDelegate {
         
         guard let response = task.response as? HTTPURLResponse else { return }
         
-        Task {
+        Task { [weak owner] in
             if (response.statusCode == 206) { await owner?.fragmentDownloadCompleteAction(session, task: task, didCompleteWithError: error); return }
             await owner?.fragmentUploadCompleteAction(session, task: task, didCompleteWithError: error)
         }
@@ -30,7 +30,7 @@ extension TaskDelegateProxy: URLSessionTaskDelegate {
     
     func urlSession(_ session: URLSession, task: URLSessionTask, didSendBodyData bytesSent: Int64, totalBytesSent: Int64, totalBytesExpectedToSend: Int64) {
         let progress = fragmentUploadProgressAction(session, task: task, didSendBodyData: bytesSent, totalBytesSent: totalBytesSent, totalBytesExpectedToSend: totalBytesExpectedToSend)
-        Task { await owner?.fragmentUploadProgressAction(progress) }
+        Task { [weak owner] in await owner?.fragmentUploadProgressAction(progress) }
     }
 }
 

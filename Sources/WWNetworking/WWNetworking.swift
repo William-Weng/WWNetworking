@@ -61,6 +61,7 @@ public extension WWNetworking {
     ///   - delegateQueue: OperationQueue?
     ///   - result: Result<ResponseInformation, Error>
     /// - Returns: URLSessionTask?
+    @discardableResult
     func request(httpMethod: HttpMethod = .GET, urlString: String, timeout: TimeInterval = 60, contentType: ContentType = .json, paramaters: [String: String?]? = nil, headers: [String: String?]? = nil, httpBodyType: HttpBobyType? = nil, delegateQueue: OperationQueue? = .current, result: @escaping (Result<ResponseInformation, Error>) -> Void) -> URLSessionTask? {
         let task = request(httpMethod: httpMethod, urlString: urlString, contentType: contentType, timeout: timeout, queryItems: paramaters?._queryItems(), headers: headers, httpBody: httpBodyType?.data(), delegateQueue: delegateQueue) { result($0) }
         return task
@@ -74,6 +75,7 @@ public extension WWNetworking {
     ///   - delegateQueue: OperationQueue?
     ///   - result: Result<ResponseInformation?, Error>
     /// - Returns: URLSessionTask?
+    @discardableResult
     func header(urlString: String, timeout: TimeInterval = 60, headers: [String: String?]? = nil, delegateQueue: OperationQueue? = .current, result: @escaping (Result<ResponseInformation, Error>) -> Void) -> URLSessionTask? {
         
         let task = request(httpMethod: .HEAD, urlString: urlString, timeout: timeout, contentType: .plain, paramaters: nil, headers: headers, httpBodyType: nil, delegateQueue: delegateQueue) { _result in
@@ -98,6 +100,7 @@ public extension WWNetworking {
     ///   - delegateQueue: OperationQueue?
     ///   - result: Result<ResponseInformation, Error>
     /// - Returns: URLSessionDataTask?
+    @discardableResult
     func upload(httpMethod: HttpMethod? = .POST, urlString: String, timeout: TimeInterval = 60, formData: FormDataInformation, parameters: [String: String]? = nil, headers: [String: String?]? = nil, delegateQueue: OperationQueue? = .current, result: @escaping (Result<ResponseInformation, Error>) -> Void) -> URLSessionDataTask? {
         
         guard var request = URLRequest._build(string: urlString, httpMethod: httpMethod, timeout: timeout) else { result(.failure(CustomError.notUrlFormat)); return nil }
@@ -124,6 +127,7 @@ public extension WWNetworking {
     ///   - delegateQueue: OperationQueue?
     ///   - result: Result<ResponseInformation, Error>
     /// - Returns: URLSessionDataTask?
+    @discardableResult
     func multipleUpload(httpMethod: HttpMethod? = .POST, urlString: String, timeout: TimeInterval = 60, formDatas: [FormDataInformation], parameters: [String: String]? = nil, headers: [String: String?]? = nil, delegateQueue: OperationQueue? = .current, result: @escaping (Result<ResponseInformation, Error>) -> Void) -> URLSessionDataTask? {
         
         guard var request = URLRequest._build(string: urlString, httpMethod: httpMethod, timeout: timeout) else { result(.failure(CustomError.notUrlFormat)); return nil }
@@ -150,6 +154,7 @@ public extension WWNetworking {
     ///   - progress: UploadProgressInformation
     ///   - completion: Result<Bool, Error>
     /// - Returns: URLSessionUploadTask?
+    @discardableResult
     func binaryUpload(httpMethod: HttpMethod? = .POST, urlString: String, timeout: TimeInterval = 60, formData: FormDataInformation, headers: [String: String?]? = nil, delegateQueue: OperationQueue? = .current, progress: @escaping ((UploadProgressInformation) -> Void), completion: @escaping (Result<Bool, Error>) -> Void) -> URLSessionUploadTask? {
         
         cleanAllBlocks()
@@ -187,6 +192,7 @@ public extension WWNetworking {
     ///   - progress: [下載進度](https://www.appcoda.com.tw/ios-concurrency/)
     ///   - completion: 下載完成後
     /// - Returns: URLSessionDownloadTask?
+    @discardableResult
     func download(httpMethod: HttpMethod? = .GET, urlString: String, timeout: TimeInterval = 60, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = nil, progress: @escaping ((DownloadProgressInformation) -> Void), completion: @escaping ((Result<DownloadResultInformation, Error>) -> Void)) -> URLSessionDownloadTask? {
         
         guard let downloadTask = downloadTaskMaker(with: httpMethod, urlString: urlString, timeout: timeout, configuration: configuration, delegateQueue: delegateQueue) else { completion(.failure(CustomError.notUrlFormat)); return nil }
@@ -209,6 +215,7 @@ public extension WWNetworking {
     ///   - progress: 下載進度
     ///   - completion: 下載完成後
     /// - Returns: [URLSessionDownloadTask]
+    @discardableResult
     func multipleDownload(httpMethod: HttpMethod? = .GET, urlStrings: [String], timeout: TimeInterval = 60, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .current, progress: @escaping ((DownloadProgressInformation) -> Void), completion: @escaping ((Result<DownloadResultInformation, Error>) -> Void)) -> [URLSessionDownloadTask] {
         
         cleanAllBlocks()

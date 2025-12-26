@@ -11,7 +11,7 @@ https://github.com/user-attachments/assets/6c2a02b4-34e8-4678-8d0b-48169dda53fe
 ### [Installation with Swift Package Manager](https://medium.com/彼得潘的-swift-ios-app-開發問題解答集/使用-spm-安裝第三方套件-xcode-11-新功能-2c4ffcf85b4b)
 ```
 dependencies: [
-    .package(url: "https://github.com/William-Weng/WWNetworking.git", .upToNextMajor(from: "2.0.2"))
+    .package(url: "https://github.com/William-Weng/WWNetworking.git", .upToNextMajor(from: "2.0.3"))
 ]
 ```
 
@@ -79,12 +79,12 @@ final class ViewController: UIViewController {
         "POST": "https://httpbin.org/post",
         "DOWNLOAD": "https://raw.githubusercontent.com/William-Weng/AdobeIllustrator/master/William-Weng.png",
         "FRAGMENT": "https://photosku.com/images_file/images/i000_803.jpg",
-        "UPLOAD": "http://192.168.4.92:8080/upload",
-        "BINARY-UPLOAD": "http://192.168.4.92:8081/binaryUpload",
+        "UPLOAD": "http://192.168.4.200:8080/upload",
+        "BINARY-UPLOAD": "http://192.168.4.200:8081/binaryUpload",
     ]
     
     @IBAction func httpGetAction(_ sender: UIButton) { Task { await httpGetTest() }}
-    @IBAction func httpPostAction(_ sender: UIButton) { Task { await httpPostTest()} }
+    @IBAction func httpPostAction(_ sender: UIButton) { httpPostTest() }
     @IBAction func httpDownloadAction(_ sender: UIButton) { Task { await httpDownloadData()} }
     @IBAction func httpFragmentDownloadAction(_ sender: UIButton) { Task { await fragmentDownloadData() }}
     @IBAction func httpMultipleDownloadAction(_ sender: UIButton) { Task { await httpMultipleDownload() }}
@@ -107,16 +107,19 @@ private extension ViewController {
         }
     }
     
-    func httpPostTest() async {
+    func httpPostTest() {
         
         let urlString = UrlStrings["POST"]!
         let parameters: [String: Any] = ["name": "William.Weng", "github": "https://william-weng.github.io/"]
         
-        _ = await WWNetworking.shared.request(httpMethod: .POST, urlString: urlString, paramaters: nil, httpBodyType: .dictionary(parameters)) { result in
-
-            switch result {
-            case .failure(let error): self.displayText(error)
-            case .success(let info): self.displayText(info.data?._jsonSerialization())
+        Task {
+            
+            await WWNetworking.shared.request(httpMethod: .POST, urlString: urlString, paramaters: nil, httpBodyType: .dictionary(parameters)) { result in
+                
+                switch result {
+                case .failure(let error): self.displayText(error)
+                case .success(let info): self.displayText(info.data?._jsonSerialization())
+                }
             }
         }
     }
@@ -128,7 +131,7 @@ private extension ViewController {
         
         displayText("")
         
-        _ = await WWNetworking.shared.download(urlString: urlString, progress: { info in
+        await WWNetworking.shared.download(urlString: urlString, progress: { info in
             
             let progress = Float(info.totalWritten) / Float(info.totalSize)
             self.displayProgressWithIndex(index, progress: progress)
@@ -168,15 +171,10 @@ private extension ViewController {
         
         resultImageViews.forEach { $0.image = nil }
         
-        _ = await WWNetworking.shared.multipleDownload(urlStrings: ImageUrlInfos) { info in
+        await WWNetworking.shared.multipleDownload(urlStrings: ImageUrlInfos) { info in
             
-            guard let index = self.displayImageIndex(urlStrings: self.ImageUrlInfos, urlString: info.urlString),
-                  let progress = Optional.some(Float(info.totalWritten) / Float(info.totalSize))
-            else {
-                return
-            }
-
-            self.displayProgressWithIndex(index, progress: progress)
+            guard let index = self.displayImageIndex(urlStrings: self.ImageUrlInfos, urlString: info.urlString) else { return }
+            self.displayProgressWithIndex(index, progress: Float(info.totalWritten) / Float(info.totalSize))
             
         } completion: { result in
             
@@ -195,7 +193,7 @@ private extension ViewController {
         let imageData = resultImageViews[0].image?.pngData()
         let formData: WWNetworking.FormDataInformation = (name: "file", filename: "Demo.png", contentType: .png, data: imageData!)
         
-        _ = await WWNetworking.shared.upload(urlString: urlString, formData: formData) { result in
+        await WWNetworking.shared.upload(urlString: urlString, formData: formData) { result in
             
             switch result {
             case .failure(let error): self.displayText(error)
@@ -211,7 +209,7 @@ private extension ViewController {
         let imageData = resultImageViews[index].image?.pngData()
         let formData: WWNetworking.FormDataInformation = (name: "x-filename", filename: "Large.png", contentType: .octetStream, data: imageData!)
         
-        _ = await WWNetworking.shared.binaryUpload(urlString: urlString, formData: formData, progress: { info in
+        await WWNetworking.shared.binaryUpload(urlString: urlString, formData: formData, progress: { info in
             self.title = "\(Float(info.totalBytesSent) / Float(info.totalBytesExpectedToSend))"
         }, completion: { result in
             switch result {
