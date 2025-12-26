@@ -812,7 +812,7 @@ private extension WWNetworking {
         let urlSession = URLSession(configuration: configuration, delegate: self, delegateQueue: delegateQueue)
         let downloadTask = urlSession.downloadTask(with: request)
         
-        if #available(iOS 15.0, *) { downloadTask.delegate = self }
+        downloadTask.delegate = self
         urlSession.finishTasksAndInvalidate()
         
         return downloadTask
@@ -868,7 +868,7 @@ private extension WWNetworking {
         fragmentDownloadFinishBlock = result
         
         let dataTask = urlSession.dataTask(with: request)
-        if #available(iOS 15.0, *) { dataTask.delegate = self }
+        dataTask.delegate = self
         
         return dataTask
     }
@@ -880,7 +880,13 @@ private extension WWNetworking {
         
         guard let cachesDirectory = FileManager.default._cachesDirectory() else { return .failure(CustomError.isCachesDirectoryEmpty) }
         
-        let fileURL = cachesDirectory.appending(component: location.lastPathComponent)
+        let fileURL: URL
+        
+        if #available(iOS 16.0, *) {
+            fileURL = cachesDirectory.appending(component: location.lastPathComponent)
+        } else {
+            fileURL = cachesDirectory.appendingPathComponent(location.lastPathComponent)
+        }
         
         switch FileManager.default._moveFile(at: location, to: fileURL) {
         case .success(_): return .success(fileURL)
