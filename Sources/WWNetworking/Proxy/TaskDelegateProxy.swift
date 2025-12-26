@@ -20,10 +20,8 @@ extension TaskDelegateProxy: URLSessionTaskDelegate {
         
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         
-        guard let response = task.response as? HTTPURLResponse else { return }
-        
         Task { [weak owner] in
-            if (response.statusCode == 206) { await owner?.fragmentDownloadCompleteAction(session, task: task, didCompleteWithError: error); return }
+            await owner?.fragmentDownloadCompleteAction(session, task: task, didCompleteWithError: error)
             await owner?.fragmentUploadCompleteAction(session, task: task, didCompleteWithError: error)
         }
     }

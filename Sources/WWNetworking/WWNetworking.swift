@@ -649,11 +649,7 @@ extension WWNetworking {
     
     /// 下載進度處理
     /// - Parameters:
-    ///   - session: URLSession
-    ///   - downloadTask: URLSessionDownloadTask
-    ///   - bytesWritten: Int64
-    ///   - totalBytesWritten: Int64
-    ///   - totalBytesExpectedToWrite: Int64
+    ///   - result: Result<WWNetworking.DownloadProgressInformation, any Error>
     func downloadProgressAction(result: Result<WWNetworking.DownloadProgressInformation, any Error>) async {
         
         guard let downloadProgressResultBlock = downloadProgressResultBlock,
