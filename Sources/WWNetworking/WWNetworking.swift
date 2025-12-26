@@ -8,7 +8,7 @@
 import Foundation
 
 // MARK: - 簡易型的AFNetworking (單例)
-open class WWNetworking: NSObject {
+public actor WWNetworking: NSObject {
     
     public static let shared = WWNetworking()
     
@@ -170,6 +170,7 @@ public extension WWNetworking {
         fragmentUploadProgressResultBlock = progress
         fragmentUploadFinishBlock = completion
         
+        uploadTask?.delegate = taskDelegateProxy
         uploadTask?.resume()
         urlSession.finishTasksAndInvalidate()
 
@@ -443,11 +444,8 @@ public extension WWNetworking {
             
             continuation.onTermination = { @Sendable _ in task?.cancel() }
             
-            if let task {
-                continuation.yield(.start(task))
-            } else {
-                continuation.finish(throwing: CustomError.isURLSessionTaskNull)
-            }
+            if let task { continuation.yield(.start(task)); return }
+            continuation.finish(throwing: CustomError.isURLSessionTaskNull)
         }
     }
     
@@ -494,14 +492,14 @@ public extension WWNetworking {
             var tasks: [URLSessionTask] = []
             
             fragmentDownload(urlString: urlString, timeout: timeout, fragment: fragment, configiguration: configiguration, delegateQueue: delegateQueue) { info in
-                DispatchQueue.main.async { continuation.yield(.progress(info)) }
+                Task { @MainActor in continuation.yield(.progress(info)) }
             } fragmentTask: { task in
                 tasks.append(task)
-                DispatchQueue.main.async { continuation.yield(.start(task)) }
+                Task { @MainActor in continuation.yield(.start(task)) }
             } completion: { result in
                 switch result {
-                case .success(let data): DispatchQueue.main.async { continuation.yield(.finished(data)); continuation.finish() }
-                case .failure(let error): DispatchQueue.main.async { continuation.finish(throwing: error) }
+                case .success(let data): Task { @MainActor in continuation.yield(.finished(data)); continuation.finish() }
+                case .failure(let error): Task { @MainActor in continuation.finish(throwing: error) }
                 }
             }
             
@@ -590,7 +588,7 @@ extension WWNetworking {
     ///   - dataTask: URLSessionDataTask
     ///   - response: URLResponse
     ///   - completionHandler: URLSession.ResponseDisposition
-    func fragmentDownloadAction(_ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse, completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
+    func fragmentDownloadAction(_ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse, completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) async {
         fragmentDownloadDatas["\(dataTask)"] = Data()
         completionHandler(.allow)
     }
@@ -600,7 +598,7 @@ extension WWNetworking {
     ///   - session: URLSession
     ///   - dataTask: URLSessionDataTask
     ///   - data: Data
-    func fragmentDownloadedAction(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
+    func fragmentDownloadedAction(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) async {
         
         fragmentDownloadDatas["\(dataTask)"]? += data
         
@@ -618,24 +616,22 @@ extension WWNetworking {
         let progress: DownloadProgressInformation = (urlString: dataTask.currentRequest?.url?.absoluteString, totalSize: Int64(fragmentDownloadContentLength), totalWritten: Int64(downloadData.count), writting: Int64(data.count))
         fragmentDownloadProgressResultBlock(progress)
         
-        if downloadData.count >= fragmentDownloadContentLength {
-            fragmentDownloadFinishBlock(.success(downloadData))
-        }
+        if downloadData.count >= fragmentDownloadContentLength { fragmentDownloadFinishBlock(.success(downloadData)) }
     }
-        
-    /// 分段下載錯誤的處理
+    
+    /// [分段下載完成的處理](https://myapollo.com.tw/post/http-status-code-206/)
     /// - Parameters:
     ///   - session: URLSession
     ///   - task: URLSessionTask
     ///   - error: Error?
-    func fragmentDownloadCompleteAction(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+    func fragmentDownloadCompleteAction(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) async {
         
         guard let error = error,
               let fragmentDownloadFinishBlock = fragmentDownloadFinishBlock
         else {
             return
         }
-
+        
         task.cancel()
         fragmentDownloadFinishBlock(.failure(error))
     }
@@ -651,47 +647,29 @@ extension WWNetworking {
     ///   - bytesWritten: Int64
     ///   - totalBytesWritten: Int64
     ///   - totalBytesExpectedToWrite: Int64
-    func downloadProgressAction(_ session: URLSession, downloadTask: URLSessionDownloadTask, didWriteData bytesWritten: Int64, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
+    func downloadProgressAction(result: Result<WWNetworking.DownloadProgressInformation, any Error>) async {
         
-        guard let response = downloadTask.response as? HTTPURLResponse,
-              let downloadProgressResultBlock = downloadProgressResultBlock,
-              let downloadTaskResultBlock = downloadTaskResultBlock,
-              let urlString = downloadTask.originalRequest?.url?.absoluteString
+        guard let downloadProgressResultBlock = downloadProgressResultBlock,
+              let downloadTaskResultBlock = downloadTaskResultBlock
         else {
             return
         }
         
-        let httpResponse = HttpResponse.builder(response: response)
-        if (httpResponse.hasError()) { DispatchQueue.main.async {downloadTaskResultBlock(.failure(httpResponse)); downloadTask.cancel(); return }}
-        
-        let progress: DownloadProgressInformation = (urlString: urlString, totalSize: totalBytesExpectedToWrite, totalWritten: totalBytesWritten, writting: bytesWritten)
-        DispatchQueue.main.async { downloadProgressResultBlock(progress) }
+        switch result {
+        case .success(let info): Task { @MainActor in downloadProgressResultBlock(info) }
+        case .failure(let error): Task { @MainActor in downloadTaskResultBlock(.failure(error)) }
+        }
     }
     
     /// 下載完成處理
-    /// - Parameters:
-    ///   - session: URLSession
-    ///   - downloadTask: URLSessionDownloadTask
-    ///   - location: URL
-    func downloadFinishedAction(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
-                
-        guard let downloadTaskResultBlock = downloadTaskResultBlock,
-              let response = downloadTask.response as? HTTPURLResponse,
-              let urlString = downloadTask.currentRequest?.url?.absoluteString
-        else {
-            return
-        }
+    /// - Parameter result: Result<WWNetworking.DownloadResultInformation, Error>
+    func downloadFinishedAction(result: Result<WWNetworking.DownloadResultInformation, Error>) {
         
-        let httpResponse = HttpResponse.builder(response: response)
-        if (httpResponse.hasError()) { DispatchQueue.main.async { downloadTaskResultBlock(.failure(httpResponse)) }; return }
+        guard let downloadTaskResultBlock = downloadTaskResultBlock else { return }
         
-        do {
-            let fileUrl = try moveLocationFile(at: location).get()
-            let data = try Data(contentsOf: fileUrl)
-            let info: DownloadResultInformation = (urlString: urlString, location: fileUrl, data: data)
-            DispatchQueue.main.async { downloadTaskResultBlock(.success(info)) }
-        } catch {
-            DispatchQueue.main.async { downloadTaskResultBlock(.failure(error)) }
+        switch result {
+        case .success(let info): Task { @MainActor in downloadTaskResultBlock(.success(info)) }
+        case .failure(let error): Task { @MainActor in downloadTaskResultBlock(.failure(error)) }
         }
     }
 }
@@ -701,31 +679,25 @@ extension WWNetworking {
     
     /// 分段上傳進度處理
     /// - Parameters:
-    ///   - session: URLSession
-    ///   - task: URLSessionTask
-    ///   - bytesSent: Int64
-    ///   - totalBytesSent: Int64
-    ///   - totalBytesExpectedToSend: Int64
-    func fragmentUploadProgressAction(_ session: URLSession, task: URLSessionTask, didSendBodyData bytesSent: Int64, totalBytesSent: Int64, totalBytesExpectedToSend: Int64) {
-        
+    ///   - progress: URLSession
+    func fragmentUploadProgressAction(_ progress: UploadProgressInformation) async {
         guard let fragmentUploadProgressResultBlock = fragmentUploadProgressResultBlock else { return }
-        
-        let progress: UploadProgressInformation = (urlString: task.currentRequest?.url?.absoluteString, bytesSent: bytesSent, totalBytesSent: totalBytesSent, totalBytesExpectedToSend: totalBytesExpectedToSend)
-        
-        DispatchQueue.main.async { fragmentUploadProgressResultBlock(progress) }
+        Task { @MainActor in fragmentUploadProgressResultBlock(progress) }
     }
     
-    /// 分段上傳完成處理
+    /// 分段上傳上傳完成處理
     /// - Parameters:
     ///   - session: URLSession
     ///   - task: URLSessionTask
     ///   - error: Error?
-    func fragmentUploadCompleteAction(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+    func fragmentUploadCompleteAction(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) async {
         
         guard let fragmentUploadFinishBlock = fragmentUploadFinishBlock else { return }
-        guard let error = error else { fragmentUploadFinishBlock(.success(true)); return }
         
-        DispatchQueue.main.async { fragmentUploadFinishBlock(.failure(error)) }
+        Task { @MainActor in
+            if let error = error { fragmentUploadFinishBlock(.failure(error)) }; return
+            fragmentUploadFinishBlock(.success(true));
+        }
     }
 }
 
@@ -785,14 +757,14 @@ private extension WWNetworking {
     ///   - configuration: URLSessionConfiguration
     ///   - delegateQueue: 執行緒
     /// - Returns: URLSessionDownloadTask
-    func downloadTaskMaker(with httpMethod: HttpMethod? = .POST, urlString: String, timeout: TimeInterval = 60, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .current) -> URLSessionDownloadTask? {
+    func downloadTaskMaker(with httpMethod: HttpMethod?, urlString: String, timeout: TimeInterval = 60, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .current) -> URLSessionDownloadTask? {
         
         guard let request = URLRequest._build(string: urlString, httpMethod: httpMethod, timeout: timeout) else { return nil }
         
         let urlSession = URLSession(configuration: configuration, delegate: downloadDelegateProxy, delegateQueue: delegateQueue)
         let downloadTask = urlSession.downloadTask(with: request)
         
-        downloadTask.delegate = dataDelegateProxy
+        downloadTask.delegate = downloadDelegateProxy
         urlSession.finishTasksAndInvalidate()
         
         return downloadTask
@@ -810,7 +782,7 @@ private extension WWNetworking {
         let session = URLSession(configuration: configuration, delegate: dataDelegateProxy, delegateQueue: delegateQueue)
         
         let dataTask = session.dataTask(with: request) { (data, response, error) in
-            DispatchQueue.main.async {
+            Task { @MainActor in
                 if let error = error { result(.failure(error)); return }
                 let info: ResponseInformation = (data: data, response: response as? HTTPURLResponse)
                 result(.success(info))
@@ -851,21 +823,6 @@ private extension WWNetworking {
         dataTask.delegate = dataDelegateProxy
         
         return dataTask
-    }
-    
-    /// 移動本地下載完成的檔案 (因為在tmp的檔案會不見)
-    /// - Parameter location: tmp檔位置
-    /// - Returns: Result<URL, any Error>
-    func moveLocationFile(at location: URL) -> Result<URL, any Error> {
-        
-        guard let cachesDirectory = FileManager.default._cachesDirectory() else { return .failure(CustomError.isCachesDirectoryEmpty) }
-        
-        let fileURL = cachesDirectory.appending(component: location.lastPathComponent)
-                
-        switch FileManager.default._moveFile(at: location, to: fileURL) {
-        case .success(_): return .success(fileURL)
-        case .failure(let error): return .failure(error)
-        }
     }
     
     /// Range: bytes=0-1024

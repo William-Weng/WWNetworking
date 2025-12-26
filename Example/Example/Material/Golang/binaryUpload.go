@@ -35,6 +35,6 @@ func main() {
 	// 設定路由
 	http.HandleFunc("/binaryUpload", uploadBinaryHandler)
 
-	fmt.Println("Server started at :8080")
-	http.ListenAndServe(":8080", nil)
+	fmt.Println("Server started at :8081")
+	http.ListenAndServe(":8081", nil)
 }
