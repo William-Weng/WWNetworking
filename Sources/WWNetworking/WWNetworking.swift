@@ -14,11 +14,12 @@ public actor WWNetworking: NSObject {
         
     let util = Utility()
     var sslPinning: SSLPinningInformation = (bundle: .main, values: [])                             // SSL-Pinning設定值
+    weak var delegate: WWNetworking.Delegate?
     
     private let downloadDelegateProxy = DownloadDelegateProxy()
     private let taskDelegateProxy = TaskDelegateProxy()
     private let dataDelegateProxy = DataDelegateProxy()
-
+    
     private var downloadTaskResultBlock: ((Result<DownloadResultInformation, Error>) -> Void)?      // 下載檔案完成的動作
     private var downloadProgressResultBlock: ((DownloadProgressInformation) -> Void)?               // 下載進行中的進度 - 檔案
 
@@ -46,13 +47,17 @@ public extension WWNetworking {
     /// - Returns: WWNetworking
     static func builder() -> WWNetworking { return WWNetworking() }
 }
+
 // MARK: - 公開函數
 public extension WWNetworking {
     
     /// SSL-Pinning設定 => host + .cer
-    /// - Parameter sslPinning: SSLPinningInformation
-    func sslPinningSetting(_ sslPinning: SSLPinningInformation) {
+    /// - Parameters:
+    ///   - sslPinning: SSLPinningInformation
+    ///   - delegate: WWNetworking.Delegate?
+    func sslPinningSetting(_ sslPinning: SSLPinningInformation, delegate: WWNetworking.Delegate? = nil) {
         self.sslPinning = sslPinning
+        self.delegate = delegate
     }
 }
 
@@ -720,6 +725,7 @@ private extension WWNetworking {
     
     /// 清除DelegateProxy
     func removeDelegateProxy() {
+        delegate = nil
         downloadDelegateProxy.owner = nil
         taskDelegateProxy.owner = nil
         dataDelegateProxy.owner = nil

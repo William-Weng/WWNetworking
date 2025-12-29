@@ -33,27 +33,34 @@ private extension DelegateProxy {
     ///   - completionHandler: (URLSession.AuthChallengeDisposition, URLCredential?)
     func sslPinningAction(with session: URLSession, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) async {
         
-        guard let sslPinning = await owner?.sslPinning,
-              !sslPinning.values.isEmpty
-        else {
-            return completionHandler(.performDefaultHandling, nil)
-        }
+        guard let owner = owner else { return }
         
-        let host = challenge.protectionSpace.host.lowercased()
+        let sslPinning = await owner.sslPinning
+        
+        var host: String?
+        var disposition: URLSession.AuthChallengeDisposition = .performDefaultHandling
+        var credential: URLCredential?
+        
+        defer { Task { await owner.delegate?.authChalleng(owner, host: host, disposition: disposition, credential: credential) }}
+        
+        if (sslPinning.values.isEmpty) { return completionHandler(.performDefaultHandling, nil) }
+        
         let pinning = sslPinning
         let pinningHosts = pinning.values.map { $0.host }
+        host = challenge.protectionSpace.host.lowercased()
         
-        print("⚠️ [Challenge Host - DataDelegateProxy] => \(host)")
-        
-        guard pinningHosts.contains(host),
+        guard let host = host,
+              pinningHosts.contains(host),
               let value = pinning.values.first(where: {$0.host.lowercased() == host.lowercased()})
         else {
             return completionHandler(.performDefaultHandling, nil)
         }
         
         switch challenge._checkAuthenticationSSLPinning(bundle: pinning.bundle, filename: value.cer) {
-        case .success(let trust): completionHandler(.useCredential, URLCredential(trust: trust))
-        case .failure: completionHandler(.cancelAuthenticationChallenge, nil)
+        case .success(let trust): disposition = .useCredential; credential = URLCredential(trust: trust)
+        case .failure: disposition = .cancelAuthenticationChallenge
         }
+        
+        completionHandler(disposition, credential)
     }
 }
