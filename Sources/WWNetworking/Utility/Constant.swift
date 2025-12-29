@@ -98,8 +98,8 @@ public extension WWNetworking {
     enum HttpBobyType {
         
         case string(_ string: String?, encoding: String.Encoding = .utf8, isLossyConversion: Bool = false)
-        case array(_ array: [Any]?, options: JSONSerialization.WritingOptions = JSONSerialization.WritingOptions())
-        case dictionary(_ dictionary: [String: Any]?, options: JSONSerialization.WritingOptions = JSONSerialization.WritingOptions())
+        case array(_ array: [Any]?, options: JSONSerialization.WritingOptions = .init())
+        case dictionary(_ dictionary: [String: Any]?, options: JSONSerialization.WritingOptions = .init())
         case form(_ dictionary: [String: String]?, encoding: String.Encoding = .utf8, isLossyConversion: Bool = false)
         case custom(_ data: Data?)
         
