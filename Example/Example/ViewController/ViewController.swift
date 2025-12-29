@@ -31,8 +31,8 @@ final class ViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        // openssl s_client -connect google.com:443 -showcerts </dev/null | openssl x509 -outform DER > google.cer
-        // WWNetworking.sslPinning = (bundle: .main, values: [.init(host: "httpbin.org", cer: "google.cer")])
+        // openssl s_client -connect google.com:443 -showcerts </dev/null | openssl x509 -outform DER > google.cer}
+        // Task { await WWNetworking.shared.sslPinningSetting((bundle: .main, values: [.init(host: "httpbin.org", cer: "google.cer")])) }
     }
     
     @IBAction func httpGetAction(_ sender: UIButton) { Task { await httpGetTest() }}

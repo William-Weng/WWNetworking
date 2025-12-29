@@ -8,12 +8,7 @@
 import Foundation
 
 // MARK: - 轉接URLSessionDataDelegate
-final class DataDelegateProxy: NSObject {
-    
-    weak var owner: WWNetworking?
-    
-    deinit { owner = nil }
-}
+final class DataDelegateProxy: DelegateProxy {}
 
 // MARK: - URLSessionDataDelegate
 extension DataDelegateProxy: URLSessionDataDelegate {

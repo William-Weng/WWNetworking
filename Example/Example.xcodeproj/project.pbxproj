@@ -21,12 +21,12 @@
 		8133FE2E2EFE81F1008148AF /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 8133FE2D2EFE81F1008148AF /* WWNetworking */; };
 		8133FE342EFE8A8D008148AF /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 8133FE332EFE8A8D008148AF /* WWNetworking */; };
 		8133FE3A2EFE8B45008148AF /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 8133FE392EFE8B45008148AF /* WWNetworking */; };
-		8133FE3D2EFE8D52008148AF /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 8133FE3C2EFE8D52008148AF /* WWNetworking */; };
 		8141CA7D2EFE2110002C6BF0 /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 8141CA7C2EFE2110002C6BF0 /* WWNetworking */; };
 		8141CA832EFE23FE002C6BF0 /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 8141CA822EFE23FE002C6BF0 /* WWNetworking */; };
 		8141CA8F2EFE3685002C6BF0 /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 8141CA8E2EFE3685002C6BF0 /* WWNetworking */; };
 		81487B422E8D2C0D000F490D /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 81487B412E8D2C0D000F490D /* WWNetworking */; };
 		8153D0352BA92B0700216FAE /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 8153D0342BA92B0700216FAE /* WWNetworking */; };
+		8156CFBC2F02498000FF9381 /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 8156CFBB2F02498000FF9381 /* WWNetworking */; };
 		8171DB882D641C5A00954209 /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 8171DB872D641C5A00954209 /* WWNetworking */; };
 		8171DB8A2D641DF000954209 /* Golang in Resources */ = {isa = PBXBuildFile; fileRef = 8171DB892D641DF000954209 /* Golang */; };
 		8176122E2D68484B003A0440 /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 8176122D2D68484B003A0440 /* WWNetworking */; };
@@ -35,6 +35,7 @@
 		818840222D6C6007001F50D5 /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 818840212D6C6007001F50D5 /* WWNetworking */; };
 		8189FC522C3E22F30080A100 /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 8189FC512C3E22F30080A100 /* WWNetworking */; };
 		819145B92D966C6E00D73A41 /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 819145B82D966C6E00D73A41 /* WWNetworking */; };
+		819B82C72F0211C200CDB434 /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 819B82C62F0211C200CDB434 /* WWNetworking */; };
 		819D5B762B84421A002C23E9 /* Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 819D5B752B84421A002C23E9 /* Extension.swift */; };
 		81A769782E94AEF1009C03CA /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 81A769772E94AEF1009C03CA /* WWNetworking */; };
 		81AB51132D648AEC00552C83 /* WWNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 81AB51122D648AEC00552C83 /* WWNetworking */; };
@@ -70,8 +71,9 @@
 				81034D2B2E499A58005A619A /* WWNetworking in Frameworks */,
 				8189FC522C3E22F30080A100 /* WWNetworking in Frameworks */,
 				8176122E2D68484B003A0440 /* WWNetworking in Frameworks */,
+				8156CFBC2F02498000FF9381 /* WWNetworking in Frameworks */,
 				8141CA8F2EFE3685002C6BF0 /* WWNetworking in Frameworks */,
-				8133FE3D2EFE8D52008148AF /* WWNetworking in Frameworks */,
+				819B82C72F0211C200CDB434 /* WWNetworking in Frameworks */,
 				81FF5DF72D6456CE00A24CF9 /* WWNetworking in Frameworks */,
 				8141CA7D2EFE2110002C6BF0 /* WWNetworking in Frameworks */,
 				8103EC512E8F78E100CCB916 /* WWNetworking in Frameworks */,
@@ -216,7 +218,8 @@
 				8133FE2D2EFE81F1008148AF /* WWNetworking */,
 				8133FE332EFE8A8D008148AF /* WWNetworking */,
 				8133FE392EFE8B45008148AF /* WWNetworking */,
-				8133FE3C2EFE8D52008148AF /* WWNetworking */,
+				819B82C62F0211C200CDB434 /* WWNetworking */,
+				8156CFBB2F02498000FF9381 /* WWNetworking */,
 			);
 			productName = Example;
 			productReference = 3DBCD87026F198EF00522E3B /* Example.app */;
@@ -247,7 +250,7 @@
 			);
 			mainGroup = 3DBCD86726F198EF00522E3B;
 			packageReferences = (
-				8133FE3B2EFE8D52008148AF /* XCRemoteSwiftPackageReference "WWNetworking" */,
+				8156CFBA2F02498000FF9381 /* XCRemoteSwiftPackageReference "WWNetworking" */,
 			);
 			productRefGroup = 3DBCD87126F198EF00522E3B /* Products */;
 			projectDirPath = "";
@@ -498,7 +501,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		8133FE3B2EFE8D52008148AF /* XCRemoteSwiftPackageReference "WWNetworking" */ = {
+		8156CFBA2F02498000FF9381 /* XCRemoteSwiftPackageReference "WWNetworking" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/William-Weng/WWNetworking";
 			requirement = {
@@ -545,11 +548,6 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = WWNetworking;
 		};
-		8133FE3C2EFE8D52008148AF /* WWNetworking */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 8133FE3B2EFE8D52008148AF /* XCRemoteSwiftPackageReference "WWNetworking" */;
-			productName = WWNetworking;
-		};
 		8141CA7C2EFE2110002C6BF0 /* WWNetworking */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = WWNetworking;
@@ -568,6 +566,11 @@
 		};
 		8153D0342BA92B0700216FAE /* WWNetworking */ = {
 			isa = XCSwiftPackageProductDependency;
+			productName = WWNetworking;
+		};
+		8156CFBB2F02498000FF9381 /* WWNetworking */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8156CFBA2F02498000FF9381 /* XCRemoteSwiftPackageReference "WWNetworking" */;
 			productName = WWNetworking;
 		};
 		8171DB872D641C5A00954209 /* WWNetworking */ = {
@@ -591,6 +594,10 @@
 			productName = WWNetworking;
 		};
 		819145B82D966C6E00D73A41 /* WWNetworking */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = WWNetworking;
+		};
+		819B82C62F0211C200CDB434 /* WWNetworking */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = WWNetworking;
 		};

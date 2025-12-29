@@ -11,13 +11,14 @@ import Foundation
 public actor WWNetworking: NSObject {
     
     public static let shared = WWNetworking()
-    
-    public static var sslPinning: SSLPinningInformation = (bundle: .main, values: [])
+        
+    let util = Utility()
+    var sslPinning: SSLPinningInformation = (bundle: .main, values: [])                             // SSL-Pinning設定值
     
     private let downloadDelegateProxy = DownloadDelegateProxy()
     private let taskDelegateProxy = TaskDelegateProxy()
     private let dataDelegateProxy = DataDelegateProxy()
-    
+
     private var downloadTaskResultBlock: ((Result<DownloadResultInformation, Error>) -> Void)?      // 下載檔案完成的動作
     private var downloadProgressResultBlock: ((DownloadProgressInformation) -> Void)?               // 下載進行中的進度 - 檔案
 
@@ -45,10 +46,19 @@ public extension WWNetworking {
     /// - Returns: WWNetworking
     static func builder() -> WWNetworking { return WWNetworking() }
 }
-
 // MARK: - 公開函數
 public extension WWNetworking {
     
+    /// SSL-Pinning設定 => host + .cer
+    /// - Parameter sslPinning: SSLPinningInformation
+    func sslPinningSetting(_ sslPinning: SSLPinningInformation) {
+        self.sslPinning = sslPinning
+    }
+}
+
+// MARK: - 公開函數
+public extension WWNetworking {
+        
     /// [發出URLRequest](https://medium.com/@jerrywang0420/urlsession-教學-swift-3-ios-part-1-a1029fc9c427)
     /// - Parameters:
     ///   - httpMethod: [HTTP方法](https://imququ.com/post/four-ways-to-post-data-in-http.html)
@@ -63,7 +73,7 @@ public extension WWNetworking {
     /// - Returns: URLSessionTask?
     @discardableResult
     func request(httpMethod: HttpMethod = .GET, urlString: String, timeout: TimeInterval = 60, contentType: ContentType = .json, paramaters: [String: String?]? = nil, headers: [String: String?]? = nil, httpBodyType: HttpBobyType? = nil, delegateQueue: OperationQueue? = .current, result: @escaping (Result<ResponseInformation, Error>) -> Void) -> URLSessionTask? {
-        let task = request(httpMethod: httpMethod, urlString: urlString, contentType: contentType, timeout: timeout, queryItems: paramaters?._queryItems(), headers: headers, httpBody: httpBodyType?.data(), delegateQueue: delegateQueue) { result($0) }
+        let task = util.request(httpMethod: httpMethod, urlString: urlString, contentType: contentType, timeout: timeout, queryItems: paramaters?._queryItems(), headers: headers, httpBody: httpBodyType?.data(), delegate: dataDelegateProxy, delegateQueue: delegateQueue) { result($0) }
         return task
     }
     
@@ -106,14 +116,14 @@ public extension WWNetworking {
         guard var request = URLRequest._build(string: urlString, httpMethod: httpMethod, timeout: timeout) else { result(.failure(CustomError.notUrlFormat)); return nil }
         
         let boundary = "Boundary+\(arc4random())\(arc4random())"
-        let httpBody = multipleUploadBodyMaker(boundary: boundary, formDatas: [formData], parameters: parameters)
+        let httpBody = util.multipleUploadBodyMaker(boundary: boundary, formDatas: [formData], parameters: parameters)
         
         if let headers = headers { headers.forEach { key, value in if let value = value { request.addValue(value, forHTTPHeaderField: key) }}}
         
         request._setValue(.formData(boundary: boundary), forHTTPHeaderField: .contentType)
         request.httpBody = httpBody
         
-        return fetchData(from: request, delegateQueue: delegateQueue, result: result)
+        return util.fetchData(from: request, delegate: dataDelegateProxy, delegateQueue: delegateQueue, result: result)
     }
     
     /// [上傳檔案 (多個) - 模仿Form](https://www.w3schools.com/nodejs/nodejs_uploadfiles.asp)
@@ -133,14 +143,14 @@ public extension WWNetworking {
         guard var request = URLRequest._build(string: urlString, httpMethod: httpMethod, timeout: timeout) else { result(.failure(CustomError.notUrlFormat)); return nil }
         
         let boundary = "Boundary+\(arc4random())\(arc4random())"
-        let httpBody = multipleUploadBodyMaker(boundary: boundary, formDatas: formDatas, parameters: parameters)
+        let httpBody = util.multipleUploadBodyMaker(boundary: boundary, formDatas: formDatas, parameters: parameters)
         
         if let headers = headers { headers.forEach { key, value in if let value = value { request.addValue(value, forHTTPHeaderField: key) }}}
         
         request._setValue(.formData(boundary: boundary), forHTTPHeaderField: .contentType)
         request.httpBody = httpBody
         
-        return fetchData(from: request, delegateQueue: delegateQueue, result: result)
+        return util.fetchData(from: request, delegate: dataDelegateProxy, delegateQueue: delegateQueue, result: result)
     }
     
     /// [二進制檔案上傳 - 大型檔案](https://www.swiftbysundell.com/articles/http-post-and-file-upload-requests-using-urlsession/)
@@ -195,7 +205,7 @@ public extension WWNetworking {
     @discardableResult
     func download(httpMethod: HttpMethod? = .GET, urlString: String, timeout: TimeInterval = 60, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = nil, progress: @escaping ((DownloadProgressInformation) -> Void), completion: @escaping ((Result<DownloadResultInformation, Error>) -> Void)) -> URLSessionDownloadTask? {
         
-        guard let downloadTask = downloadTaskMaker(with: httpMethod, urlString: urlString, timeout: timeout, configuration: configuration, delegateQueue: delegateQueue) else { completion(.failure(CustomError.notUrlFormat)); return nil }
+        guard let downloadTask = util.downloadTaskMaker(with: httpMethod, urlString: urlString, timeout: timeout, configuration: configuration, delegate: downloadDelegateProxy, delegateQueue: delegateQueue) else { completion(.failure(CustomError.notUrlFormat)); return nil }
         
         downloadTaskResultBlock = completion
         downloadProgressResultBlock = progress
@@ -267,18 +277,14 @@ public extension WWNetworking {
                 for index in 0..<fragment {
 
                     let offset: HttpDownloadOffset = (index * fragmentSize, (index + 1) * fragmentSize - 1)
+                    let task = self.util.fragmentDownloadDataTaskMaker(with: urlString, delegate: self.dataDelegateProxy, delegateQueue: delegateQueue, offset: offset, timeout: timeout, configiguration: configiguration)
 
-                    let _task = self.fragmentDownloadDataTaskMaker(with: urlString, delegateQueue: delegateQueue, offset: offset, timeout: timeout, configiguration: configiguration) { _result in
-                        switch _result {
-                        case .failure(let error): completion(.failure(error))
-                        case .success(let info): completion(.success(info))
-                        }
-                    }
+                    self.fragmentDownloadFinishBlock = completion
 
-                    if let _task = _task {
-                        self.fragmentDownloadKeys.append("\(_task)")
-                        _task.resume()
-                        fragmentTask(_task)
+                    if let task = task {
+                        self.fragmentDownloadKeys.append("\(task)")
+                        task.resume()
+                        fragmentTask(task)
                     }
                 }
             }
@@ -556,39 +562,6 @@ public extension WWNetworking {
 // MARK: - URLSessionDataDelegate
 extension WWNetworking {
     
-    /// [發出URLRequest](https://medium.com/@jerrywang0420/urlsession-教學-swift-3-ios-part-1-a1029fc9c427)
-    /// - Parameters:
-    ///   - httpMethod: [HTTP方法](https://imququ.com/post/four-ways-to-post-data-in-http.html)
-    ///   - urlString: 網址
-    ///   - contentType: [要回傳的格式 => application/json](https://notfalse.net/39/http-message-format)
-    ///   - timeout: [設定請求超時時間](https://blog.csdn.net/qq_28091923/article/details/86233229)
-    ///   - queryItems: 參數 => ?name=william
-    ///   - headers: [Http Header](https://zh.wikipedia.org/zh-tw/HTTP头字段)
-    ///   - httpBody: Data => 所有的資料只要轉成Data都可以傳
-    ///   - delegateQueue: OperationQueue?
-    ///   - result: Result<ResponseInformation, Error>
-    /// - Returns: URLSessionTask?
-    func request(httpMethod: HttpMethod = .GET, urlString: String, contentType: ContentType = .json, timeout: TimeInterval, queryItems: [URLQueryItem]? = nil, headers: [String: String?]? = nil, httpBody: Data? = nil, delegateQueue: OperationQueue?, result: @escaping (Result<ResponseInformation, Error>) -> Void) -> URLSessionTask? {
-        
-        guard let urlComponents = URLComponents._build(urlString: urlString, queryItems: queryItems),
-              let queryedURL = urlComponents.url
-        else {
-            result(.failure(CustomError.notUrlFormat)); return nil
-        }
-        
-        var request = URLRequest._build(url: queryedURL, httpMethod: httpMethod, timeout: timeout)
-        
-        if let headers = headers {
-            headers.forEach { key, value in if let value = value { request.addValue(value, forHTTPHeaderField: key) }}
-        }
-        
-        request.httpBody = httpBody
-        request._setValue(contentType, forHTTPHeaderField: .contentType)
-        
-        let task = fetchData(from: request, delegateQueue: delegateQueue, result: result)
-        return task
-    }
-    
     /// 分段下載開始時的設定
     /// - Parameters:
     ///   - session: URLSession
@@ -619,7 +592,7 @@ extension WWNetworking {
         let httpResponse = HttpResponse.builder(response: response)
         if (httpResponse.hasError()) { fragmentDownloadFinishBlock(.failure(httpResponse)); dataTask.cancel(); return }
         
-        let downloadData = downloadTotalData(with: fragmentDownloadDatas, for: fragmentDownloadKeys)
+        let downloadData = util.downloadTotalDatas(fragmentDownloadDatas, for: fragmentDownloadKeys)
         let progress: DownloadProgressInformation = (urlString: dataTask.currentRequest?.url?.absoluteString, totalSize: Int64(fragmentDownloadContentLength), totalWritten: Int64(downloadData.count), writting: Int64(data.count))
         fragmentDownloadProgressResultBlock(progress)
         
@@ -704,7 +677,7 @@ extension WWNetworking {
     }
 }
 
-// MARK: - SSL Pinning
+// SSL Pinning
 extension WWNetworking {
     
     /// [處理 URLSession 的身份驗證挑戰](https://developer.apple.com/documentation/foundation/urlsessiontaskdelegate/1411595-urlsession)
@@ -712,12 +685,12 @@ extension WWNetworking {
     ///   - session: URLSession
     ///   - challenge: URLAuthenticationChallenge
     ///   - completionHandler: (URLSession.AuthChallengeDisposition, URLCredential?)
-    func sslPinning(with session: URLSession, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+    func sslPinningAction(with session: URLSession, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
         
-        if WWNetworking.sslPinning.values.isEmpty { return completionHandler(.performDefaultHandling, nil) }
+        guard !sslPinning.values.isEmpty else { return completionHandler(.performDefaultHandling, nil) }
         
         let host = challenge.protectionSpace.host.lowercased()
-        let pinning = WWNetworking.sslPinning
+        let pinning = sslPinning
         let pinningHosts = pinning.values.map { $0.host }
         
         print("⚠️ [Challenge Host] => \(host)")
@@ -751,143 +724,7 @@ private extension WWNetworking {
         taskDelegateProxy.owner = nil
         dataDelegateProxy.owner = nil
     }
-    
-    /// [產生下載用的HttpTask - downloadTask() => URLSessionDownloadDelegate](https://developer.apple.com/documentation/foundation/urlsessiondownloaddelegate)
-    /// - Parameters:
-    ///   - httpMethod: [HTTP方法](https://imququ.com/post/four-ways-to-post-data-in-http.html)
-    ///   - urlString: [網址](https://imququ.com/post/web-proxy.html)
-    ///   - timeout: [設定請求超時時間](https://blog.csdn.net/qq_28091923/article/details/86233229)
-    ///   - configuration: URLSessionConfiguration
-    ///   - delegateQueue: 執行緒
-    /// - Returns: URLSessionDownloadTask
-    func downloadTaskMaker(with httpMethod: HttpMethod?, urlString: String, timeout: TimeInterval = 60, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .current) -> URLSessionDownloadTask? {
         
-        guard let request = URLRequest._build(string: urlString, httpMethod: httpMethod, timeout: timeout) else { return nil }
-        
-        let urlSession = URLSession(configuration: configuration, delegate: downloadDelegateProxy, delegateQueue: delegateQueue)
-        let downloadTask = urlSession.downloadTask(with: request)
-        
-        downloadTask.delegate = downloadDelegateProxy
-        urlSession.finishTasksAndInvalidate()
-        
-        return downloadTask
-    }
-    
-    /// [抓取資料 - dataTask() => URLSessionDataDelegate](https://developer.apple.com/documentation/foundation/urlsessiondatadelegate)
-    /// - Parameters:
-    ///   - request: [URLRequest](https://medium.com/@jerrywang0420/urlsession-教學-swift-3-ios-part-2-a17b2d4cc056)
-    ///   - configuration: URLSessionConfiguration
-    ///   - delegateQueue: 執行緒
-    ///   - result: Result<ResponseInformation, Error>
-    /// - Returns: URLSessionDataTask
-    func fetchData(from request: URLRequest, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue?, result: @escaping (Result<ResponseInformation, Error>) -> Void) -> URLSessionDataTask {
-        
-        let session = URLSession(configuration: configuration, delegate: dataDelegateProxy, delegateQueue: delegateQueue)
-        
-        let dataTask = session.dataTask(with: request) { (data, response, error) in
-            Task { @MainActor in
-                if let error = error { result(.failure(error)); return }
-                let info: ResponseInformation = (data: data, response: response as? HTTPURLResponse)
-                result(.success(info))
-            }
-        }
-        
-        dataTask.resume()
-        return dataTask
-    }
-
-    /// [斷點續傳下載檔案 - URLSessionTaskDelegate (Data) => HTTPHeaderField = Range / ∵ 是一段一段下載 ∴ 自己要一段一段存](https://www.jianshu.com/p/534ec0d9d758)
-    /// - urlSession(_:dataTask:didReceive:) => completionHandler(.allow)
-    /// - Parameters:
-    ///   - urlString: [String](https://stackoverflow.com/questions/58023230/memory-leak-occurring-in-iphone-x-after-updating-to-ios-13)
-    ///   - delegateQueue: OperationQueue?
-    ///   - offset: HttpDownloadOffset
-    ///   - timeout: TimeInterval
-    ///   - configiguration: URLSessionConfiguratio
-    ///   - result: Result<Data, Error>) -> Void
-    /// - Returns: URLSessionDataTask?
-    func fragmentDownloadDataTaskMaker(with urlString: String, delegateQueue: OperationQueue?, offset: HttpDownloadOffset = (0, nil), timeout: TimeInterval, configiguration: URLSessionConfiguration, result: ((Result<Data, Error>) -> Void)?) -> URLSessionDataTask? {
-
-        guard let url = URL(string: urlString),
-              let headerValue = downloadOffsetMaker(offset: offset)
-        else {
-            return nil
-        }
-        
-        let urlSession = URLSession(configuration: configiguration, delegate: taskDelegateProxy, delegateQueue: delegateQueue)
-        var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: timeout)
-        
-        defer { urlSession.finishTasksAndInvalidate() }
-        
-        request._setValue(headerValue, forHTTPHeaderField: .range)
-        fragmentDownloadFinishBlock = result
-        
-        let dataTask = urlSession.dataTask(with: request)
-        dataTask.delegate = dataDelegateProxy
-        
-        return dataTask
-    }
-    
-    /// Range: bytes=0-1024
-    /// - Parameter offset: HttpDownloadOffset
-    /// - Returns: String?
-    func downloadOffsetMaker(offset: HttpDownloadOffset) -> String? {
-
-        guard let startOffset = offset.start else { return nil }
-        guard let endOffset = offset.end else { return String(format: "bytes=%lld-", startOffset) }
-
-        return String(format: "bytes=%lld-%lld", startOffset, endOffset)
-    }
-
-    /// 計算下載的檔案總和 (將分段的Data組合起來)
-    /// - Parameters:
-    ///   - datas: [<Task String>: Data]
-    ///   - keys: [<Task String>]
-    /// - Returns: Data
-    func downloadTotalData(with datas: [String: Data], for keys: [String]) -> Data {
-
-        var downloadData = Data()
-        for key in keys { if let _data = datas[key] { downloadData += _data }}
-
-        return downloadData
-    }
-    
-    /// 產生上傳檔案的Body (多個檔案) - Content-Type: multipart/form-data
-    /// - Parameters:
-    ///   - boundary: 分隔字串
-    ///   - formDatas: 上傳檔案的相關資料
-    ///   - parameters: [String: String]?
-    /// - Returns: Data
-    func multipleUploadBodyMaker(boundary: String, formDatas: [FormDataInformation], parameters: [String: String]?) -> Data {
-        
-        var body = Data()
-        
-        for formData in formDatas {
-            
-            /* 上傳Data的部分 */
-            _ = body._append(string: "--\(boundary)\r\n")
-            _ = body._append(string: "Content-Disposition: form-data; name=\"\(formData.name)\"; filename=\"\(formData.filename)\"\r\n")
-            _ = body._append(string: "Content-Type: \(formData.contentType)\r\n")
-            _ = body._append(string: "\r\n")
-            _ = body._append(data: formData.data)
-            _ = body._append(string: "\r\n")
-        }
-        
-        /* 額外參數的部分 */
-        parameters?.forEach { (key, value) in
-            _ = body._append(string: "--\(boundary)\r\n")
-            _ = body._append(string: "Content-Disposition: form-data; name=\"\(key)\"\r\n")
-            _ = body._append(string: "\r\n")
-            _ = body._append(string: "\(value)")
-            _ = body._append(string: "\r\n")
-        }
-        
-        /* 結尾部分 */
-        _ = body._append(string: "--\(boundary)--\r\n")
-        
-        return body
-    }
-    
     /// 清除分段下載的暫存資訊
     func cleanFragmentInformation() {
         fragmentDownloadContentLength = -1

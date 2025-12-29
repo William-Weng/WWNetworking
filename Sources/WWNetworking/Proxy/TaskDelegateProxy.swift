@@ -8,16 +8,11 @@
 import Foundation
 
 // MARK: - 轉接URLSessionTaskDelegate
-final class TaskDelegateProxy: NSObject {
-    
-    weak var owner: WWNetworking?
-    
-    deinit { owner = nil }
-}
+final class TaskDelegateProxy: DelegateProxy {}
 
 // MARK: - URLSessionTaskDelegate
 extension TaskDelegateProxy: URLSessionTaskDelegate {
-        
+    
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         
         Task { [weak owner] in

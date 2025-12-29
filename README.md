@@ -11,21 +11,8 @@ https://github.com/user-attachments/assets/6c2a02b4-34e8-4678-8d0b-48169dda53fe
 ### [Installation with Swift Package Manager](https://medium.com/彼得潘的-swift-ios-app-開發問題解答集/使用-spm-安裝第三方套件-xcode-11-新功能-2c4ffcf85b4b)
 ```
 dependencies: [
-    .package(url: "https://github.com/William-Weng/WWNetworking.git", .upToNextMajor(from: "2.0.4"))
+    .package(url: "https://github.com/William-Weng/WWNetworking.git", .upToNextMajor(from: "2.1.0"))
 ]
-```
-
-## [Parameter - 可用變數](https://gitbook.swiftgg.team/swift/swift-jiao-cheng)
-
-|變數|功能|
-|-|-|
-|sslPinning|SSL-Pinning設定 => host + .cer|
-
-## 取得公鑰
-```bash
-openssl s_client -connect <your.server.com>:443 -showcerts </dev/null | openssl x509 -outform DER > <server>.cer
-
-openssl s_client -connect google.com:443 -showcerts </dev/null | openssl x509 -outform DER > google.cer
 ```
 
 ## [Function - 可用函式](https://gitbook.swiftgg.team/swift/swift-jiao-cheng)
@@ -33,6 +20,7 @@ openssl s_client -connect google.com:443 -showcerts </dev/null | openssl x509 -o
 |函式|功能|
 |-|-|
 |builder()|建立一個新的WWNetworking|
+|sslPinningSetting()|SSL-Pinning設定 => host + .cer|
 |request(httpMethod:urlString:timeout:contentType:paramaters:headers:httpBodyType:delegateQueue:result:)|發出URLRequest|
 |header(urlString:timeout:headers:delegateQueue:result:)|取得該URL資源的HEAD資訊|
 |upload(httpMethod:urlString:timeout:formData:parameters:headers:delegateQueue:result)|上傳檔案 - 模仿Form|
@@ -56,6 +44,12 @@ openssl s_client -connect google.com:443 -showcerts </dev/null | openssl x509 -o
 |multipleRequest(types:)|順序執行多個Request|
 |multipleRequestWithTaskGroup(types:)|同時執行多個Request|
 |multipleRequestWithStream(types:)|串流執行多個Request|
+
+## 取得公鑰
+```bash
+openssl s_client -connect <your.server.com>:443 -showcerts </dev/null | openssl x509 -outform DER > <server>.cer
+openssl s_client -connect google.com:443 -showcerts </dev/null | openssl x509 -outform DER > google.cer
+```
 
 ## [Example](https://ezgif.com/video-to-webp)
 ```swift

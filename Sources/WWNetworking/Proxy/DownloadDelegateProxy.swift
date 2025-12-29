@@ -8,12 +8,7 @@
 import Foundation
 
 // MARK: - 轉接URLSessionDownloadDelegate
-final class DownloadDelegateProxy: NSObject {
-    
-    weak var owner: WWNetworking?
-    
-    deinit { owner = nil }
-}
+final class DownloadDelegateProxy: DelegateProxy {}
 
 // MARK: - URLSessionDownloadDelegate
 extension DownloadDelegateProxy: URLSessionDownloadDelegate {
@@ -26,10 +21,6 @@ extension DownloadDelegateProxy: URLSessionDownloadDelegate {
     func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
         let result = downloadFinishedAction(session, downloadTask: downloadTask, didFinishDownloadingTo: location)
         Task { [weak owner] in await owner?.downloadFinishedAction(result: result) }
-    }
-    
-    func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
-        Task { [weak owner] in await owner?.sslPinning(with: session, didReceive: challenge, completionHandler: completionHandler) }
     }
 }
 
