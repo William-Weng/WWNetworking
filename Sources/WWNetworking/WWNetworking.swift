@@ -207,7 +207,7 @@ public extension WWNetworking {
     ///   - completion: 下載完成後
     /// - Returns: URLSessionDownloadTask?
     @discardableResult
-    func download(httpMethod: HttpMethod? = .GET, urlString: String, timeout: TimeInterval = 60, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = nil, progress: @escaping ((DownloadProgressInformation) -> Void), completion: @escaping ((Result<DownloadResultInformation, Error>) -> Void)) -> URLSessionDownloadTask? {
+    func download(httpMethod: HttpMethod? = .GET, urlString: String, timeout: TimeInterval = 60, configuration: URLSessionConfiguration = .default, delegateQueue: OperationQueue? = .current, progress: @escaping ((DownloadProgressInformation) -> Void), completion: @escaping ((Result<DownloadResultInformation, Error>) -> Void)) -> URLSessionDownloadTask? {
         
         guard let downloadTask = util.downloadTaskMaker(with: httpMethod, urlString: urlString, timeout: timeout, configuration: configuration, delegate: downloadDelegateProxy, delegateQueue: delegateQueue) else { completion(.failure(CustomError.notUrlFormat)); return nil }
         
