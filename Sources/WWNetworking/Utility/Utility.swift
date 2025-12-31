@@ -140,7 +140,7 @@ extension WWNetworking.Utility {
         
         let urlSession = URLSession(configuration: configuration, delegate: delegate, delegateQueue: delegateQueue)
         let downloadTask = urlSession.downloadTask(with: request)
-        
+
         downloadTask.delegate = delegate
         urlSession.finishTasksAndInvalidate()
         

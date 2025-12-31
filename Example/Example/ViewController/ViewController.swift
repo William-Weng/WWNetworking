@@ -14,24 +14,8 @@ final class ViewController: UIViewController {
     @IBOutlet var resultImageViews: [UIImageView]!
     @IBOutlet var resultProgressLabels: [UILabel]!
     
-    private let ImageUrlInfos: [String] = [
-        ("https://images-assets.nasa.gov/image/PIA18033/PIA18033~orig.jpg"),
-        ("https://images-assets.nasa.gov/image/KSC-20210907-PH-KLS01_0009/KSC-20210907-PH-KLS01_0009~orig.jpg"),
-        ("https://images-assets.nasa.gov/image/iss065e095794/iss065e095794~orig.jpg"),
-    ]
-    
-    private let UrlStrings = [
-        "GET": "https://httpbin.org/get",
-        "POST": "https://httpbin.org/post",
-        "DOWNLOAD": "https://raw.githubusercontent.com/William-Weng/AdobeIllustrator/master/William-Weng.png",
-        "FRAGMENT": "https://photosku.com/images_file/images/i000_803.jpg",
-        "UPLOAD": "http://192.168.4.200:8080/upload",
-        "BINARY-UPLOAD": "http://192.168.4.200:8081/binaryUpload",
-    ]
-    
     override func viewDidLoad() {
         super.viewDidLoad()
-        // openssl s_client -connect google.com:443 -showcerts </dev/null | openssl x509 -outform DER > google.cer}
         // Task { await WWNetworking.shared.sslPinningSetting((bundle: .main, values: [.init(host: "httpbin.org", cer: "google.cer")])) }
     }
     
@@ -50,7 +34,7 @@ private extension ViewController {
     /// 測試GET (GET不能有httpBody)
     func httpGetTest() async {
         
-        let urlString = UrlStrings["GET"]!
+        let urlString = "https://httpbin.org/get"
         let parameters: [String: String?] = ["name": "William.Weng", "github": "https://william-weng.github.io/"]
         
         do {
@@ -64,7 +48,7 @@ private extension ViewController {
     /// 測試POST
     func httpPostTest() {
         
-        let urlString = UrlStrings["POST"]!
+        let urlString = "https://httpbin.org/post"
         let parameters: [String: Any] = ["name": "William.Weng", "github": "https://william-weng.github.io/"]
         
         Task {
@@ -81,7 +65,7 @@ private extension ViewController {
     /// 下載檔案 (單個)
     func httpDownloadData() async {
         
-        let urlString = UrlStrings["DOWNLOAD"]!
+        let urlString = "https://raw.githubusercontent.com/William-Weng/AdobeIllustrator/master/William-Weng.png"
         let index = 0
         
         displayText("")
@@ -103,7 +87,7 @@ private extension ViewController {
     /// 分段下載 (單一檔案分多點合併下載)
     func fragmentDownloadData() async {
         
-        let urlString = UrlStrings["FRAGMENT"]!
+        let urlString = "https://photosku.com/images_file/images/i000_803.jpg"
         let index = 1
         
         displayText("")
@@ -113,9 +97,7 @@ private extension ViewController {
                 switch state {
                 case .start(let task): print("task = \(task)")
                 case .finished(let data): displayImageWithIndex(index, data: data)
-                case .progress(let info):
-                    let progress = Float(info.totalWritten) / Float(info.totalSize)
-                    displayProgressWithIndex(index, progress: progress)
+                case .progress(let info): displayProgressWithIndex(index, progress: Float(info.totalWritten) / Float(info.totalSize))
                 }
             }
         } catch {
@@ -126,11 +108,19 @@ private extension ViewController {
     /// 下載檔案 (多個檔案)
     func httpMultipleDownload() async {
         
+        let imageUrlInfos: [String] = [
+            ("https://images-assets.nasa.gov/image/PIA18033/PIA18033~orig.jpg"),
+            ("https://images-assets.nasa.gov/image/KSC-20210907-PH-KLS01_0009/KSC-20210907-PH-KLS01_0009~orig.jpg"),
+            ("https://images-assets.nasa.gov/image/iss065e095794/iss065e095794~orig.jpg"),
+        ]
+
         resultImageViews.forEach { $0.image = nil }
         
-        await WWNetworking.shared.multipleDownload(urlStrings: ImageUrlInfos) { info in
+        await WWNetworking.shared.multipleDownload(urlStrings: imageUrlInfos) { info in
 
-            guard let index = self.displayImageIndex(urlStrings: self.ImageUrlInfos, urlString: info.urlString) else { return }
+            print(Float(info.totalWritten) / Float(info.totalSize))
+            
+            guard let index = self.displayImageIndex(urlStrings: imageUrlInfos, urlString: info.urlString) else { return }
             self.displayProgressWithIndex(index, progress: Float(info.totalWritten) / Float(info.totalSize))
             
         } completion: { result in
@@ -138,7 +128,7 @@ private extension ViewController {
             switch result {
             case .failure(let error): self.displayText(error)
             case .success(let info):
-                guard let index = self.displayImageIndex(urlStrings: self.ImageUrlInfos, urlString: info.urlString) else { return }
+                guard let index = self.displayImageIndex(urlStrings: imageUrlInfos, urlString: info.urlString) else { return }
                 self.displayImageWithIndex(index, data: info.data)
             }
         }
@@ -147,7 +137,7 @@ private extension ViewController {
     /// 上傳圖片
     func httpUploadData() async {
         
-        let urlString = UrlStrings["UPLOAD"]!
+        let urlString = "http://192.168.4.200:8080/upload"
         let imageData = resultImageViews[0].image?.pngData()
         let formData: WWNetworking.FormDataInformation = (name: "file", filename: "Demo.png", contentType: .png, data: imageData!)
         
@@ -163,7 +153,7 @@ private extension ViewController {
     /// 上傳檔案 (二進制)
     func httpBinaryUploadData() async {
         
-        let urlString = UrlStrings["BINARY-UPLOAD"]!
+        let urlString = "http://192.168.4.200:8081/binaryUpload"
         let index = 1
         let imageData = resultImageViews[index].image?.pngData()
         let formData: WWNetworking.FormDataInformation = (name: "x-filename", filename: "Large.png", contentType: .octetStream, data: imageData!)

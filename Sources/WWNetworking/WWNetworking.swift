@@ -13,7 +13,9 @@ public actor WWNetworking {
     public static let shared = WWNetworking()
         
     let util = Utility()
+    
     var sslPinning: SSLPinningInformation = (bundle: .main, values: [])                             // SSL-Pinning設定值
+    
     weak var delegate: WWNetworking.Delegate?
     
     private let downloadDelegateProxy = DownloadDelegateProxy()
