@@ -14,10 +14,10 @@ final class ViewController: UIViewController {
     @IBOutlet var resultImageViews: [UIImageView]!
     @IBOutlet var resultProgressLabels: [UILabel]!
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        // Task { await WWNetworking.shared.sslPinningSetting((bundle: .main, values: [.init(host: "httpbin.org", cer: "google.cer")])) }
-    }
+//    override func viewDidLoad() {
+//        super.viewDidLoad()
+//        Task { await WWNetworking.shared.sslPinningSetting((bundle: .main, values: [.init(host: "httpbin.org", cer: "google.cer")])) }
+//    }
     
     @IBAction func httpGetAction(_ sender: UIButton) { Task { await httpGetTest() }}
     @IBAction func httpPostAction(_ sender: UIButton) { httpPostTest() }
@@ -117,8 +117,6 @@ private extension ViewController {
         resultImageViews.forEach { $0.image = nil }
         
         await WWNetworking.shared.multipleDownload(urlStrings: imageUrlInfos) { info in
-
-            print(Float(info.totalWritten) / Float(info.totalSize))
             
             guard let index = self.displayImageIndex(urlStrings: imageUrlInfos, urlString: info.urlString) else { return }
             self.displayProgressWithIndex(index, progress: Float(info.totalWritten) / Float(info.totalSize))
