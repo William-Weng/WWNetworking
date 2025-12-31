@@ -53,7 +53,6 @@ private extension ViewController {
         
         Task {
             await WWNetworking.shared.request(httpMethod: .POST, urlString: urlString, paramaters: nil, httpBodyType: .dictionary(parameters)) { result in
-                
                 switch result {
                 case .failure(let error): self.displayText(error)
                 case .success(let info): self.displayText(info.data?._jsonSerialization())
@@ -71,12 +70,8 @@ private extension ViewController {
         displayText("")
         
         await WWNetworking.shared.download(urlString: urlString, progress: { info in
-            
-            let progress = Float(info.totalWritten) / Float(info.totalSize)
-            self.displayProgressWithIndex(index, progress: progress)
-            
+            self.displayProgressWithIndex(index, progress: Float(info.totalWritten) / Float(info.totalSize))
         }, completion: { result in
-            
             switch result {
             case .failure(let error): self.displayText(error)
             case .success(let info): self.displayImageWithIndex(index, data: info.data)
@@ -117,12 +112,9 @@ private extension ViewController {
         resultImageViews.forEach { $0.image = nil }
         
         await WWNetworking.shared.multipleDownload(urlStrings: imageUrlInfos) { info in
-            
             guard let index = self.displayImageIndex(urlStrings: imageUrlInfos, urlString: info.urlString) else { return }
             self.displayProgressWithIndex(index, progress: Float(info.totalWritten) / Float(info.totalSize))
-            
         } completion: { result in
-            
             switch result {
             case .failure(let error): self.displayText(error)
             case .success(let info):
@@ -140,7 +132,6 @@ private extension ViewController {
         let formData: WWNetworking.FormDataInformation = (name: "file", filename: "Demo.png", contentType: .png, data: imageData!)
         
         await WWNetworking.shared.upload(urlString: urlString, formData: formData) { result in
-            
             switch result {
             case .failure(let error): self.displayText(error)
             case .success(let info): self.displayText(info.response?.statusCode ?? 404)

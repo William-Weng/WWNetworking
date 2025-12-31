@@ -131,12 +131,17 @@ extension WWNetworking.Utility {
     ///   - urlString: [網址](https://imququ.com/post/web-proxy.html)
     ///   - timeout: [設定請求超時時間](https://blog.csdn.net/qq_28091923/article/details/86233229)
     ///   - configuration: URLSessionConfiguration
+    ///   - headers: [String: String?]?
     ///   - delegate: URLSessionDownloadDelegate
     ///   - delegateQueue: 執行緒
     /// - Returns: URLSessionDownloadTask
-    func downloadTaskMaker(with httpMethod: WWNetworking.HttpMethod?, urlString: String, timeout: TimeInterval = 60, configuration: URLSessionConfiguration = .default, delegate: URLSessionDownloadDelegate, delegateQueue: OperationQueue? = .current) -> URLSessionDownloadTask? {
+    func downloadTaskMaker(with httpMethod: WWNetworking.HttpMethod?, urlString: String, timeout: TimeInterval = 60, configuration: URLSessionConfiguration = .default, headers: [String: String?]?, delegate: URLSessionDownloadDelegate, delegateQueue: OperationQueue? = .current) -> URLSessionDownloadTask? {
         
-        guard let request = URLRequest._build(string: urlString, httpMethod: httpMethod, timeout: timeout) else { return nil }
+        guard var request = URLRequest._build(string: urlString, httpMethod: httpMethod, timeout: timeout) else { return nil }
+        
+        if let headers = headers {
+            headers.forEach { key, value in if let value = value { request.addValue(value, forHTTPHeaderField: key) }}
+        }
         
         let urlSession = URLSession(configuration: configuration, delegate: delegate, delegateQueue: delegateQueue)
         let downloadTask = urlSession.downloadTask(with: request)
@@ -162,13 +167,14 @@ extension WWNetworking.Utility {
     /// - urlSession(_:dataTask:didReceive:) => completionHandler(.allow)
     /// - Parameters:
     ///   - urlString: [String](https://stackoverflow.com/questions/58023230/memory-leak-occurring-in-iphone-x-after-updating-to-ios-13)
-    ///   - delegate: URLSessionDataDelegate
-    ///   - delegateQueue: OperationQueue?
     ///   - offset: HttpDownloadOffset
     ///   - timeout: TimeInterval
-    ///   - configiguration: URLSessionConfiguratio
+    ///   - configiguration: URLSessionConfiguration
+    ///   - headers: [String: String?]?
+    ///   - delegate: URLSessionDataDelegate
+    ///   - delegateQueue: OperationQueue?
     /// - Returns: URLSessionDataTask?
-    func fragmentDownloadDataTaskMaker(with urlString: String, delegate: URLSessionDataDelegate, delegateQueue: OperationQueue?, offset: WWNetworking.HttpDownloadOffset = (0, nil), timeout: TimeInterval, configiguration: URLSessionConfiguration) -> URLSessionDataTask? {
+    func fragmentDownloadDataTaskMaker(with urlString: String, offset: WWNetworking.HttpDownloadOffset = (0, nil), timeout: TimeInterval, configiguration: URLSessionConfiguration, headers: [String: String?]?, delegate: URLSessionDataDelegate, delegateQueue: OperationQueue?) -> URLSessionDataTask? {
 
         guard let url = URL(string: urlString),
               let headerValue = downloadOffsetMaker(offset: offset)
@@ -179,6 +185,10 @@ extension WWNetworking.Utility {
         let urlSession = URLSession(configuration: configiguration, delegate: delegate, delegateQueue: delegateQueue)
         var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: timeout)
         
+        if let headers = headers {
+            headers.forEach { key, value in if let value = value { request.addValue(value, forHTTPHeaderField: key) }}
+        }
+
         defer { urlSession.finishTasksAndInvalidate() }
         
         request._setValue(headerValue, forHTTPHeaderField: .range)

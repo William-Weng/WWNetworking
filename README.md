@@ -11,7 +11,7 @@ https://github.com/user-attachments/assets/6c2a02b4-34e8-4678-8d0b-48169dda53fe
 ### [Installation with Swift Package Manager](https://medium.com/彼得潘的-swift-ios-app-開發問題解答集/使用-spm-安裝第三方套件-xcode-11-新功能-2c4ffcf85b4b)
 ```
 dependencies: [
-    .package(url: "https://github.com/William-Weng/WWNetworking.git", .upToNextMajor(from: "2.1.2"))
+    .package(url: "https://github.com/William-Weng/WWNetworking.git", .upToNextMajor(from: "2.1.3"))
 ]
 ```
 
@@ -26,9 +26,9 @@ dependencies: [
 |upload(httpMethod:urlString:timeout:formData:parameters:headers:delegateQueue:result)|上傳檔案 - 模仿Form|
 |multipleUpload(httpMethod:urlString:timeout:formDatas:parameters:headers:delegateQueue:result)|上傳檔案 (多個) - 模仿Form|
 |binaryUpload(httpMethod:urlString:timeout:formData:headers:delegateQueue:progress:completion:)|二進制檔案上傳 - 大型檔案|
-|download(httpMethod:urlString:timeout:configuration:delegateQueue:progress:completion:)|下載資料 - URLSessionDownloadDelegate|
-|fragmentDownload(urlString:timeout:fragment:configiguration:delegateQueue:progress:fragmentTask:completion:)|分段下載|
-|multipleDownload(httpMethod:urlStrings:timeout:configuration:delegateQueue:progress:completion:)|下載多筆資料- URLSessionDownloadDelegate|
+|download(httpMethod:urlString:timeout:configuration:headers:delegateQueue:progress:completion:)|下載資料 - URLSessionDownloadDelegate|
+|fragmentDownload(urlString:timeout:fragment:configiguration:headers:delegateQueue:progress:fragmentTask:completion:)|分段下載|
+|multipleDownload(httpMethod:urlStrings:timeout:configuration:headers:delegateQueue:progress:completion:)|下載多筆資料- URLSessionDownloadDelegate|
 
 ### [async / await版本](https://youtu.be/s2PiL_Vte4E)
 |函式|功能|
@@ -38,9 +38,9 @@ dependencies: [
 |upload(httpMethod:timeout:urlString:formData:parameters:headers:delegateQueue:)|上傳檔案 - 模仿Form|
 |multipleUpload(httpMethod:urlString:timeout:formDatas:parameters:headers:delegateQueue:)|上傳檔案 (多個) - 模仿Form|
 |binaryUpload(httpMethod:urlString:timeout:formData:headers:delegateQueue:)|二進制檔案上傳 - 大型檔案|
-|download(httpMethod:urlString:timeout:configuration:delegateQueue:)|下載資料 - URLSessionDownloadDelegate|
-|fragmentDownload(urlString:fragment:timeout:configiguration:delegateQueue:)|分段下載|
-|multipleDownload(httpMethod:urlStrings:timeout:configuration:delegateQueue:)|下載多筆資料- URLSessionDownloadDelegate|
+|download(httpMethod:urlString:timeout:configuration:headers:delegateQueue:)|下載資料 - URLSessionDownloadDelegate|
+|fragmentDownload(urlString:fragment:timeout:configiguration:headers:delegateQueue:)|分段下載|
+|multipleDownload(httpMethod:urlStrings:timeout:configuration:headers:delegateQueue:)|下載多筆資料- URLSessionDownloadDelegate|
 |multipleRequest(types:)|順序執行多個Request|
 |multipleRequestWithTaskGroup(types:)|同時執行多個Request|
 |multipleRequestWithStream(types:)|串流執行多個Request|
