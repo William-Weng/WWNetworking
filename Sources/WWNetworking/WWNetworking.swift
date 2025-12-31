@@ -8,7 +8,7 @@
 import Foundation
 
 // MARK: - 簡易型的AFNetworking (單例)
-public actor WWNetworking: NSObject {
+public actor WWNetworking {
     
     public static let shared = WWNetworking()
         
@@ -32,8 +32,7 @@ public actor WWNetworking: NSObject {
     private var fragmentUploadFinishBlock: ((Result<Bool, Error>) -> Void)?                         // 分段上傳完成的動作
     private var fragmentUploadProgressResultBlock: ((UploadProgressInformation) -> Void)?           // 分段下載進行中的進度 - 檔案大小
     
-    private override init() {
-        super.init()
+    private init() {
         initDelegateProxy()
     }
     
@@ -678,37 +677,6 @@ extension WWNetworking {
         Task { @MainActor in
             if let error = error { fragmentUploadFinishBlock(.failure(error)) }; return
             fragmentUploadFinishBlock(.success(true));
-        }
-    }
-}
-
-// SSL Pinning
-extension WWNetworking {
-    
-    /// [處理 URLSession 的身份驗證挑戰](https://developer.apple.com/documentation/foundation/urlsessiontaskdelegate/1411595-urlsession)
-    /// - Parameters:
-    ///   - session: URLSession
-    ///   - challenge: URLAuthenticationChallenge
-    ///   - completionHandler: (URLSession.AuthChallengeDisposition, URLCredential?)
-    func sslPinningAction(with session: URLSession, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
-        
-        guard !sslPinning.values.isEmpty else { return completionHandler(.performDefaultHandling, nil) }
-        
-        let host = challenge.protectionSpace.host.lowercased()
-        let pinning = sslPinning
-        let pinningHosts = pinning.values.map { $0.host }
-        
-        print("⚠️ [Challenge Host] => \(host)")
-        
-        guard pinningHosts.contains(host),
-              let value = pinning.values.first(where: {$0.host.lowercased() == host.lowercased()})
-        else {
-            return completionHandler(.performDefaultHandling, nil)
-        }
-        
-        switch challenge._checkAuthenticationSSLPinning(bundle: pinning.bundle, filename: value.cer) {
-        case .success(let trust): completionHandler(.useCredential, URLCredential(trust: trust))
-        case .failure: completionHandler(.cancelAuthenticationChallenge, nil)
         }
     }
 }
