@@ -11,7 +11,7 @@ https://github.com/user-attachments/assets/6c2a02b4-34e8-4678-8d0b-48169dda53fe
 ### [Installation with Swift Package Manager](https://medium.com/彼得潘的-swift-ios-app-開發問題解答集/使用-spm-安裝第三方套件-xcode-11-新功能-2c4ffcf85b4b)
 ```
 dependencies: [
-    .package(url: "https://github.com/William-Weng/WWNetworking.git", .upToNextMajor(from: "2.1.3"))
+    .package(url: "https://github.com/William-Weng/WWNetworking.git", .upToNextMajor(from: "2.1.4"))
 ]
 ```
 
@@ -21,29 +21,29 @@ dependencies: [
 |-|-|
 |builder()|建立一個新的WWNetworking|
 |sslPinningSetting(_:delegate:)|SSL-Pinning設定 => host + .cer|
-|request(httpMethod:urlString:timeout:contentType:paramaters:headers:httpBodyType:delegateQueue:result:)|發出URLRequest|
-|header(urlString:timeout:headers:delegateQueue:result:)|取得該URL資源的HEAD資訊|
-|upload(httpMethod:urlString:timeout:formData:parameters:headers:delegateQueue:result)|上傳檔案 - 模仿Form|
-|multipleUpload(httpMethod:urlString:timeout:formDatas:parameters:headers:delegateQueue:result)|上傳檔案 (多個) - 模仿Form|
-|binaryUpload(httpMethod:urlString:timeout:formData:headers:delegateQueue:progress:completion:)|二進制檔案上傳 - 大型檔案|
-|download(httpMethod:urlString:timeout:configuration:headers:delegateQueue:progress:completion:)|下載資料 - URLSessionDownloadDelegate|
-|fragmentDownload(urlString:timeout:fragment:configiguration:headers:delegateQueue:progress:fragmentTask:completion:)|分段下載|
-|multipleDownload(httpMethod:urlStrings:timeout:configuration:headers:delegateQueue:progress:completion:)|下載多筆資料- URLSessionDownloadDelegate|
+|request(httpMethod:urlString:timeout:contentType:paramaters:headers:cachePolicy:httpBodyType:delegateQueue:result:)|發出URLRequest|
+|header(urlString:timeout:headers:cachePolicy:delegateQueue:result:)|取得該URL資源的HEAD資訊|
+|upload(httpMethod:urlString:timeout:formData:parameters:headers:cachePolicy:delegateQueue:result)|上傳檔案 - 模仿Form|
+|multipleUpload(httpMethod:urlString:timeout:formDatas:parameters:headers:cachePolicy:delegateQueue:result)|上傳檔案 (多個) - 模仿Form|
+|binaryUpload(httpMethod:urlString:timeout:formData:headers:cachePolicy:delegateQueue:progress:completion:)|二進制檔案上傳 - 大型檔案|
+|download(httpMethod:urlString:timeout:configuration:headers:cachePolicy:delegateQueue:progress:completion:)|下載資料 - URLSessionDownloadDelegate|
+|fragmentDownload(httpMethod:urlString:timeout:fragment:configiguration:headers:cachePolicy:delegateQueue:progress:fragmentTask:completion:)|分段下載|
+|multipleDownload(httpMethod:urlStrings:timeout:configuration:headers:cachePolicy:delegateQueue:progress:completion:)|下載多筆資料- URLSessionDownloadDelegate|
 
 ### [async / await版本](https://youtu.be/s2PiL_Vte4E)
 |函式|功能|
 |-|-|
-|request(httpMethod:urlString:timeout:contentType:paramaters:headers:httpBodyType:delegateQueue:)|發出URLRequest|
-|header(urlString:timeout:headers:delegateQueue:)|取得該URL資源的HEAD資訊|
-|upload(httpMethod:timeout:urlString:formData:parameters:headers:delegateQueue:)|上傳檔案 - 模仿Form|
-|multipleUpload(httpMethod:urlString:timeout:formDatas:parameters:headers:delegateQueue:)|上傳檔案 (多個) - 模仿Form|
-|binaryUpload(httpMethod:urlString:timeout:formData:headers:delegateQueue:)|二進制檔案上傳 - 大型檔案|
-|download(httpMethod:urlString:timeout:configuration:headers:delegateQueue:)|下載資料 - URLSessionDownloadDelegate|
-|fragmentDownload(urlString:fragment:timeout:configiguration:headers:delegateQueue:)|分段下載|
-|multipleDownload(httpMethod:urlStrings:timeout:configuration:headers:delegateQueue:)|下載多筆資料- URLSessionDownloadDelegate|
-|multipleRequest(types:)|順序執行多個Request|
-|multipleRequestWithTaskGroup(types:)|同時執行多個Request|
-|multipleRequestWithStream(types:)|串流執行多個Request|
+|request(httpMethod:urlString:timeout:contentType:paramaters:headers:cachePolicy:httpBodyType:delegateQueue:)|發出URLRequest|
+|header(urlString:timeout:headers:cachePolicy:delegateQueue:)|取得該URL資源的HEAD資訊|
+|upload(httpMethod:timeout:urlString:formData:parameters:headers:cachePolicy:delegateQueue:)|上傳檔案 - 模仿Form|
+|multipleUpload(httpMethod:urlString:timeout:formDatas:parameters:headers:cachePolicy:delegateQueue:)|上傳檔案 (多個) - 模仿Form|
+|binaryUpload(httpMethod:urlString:timeout:formData:headers:cachePolicy:delegateQueue:)|二進制檔案上傳 - 大型檔案|
+|download(httpMethod:urlString:timeout:configuration:headers:cachePolicy:delegateQueue:)|下載資料 - URLSessionDownloadDelegate|
+|fragmentDownload(httpMethod:urlString:fragment:timeout:configiguration:headers:cachePolicy:delegateQueue:)|分段下載|
+|multipleDownload(httpMethod:urlStrings:timeout:configuration:headers:cachePolicy:delegateQueue:)|下載多筆資料- URLSessionDownloadDelegate|
+|multipleRequest(types:cachePolicy:)|順序執行多個Request|
+|multipleRequestWithTaskGroup(types:cachePolicy:)|同時執行多個Request|
+|multipleRequestWithStream(types:cachePolicy:)|串流執行多個Request|
 
 ### [WWNetworking.Delegate](https://youtu.be/s2PiL_Vte4E)
 |函式|功能|
@@ -66,33 +66,30 @@ final class ViewController: UIViewController {
     @IBOutlet weak var resultTextField: UITextView!
     @IBOutlet var resultImageViews: [UIImageView]!
     @IBOutlet var resultProgressLabels: [UILabel]!
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        // Task { await WWNetworking.shared.sslPinningSetting((bundle: .main, values: [.init(host: "httpbin.org", cer: "google.cer")])) }
-    }
-    
-    @IBAction func httpGetAction(_ sender: UIButton) { Task { await httpGetTest() }}
+    @IBAction func httpGetAction(_ sender: UIButton) { httpGetTest() }
     @IBAction func httpPostAction(_ sender: UIButton) { httpPostTest() }
-    @IBAction func httpDownloadAction(_ sender: UIButton) { Task { await httpDownloadData()} }
-    @IBAction func httpFragmentDownloadAction(_ sender: UIButton) { Task { await fragmentDownloadData() }}
-    @IBAction func httpMultipleDownloadAction(_ sender: UIButton) { Task { await httpMultipleDownload() }}
-    @IBAction func httpUploadAction(_ sender: UIButton) { Task { await httpUploadData() }}
-    @IBAction func httpBinaryUpload(_ sender: UIButton) { Task { await httpBinaryUploadData() }}
+    @IBAction func httpDownloadAction(_ sender: UIButton) { httpDownloadData()}
+    @IBAction func httpFragmentDownloadAction(_ sender: UIButton) { fragmentDownloadData() }
+    @IBAction func httpMultipleDownloadAction(_ sender: UIButton) { httpMultipleDownload() }
+    @IBAction func httpUploadAction(_ sender: UIButton) { httpUploadData() }
+    @IBAction func httpBinaryUpload(_ sender: UIButton) { httpBinaryUploadData() }
 }
 
+// MARK: - ViewController (private class function)
 private extension ViewController {
 
-    func httpGetTest() async {
+    func httpGetTest() {
         
         let urlString = "https://httpbin.org/get"
         let parameters: [String: String?] = ["name": "William.Weng", "github": "https://william-weng.github.io/"]
         
-        do {
-            let info = try await WWNetworking.shared.request(httpMethod: .GET, urlString: urlString, paramaters: parameters).get()
-            displayText(info.data?._jsonSerialization())
-        } catch {
-            displayText(error)
+        Task {
+            do {
+                let info = try await WWNetworking.shared.request(httpMethod: .GET, urlString: urlString, paramaters: parameters).get()
+                displayText(info.data?._jsonSerialization())
+            } catch {
+                displayText(error)
+            }
         }
     }
     
@@ -103,7 +100,6 @@ private extension ViewController {
         
         Task {
             await WWNetworking.shared.request(httpMethod: .POST, urlString: urlString, paramaters: nil, httpBodyType: .dictionary(parameters)) { result in
-                
                 switch result {
                 case .failure(let error): self.displayText(error)
                 case .success(let info): self.displayText(info.data?._jsonSerialization())
@@ -112,48 +108,48 @@ private extension ViewController {
         }
     }
     
-    func httpDownloadData() async {
+    func httpDownloadData() {
         
         let urlString = "https://raw.githubusercontent.com/William-Weng/AdobeIllustrator/master/William-Weng.png"
         let index = 0
         
         displayText("")
         
-        await WWNetworking.shared.download(urlString: urlString, progress: { info in
-            
-            let progress = Float(info.totalWritten) / Float(info.totalSize)
-            self.displayProgressWithIndex(index, progress: progress)
-            
-        }, completion: { result in
-            
-            switch result {
-            case .failure(let error): self.displayText(error)
-            case .success(let info): self.displayImageWithIndex(index, data: info.data)
-            }
-        })
+        Task {
+            await WWNetworking.shared.download(urlString: urlString, progress: { info in
+                self.displayProgressWithIndex(index, progress: Float(info.totalWritten) / Float(info.totalSize))
+            }, completion: { result in
+                switch result {
+                case .failure(let error): self.displayText(error)
+                case .success(let info): self.displayImageWithIndex(index, data: info.data)
+                }
+            })
+        }
     }
     
-    func fragmentDownloadData() async {
+    func fragmentDownloadData() {
         
         let urlString = "https://photosku.com/images_file/images/i000_803.jpg"
         let index = 1
         
         displayText("")
         
-        do {
-            for try await state in await WWNetworking.shared.fragmentDownload(urlString: urlString) {
-                switch state {
-                case .start(let task): print("task = \(task)")
-                case .finished(let data): displayImageWithIndex(index, data: data)
-                case .progress(let info): displayProgressWithIndex(index, progress: Float(info.totalWritten) / Float(info.totalSize))
+        Task {
+            do {
+                for try await state in await WWNetworking.shared.fragmentDownload(urlString: urlString) {
+                    switch state {
+                    case .start(let task): print("task = \(task)")
+                    case .finished(let data): displayImageWithIndex(index, data: data)
+                    case .progress(let info): displayProgressWithIndex(index, progress: Float(info.totalWritten) / Float(info.totalSize))
+                    }
                 }
+            } catch {
+                displayText(error)
             }
-        } catch {
-            displayText(error)
         }
     }
     
-    func httpMultipleDownload() async {
+    func httpMultipleDownload() {
         
         let imageUrlInfos: [String] = [
             ("https://images-assets.nasa.gov/image/PIA18033/PIA18033~orig.jpg"),
@@ -163,54 +159,54 @@ private extension ViewController {
 
         resultImageViews.forEach { $0.image = nil }
         
-        await WWNetworking.shared.multipleDownload(urlStrings: imageUrlInfos) { info in
-
-            print(Float(info.totalWritten) / Float(info.totalSize))
-            
-            guard let index = self.displayImageIndex(urlStrings: imageUrlInfos, urlString: info.urlString) else { return }
-            self.displayProgressWithIndex(index, progress: Float(info.totalWritten) / Float(info.totalSize))
-            
-        } completion: { result in
-            
-            switch result {
-            case .failure(let error): self.displayText(error)
-            case .success(let info):
+        Task {
+            await WWNetworking.shared.multipleDownload(urlStrings: imageUrlInfos) { info in
                 guard let index = self.displayImageIndex(urlStrings: imageUrlInfos, urlString: info.urlString) else { return }
-                self.displayImageWithIndex(index, data: info.data)
+                self.displayProgressWithIndex(index, progress: Float(info.totalWritten) / Float(info.totalSize))
+            } completion: { result in
+                switch result {
+                case .failure(let error): self.displayText(error)
+                case .success(let info):
+                    guard let index = self.displayImageIndex(urlStrings: imageUrlInfos, urlString: info.urlString) else { return }
+                    self.displayImageWithIndex(index, data: info.data)
+                }
             }
         }
     }
     
-    func httpUploadData() async {
+    func httpUploadData() {
         
         let urlString = "http://192.168.4.200:8080/upload"
         let imageData = resultImageViews[0].image?.pngData()
         let formData: WWNetworking.FormDataInformation = (name: "file", filename: "Demo.png", contentType: .png, data: imageData!)
         
-        await WWNetworking.shared.upload(urlString: urlString, formData: formData) { result in
-            
-            switch result {
-            case .failure(let error): self.displayText(error)
-            case .success(let info): self.displayText(info.response?.statusCode ?? 404)
+        Task {
+            await WWNetworking.shared.upload(urlString: urlString, formData: formData) { result in
+                switch result {
+                case .failure(let error): self.displayText(error)
+                case .success(let info): self.displayText(info.response?.statusCode ?? 404)
+                }
             }
         }
     }
     
-    func httpBinaryUploadData() async {
+    func httpBinaryUploadData() {
         
         let urlString = "http://192.168.4.200:8081/binaryUpload"
         let index = 1
         let imageData = resultImageViews[index].image?.pngData()
         let formData: WWNetworking.FormDataInformation = (name: "x-filename", filename: "Large.png", contentType: .octetStream, data: imageData!)
         
-        await WWNetworking.shared.binaryUpload(urlString: urlString, formData: formData, progress: { info in
-            self.title = "\(Float(info.totalBytesSent) / Float(info.totalBytesExpectedToSend))"
-        }, completion: { result in
-            switch result {
-            case .failure(let error): self.displayText(error)
-            case .success(let isSuccess): self.displayText(isSuccess)
-            }
-        })
+        Task {
+            await WWNetworking.shared.binaryUpload(urlString: urlString, formData: formData, progress: { info in
+                self.title = "\(Float(info.totalBytesSent) / Float(info.totalBytesExpectedToSend))"
+            }, completion: { result in
+                switch result {
+                case .failure(let error): self.displayText(error)
+                case .success(let isSuccess): self.displayText(isSuccess)
+                }
+            })
+        }
     }
 }
 

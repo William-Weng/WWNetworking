@@ -226,53 +226,77 @@ extension URLRequest {
     /// - Parameters:
     ///   - url: URL網址
     ///   - httpMethod: HTTP方法 (GET / POST / ...)
+    ///   - headers: [String : String?]?
+    ///   - cachePolicy: CachePolicy?
     ///   - timeoutInterval: TimeInterval
     /// - Returns: URLRequest
-    static func _build(url: URL, httpMethod: WWNetworking.HttpMethod? = nil, timeout: TimeInterval) -> URLRequest {
-        return Self._build(url: url, httpMethod: httpMethod?.rawValue, timeout: timeout)
+    static func _build(url: URL, httpMethod: WWNetworking.HttpMethod?, headers: [String : String?]?, cachePolicy: CachePolicy?, timeout: TimeInterval) -> URLRequest {
+        return Self._build(url: url, httpMethod: httpMethod?.rawValue, headers: headers, cachePolicy: cachePolicy, timeout: timeout)
+    }
+    
+    /// 產生URLRequest
+    /// - Parameters:
+    ///   - string: URL網址
+    ///   - httpMethod: HTTP方法 (GET / POST / ...)
+    ///   - headers: [String : String?]?
+    ///   - cachePolicy: CachePolicy?
+    ///   - timeout: TimeInterval
+    /// - Returns: URLRequest?
+    static func _build(string: String, httpMethod: String?, headers: [String : String?]?, cachePolicy: CachePolicy?, timeout: TimeInterval) -> URLRequest? {
+        guard let url = URL(string: string) else { return nil }
+        return Self._build(url: url, httpMethod: httpMethod, headers: headers, cachePolicy: cachePolicy, timeout: timeout)
+    }
+    
+    /// 產生URLRequest
+    /// - Parameters:
+    ///   - string: URL網址
+    ///   - httpMethod: HTTP方法 (GET / POST / ...)
+    ///   - headers: [String : String?]?
+    ///   - cachePolicy: CachePolicy?
+    ///   - timeout: TimeInterval
+    /// - Returns: URLRequest?
+    static func _build(string: String, httpMethod: WWNetworking.HttpMethod?, headers: [String : String?]?, cachePolicy: CachePolicy?, timeout: TimeInterval) -> URLRequest? {
+        guard let url = URL(string: string) else { return nil }
+        return Self._build(url: url, httpMethod: httpMethod, headers: headers, cachePolicy: cachePolicy, timeout: timeout)
     }
     
     /// 產生URLRequest
     /// - Parameters:
     ///   - url: URL網址
     ///   - httpMethod: HTTP方法 (GET / POST / ...)
+    ///   - headers: [String : String?]?
+    ///   - cachePolicy: CachePolicy?
     ///   - timeout: TimeInterval
     /// - Returns: URLRequest
-    static func _build(url: URL, httpMethod: String? = nil, timeout: TimeInterval) -> URLRequest {
+    static func _build(url: URL, httpMethod: String?, headers: [String : String?]?, cachePolicy: CachePolicy?, timeout: TimeInterval) -> URLRequest {
         
         var request = URLRequest(url: url)
         
         request.httpMethod = httpMethod
         request.timeoutInterval = timeout
+                
+        if let headers = headers {
+            headers.forEach { key, value in if let value = value { request.addValue(value, forHTTPHeaderField: key) }}
+        }
+           
+        if let cachePolicy = cachePolicy {
+            request.cachePolicy = .reloadIgnoringLocalCacheData
+        }
         
         return request
-    }
-    
-    /// 產生URLRequest
-    /// - Parameters:
-    ///   - string: URL網址
-    ///   - httpMethod: HTTP方法 (GET / POST / ...)
-    ///   - timeout: TimeInterval
-    /// - Returns: URLRequest?
-    static func _build(string: String, httpMethod: String? = nil, timeout: TimeInterval) -> URLRequest? {
-        guard let url = URL(string: string) else { return nil }
-        return Self._build(url: url, httpMethod: httpMethod, timeout: timeout)
-    }
-    
-    /// 產生URLRequest
-    /// - Parameters:
-    ///   - string: URL網址
-    ///   - httpMethod: HTTP方法 (GET / POST / ...)
-    ///   - timeout: TimeInterval
-    /// - Returns: URLRequest?
-    static func _build(string: String, httpMethod: WWNetworking.HttpMethod? = nil, timeout: TimeInterval) -> URLRequest? {
-        guard let url = URL(string: string) else { return nil }
-        return Self._build(url: url, httpMethod: httpMethod, timeout: timeout)
     }
 }
 
 // MARK: - URLRequest (mutating)
 extension URLRequest {
+    
+    /// enum版的.addValue(_,forHTTPHeaderField:_)
+    /// - Parameters:
+    ///   - value: 要設定的值
+    ///   - field: 要設定的欄位
+    mutating func _addValue(_ value: String, forHTTPHeaderField field: WWNetworking.HTTPHeaderField) {
+        self.addValue(value, forHTTPHeaderField: field.rawValue)
+    }
     
     /// enum版的.setValue(_,forHTTPHeaderField:_)
     /// - Parameters:
@@ -285,9 +309,8 @@ extension URLRequest {
     /// enum版的.setValue(_,forHTTPHeaderField:_)
     /// - Parameters:
     ///   - value: 要設定的值
-    ///   - field: 要設定的欄位
-    mutating func _setValue(_ value: WWNetworking.ContentType, forHTTPHeaderField field: WWNetworking.HTTPHeaderField) {
-        self.setValue("\(value)", forHTTPHeaderField: field.rawValue)
+    mutating func _setContentType(_ type: WWNetworking.ContentType) {
+        self.setValue("\(type)", forHTTPHeaderField: WWNetworking.HTTPHeaderField.contentType.rawValue)
     }
 }
 

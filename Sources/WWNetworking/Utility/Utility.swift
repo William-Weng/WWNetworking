@@ -22,12 +22,13 @@ extension WWNetworking.Utility {
     ///   - timeout: [設定請求超時時間](https://blog.csdn.net/qq_28091923/article/details/86233229)
     ///   - queryItems: 參數 => ?name=william
     ///   - headers: [Http Header](https://zh.wikipedia.org/zh-tw/HTTP头字段)
+    ///   - cachePolicy: URLRequest.CachePolicy?
     ///   - httpBody: Data => 所有的資料只要轉成Data都可以傳
     ///   - delegate: URLSessionDataDelegate
     ///   - delegateQueue: OperationQueue?
     ///   - result: Result<ResponseInformation, Error>
     /// - Returns: URLSessionTask?
-    func request(httpMethod: WWNetworking.HttpMethod = .GET, urlString: String, contentType: WWNetworking.ContentType = .json, timeout: TimeInterval, queryItems: [URLQueryItem]? = nil, headers: [String: String?]? = nil, httpBody: Data? = nil, delegate: URLSessionDataDelegate, delegateQueue: OperationQueue?, result: @escaping (Result<WWNetworking.ResponseInformation, Error>) -> Void) -> URLSessionTask? {
+    func request(httpMethod: WWNetworking.HttpMethod = .GET, urlString: String, contentType: WWNetworking.ContentType = .json, timeout: TimeInterval, queryItems: [URLQueryItem]?, headers: [String: String?]? = nil, cachePolicy: URLRequest.CachePolicy?, httpBody: Data?, delegate: URLSessionDataDelegate, delegateQueue: OperationQueue?, result: @escaping (Result<WWNetworking.ResponseInformation, Error>) -> Void) -> URLSessionTask? {
         
         guard let urlComponents = URLComponents._build(urlString: urlString, queryItems: queryItems),
               let queryedURL = urlComponents.url
@@ -35,14 +36,10 @@ extension WWNetworking.Utility {
             result(.failure(WWNetworking.CustomError.notUrlFormat)); return nil
         }
         
-        var request = URLRequest._build(url: queryedURL, httpMethod: httpMethod, timeout: timeout)
-        
-        if let headers = headers {
-            headers.forEach { key, value in if let value = value { request.addValue(value, forHTTPHeaderField: key) }}
-        }
-        
+        var request = URLRequest._build(url: queryedURL, httpMethod: httpMethod, headers: headers, cachePolicy: cachePolicy, timeout: timeout)
+                
         request.httpBody = httpBody
-        request._setValue(contentType, forHTTPHeaderField: .contentType)
+        request._setContentType(contentType)
         
         let task = fetchData(from: request, delegate: delegate, delegateQueue: delegateQueue, result: result)
         return task
@@ -135,13 +132,9 @@ extension WWNetworking.Utility {
     ///   - delegate: URLSessionDownloadDelegate
     ///   - delegateQueue: 執行緒
     /// - Returns: URLSessionDownloadTask
-    func downloadTaskMaker(with httpMethod: WWNetworking.HttpMethod?, urlString: String, timeout: TimeInterval = 60, configuration: URLSessionConfiguration = .default, headers: [String: String?]?, delegate: URLSessionDownloadDelegate, delegateQueue: OperationQueue? = .current) -> URLSessionDownloadTask? {
+    func downloadTaskMaker(with httpMethod: WWNetworking.HttpMethod?, urlString: String, timeout: TimeInterval = 60, configuration: URLSessionConfiguration = .default, headers: [String: String?]?, cachePolicy: URLRequest.CachePolicy?, delegate: URLSessionDownloadDelegate, delegateQueue: OperationQueue? = .current) -> URLSessionDownloadTask? {
         
-        guard var request = URLRequest._build(string: urlString, httpMethod: httpMethod, timeout: timeout) else { return nil }
-        
-        if let headers = headers {
-            headers.forEach { key, value in if let value = value { request.addValue(value, forHTTPHeaderField: key) }}
-        }
+        guard var request = URLRequest._build(string: urlString, httpMethod: httpMethod, headers: headers, cachePolicy: cachePolicy, timeout: timeout) else { return nil }
         
         let urlSession = URLSession(configuration: configuration, delegate: delegate, delegateQueue: delegateQueue)
         let downloadTask = urlSession.downloadTask(with: request)
@@ -166,15 +159,17 @@ extension WWNetworking.Utility {
     /// [斷點續傳下載檔案 - URLSessionTaskDelegate (Data) => HTTPHeaderField = Range / ∵ 是一段一段下載 ∴ 自己要一段一段存](https://www.jianshu.com/p/534ec0d9d758)
     /// - urlSession(_:dataTask:didReceive:) => completionHandler(.allow)
     /// - Parameters:
+    ///   - httpMethod: WWNetworking.HttpMethod?
     ///   - urlString: [String](https://stackoverflow.com/questions/58023230/memory-leak-occurring-in-iphone-x-after-updating-to-ios-13)
-    ///   - offset: HttpDownloadOffset
+    ///   - offset: [HttpDownloadOffset](https://ithelp.ithome.com.tw/articles/10195605)
     ///   - timeout: TimeInterval
     ///   - configiguration: URLSessionConfiguration
     ///   - headers: [String: String?]?
+    ///   - cachePolicy: URLRequest.CachePolicy?
     ///   - delegate: URLSessionDataDelegate
     ///   - delegateQueue: OperationQueue?
     /// - Returns: URLSessionDataTask?
-    func fragmentDownloadDataTaskMaker(with urlString: String, offset: WWNetworking.HttpDownloadOffset = (0, nil), timeout: TimeInterval, configiguration: URLSessionConfiguration, headers: [String: String?]?, delegate: URLSessionDataDelegate, delegateQueue: OperationQueue?) -> URLSessionDataTask? {
+    func fragmentDownloadDataTaskMaker(httpMethod: WWNetworking.HttpMethod?, urlString: String, offset: WWNetworking.HttpDownloadOffset = (0, nil), timeout: TimeInterval, configiguration: URLSessionConfiguration, headers: [String: String?]?, cachePolicy: URLRequest.CachePolicy?, delegate: URLSessionDataDelegate, delegateQueue: OperationQueue?) -> URLSessionDataTask? {
 
         guard let url = URL(string: urlString),
               let headerValue = downloadOffsetMaker(offset: offset)
@@ -183,11 +178,7 @@ extension WWNetworking.Utility {
         }
         
         let urlSession = URLSession(configuration: configiguration, delegate: delegate, delegateQueue: delegateQueue)
-        var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: timeout)
-        
-        if let headers = headers {
-            headers.forEach { key, value in if let value = value { request.addValue(value, forHTTPHeaderField: key) }}
-        }
+        var request = URLRequest._build(url: url, httpMethod: httpMethod, headers: headers, cachePolicy: cachePolicy, timeout: timeout)
 
         defer { urlSession.finishTasksAndInvalidate() }
         
