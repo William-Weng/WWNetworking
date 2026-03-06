@@ -171,18 +171,31 @@ public extension WWNetworking {
     }
         
     /// [HTTP Content-Type](https://www.runoob.com/http/http-content-type.html) => Content-Type: application/json
-    enum ContentType: CustomStringConvertible {
+    enum ContentType: CustomStringConvertible, CaseIterable {
+        
+        public static var allCases: [ContentType] {
+            [
+                .plain, .html, .xml, .rss, .atom, .json,
+                .png, .jpeg, .formUrlEncoded,
+                .flac, .mp3, .mp4, .mpeg, .mpga, .m4a,
+                .ogg, .wav, .webm, .octetStream,
+                
+                // 參數用預設值代表
+                .formData(boundary: ""), .bearer(forKey: ""), .custom(value: "")
+            ]
+        }
         
         public var description: String { return toString() }
         
         case plain
         case html
         case xml
+        case rss
+        case atom
         case json
         case png
         case jpeg
         case formUrlEncoded
-        case formData(boundary: String)
         case flac
         case mp3
         case mp4
@@ -193,8 +206,24 @@ public extension WWNetworking {
         case wav
         case webm
         case octetStream
+        case formData(boundary: String)
         case bearer(forKey: String)
         case custom(value: String)
+        
+        /// 由application/rss+xml; charset=utf-8 => application/rss+xml => .rss
+        /// - Parameter value: ContentType文字
+        /// - Returns: ContentType?
+        public static func find(by value: String) -> ContentType? {
+            
+            var type: ContentType?
+            
+            for _type_ in allCases {
+                if (!value.hasPrefix(_type_.toString())) { continue }
+                type = _type_; break
+            }
+            
+            return type
+        }
         
         /// [轉成MIME文字](https://developer.mozilla.org/zh-TW/docs/Web/HTTP/Basics_of_HTTP/MIME_types)
         /// - Returns: [String](https://www.iana.org/assignments/media-types/media-types.xhtml)
@@ -204,7 +233,11 @@ public extension WWNetworking {
             case .plain: return "text/plain"
             case .html: return "text/html"
             case .xml: return "text/xml"
+            case .rss: return "application/rss+xml"
+            case .atom: return "application/atom+xml"
             case .json: return "application/json"
+            case .octetStream: return "application/octet-stream"
+            case .formUrlEncoded: return "application/x-www-form-urlencoded"
             case .png: return "image/png"
             case .jpeg: return "image/jpeg"
             case .mp3: return "audio/mpeg"
@@ -216,9 +249,7 @@ public extension WWNetworking {
             case .webm: return "audio/webm"
             case .m4a: return "audio/m4a"
             case .flac: return "audio/flac"
-            case .formUrlEncoded: return "application/x-www-form-urlencoded"
             case .formData(boundary: let boundary): return "multipart/form-data; boundary=\(boundary)"
-            case .octetStream: return "application/octet-stream"
             case .bearer(forKey: let key): return "Bearer \(key)"
             case .custom(value: let value): return value
             }
